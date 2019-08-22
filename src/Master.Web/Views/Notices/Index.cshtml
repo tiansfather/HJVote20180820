@@ -1,0 +1,115 @@
+﻿@using Master.Web.Components
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("系统公告")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("标题")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="title" name="title" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("状态")</label>
+                        <div class="layui-input-inline">
+                            <select name="noticestatus" id="noticestatus">
+                                <option value="">--请选择--</option>
+                                <option value="1">草稿</option>
+                                <option value="2">发布</option>
+                            </select>
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn  " fornonerow="1" buttonname="@L("创建公告")" type="button" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[&quot;存为草稿&quot;,&quot;发布&quot;,&quot;关闭&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Notices/Post" onclick="func.callModuleButtonEvent()">@L("创建公告")</button>
+                </div>
+            </form>
+            
+
+            <table autoevent="1" id="Notice" lay-filter="Notice" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/Notice/GetPageResult', page:true, id:'Notice', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+                <thead>
+                    <tr>
+                        <th lay-data="{align:'center',field:'title'}">@L("公告标题")</th>
+                        <th lay-data="{align:'center',field:'creationTime',sort:true}">@L("创建时间")</th>
+                        <th lay-data="{align:'center',field:'lastModificationTime',sort:true}">@L("修改时间")</th>
+                        <th lay-data="{align:'center',field:'publishTime',sort:true}">@L("发布时间")</th>
+                        <th lay-data="{align:'center',field:'noticeStatus',sort:true,templet:'#statusTpl'}">@L("状态")</th>
+                        <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+<script type="text/html" id="statusTpl">
+    {{#if(d.noticeStatus==2){}}
+    <span class="layui-badge layui-bg-blue">@L("发布")</span>
+    {{#}else{}}
+    <span class="layui-badge layui-bg-gray">@L("草稿")</span>
+    {{#}}}
+</script>
+<script type="text/html" id="toolbar">
+
+    <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="Notice" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[&quot;存为草稿&quot;,&quot;发布&quot;,&quot;关闭&quot;]}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Notices/Post" onclick="func.callModuleButtonEvent()" >@L("编辑")</a>
+    <a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="Notice" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.notice.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>
+</script>
+@section scripts{
+    <script>
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+            table.on('sort(Notice)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                //console.log(obj.field); //当前排序的字段名
+                //console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+                //console.log(this); //当前排序的 th 对象
+
+                //尽管我们的 table 自带排序功能，但并没有请求服务端。
+                //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+                table.reload('Notice', {
+                    initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。 layui 2.1.1 新增参数
+                    , where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                        orderfield: obj.field,
+                        ordertype: obj.type
+                    }
+                });
+            });
+
+            config.refresh();
+
+
+        };
+        config.onTableDone = function () {
+
+        };
+        config.refresh = function () {
+
+        };
+        function doSearch() {
+            var where = {where:'1=1'};
+            var title = $("#title").val();
+            if (title) {
+                where.where += " and Title.Contains(\"" + title + "\") ";
+            }
+            var noticestatus = $("#noticestatus").val();
+            if (noticestatus) {
+                where.where += " and NoticeStatus=" + noticestatus;
+
+            }
+            layui.table.reload('Notice', {
+                where: where
+
+            })
+
+            return false;
+        }
+    </script>
+}

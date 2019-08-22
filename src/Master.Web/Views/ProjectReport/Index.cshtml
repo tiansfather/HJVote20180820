@@ -1,0 +1,169 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@model List<Master.Prizes.Prize>
+@{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+    var userid = AbpSession.UserId.Value;
+}
+@section styles{
+    <style>
+        #prizeContainer {
+            overflow: auto;
+        }
+
+            #prizeContainer .item {
+                width: 200px;
+                height: 40px;
+                line-height: 40px;
+                text-align: center;
+                border: 1px solid #000;
+                float: left;
+                margin: 10px 20px 10px 0;
+                cursor: pointer;
+            }
+    </style>
+}
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("申报奖项")</div>
+        <div class="layui-card-body">
+            <div id="prizeContainer">
+                @foreach (var item in Model)
+                {
+                    var subMajors = item.PrizeSubMajors.Where(o => o.Checked).Select(o => new { o.MajorId, o.Major.BriefName });
+                    <div class="item" onclick="gotoReport(this)" prizeId="@item.Id" prizeType="@Convert.ToInt32(item.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
+                        @item.PrizeName
+                    </div>
+                }
+            </div>
+
+
+            草稿箱：
+            <hr />
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus=0 and creatoruserid=@userid and projectsource=1'}, page:true, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+                <thead>
+                    <tr>
+                        <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
+                        <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl'}">@L("项目名称")</th>
+                        <th lay-data="{align:'center',field:'reportSN'}">@L("申报序号")</th>
+                        <th lay-data="{align:'center',field:'prizeName'}">@L("奖项大类")</th>
+                        <th lay-data="{align:'center',field:'subMajorName'}">@L("奖项子类")</th>
+                        <th lay-data="{align:'center',field:'designOrganizationName'}">@L("申报单位")</th>
+                        <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl'}">@L("是否原创")</th>
+                        <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/html" id="projectNameTpl">
+    <a href="#_" style="color:blue;text-decoration:underline;" onclick="showReport('{{d.prizeId}}', '{{d.subMajorId}}', '{{d.id}}')">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="toolbar">
+    @*<a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="DownloadList" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:[&quot;存为草稿&quot;,&quot;发布&quot;,&quot;关闭&quot;]}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/MatchResource/SubmitDownloadList" onclick="func.callModuleButtonEvent()">@L("编辑")</a>*@
+    <a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="Project" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.project.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>
+</script>
+@section scripts{
+    <div id="contentContainer" style="padding:20px;display:none">
+        <input type="hidden" name="subMajorId" />
+        请选择要申报的专业
+        <hr />
+        <div id="radioContainer" class="layui-form">
+
+        </div>
+    </div>
+    <script>
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+            layui.form.on('radio(subMajorId)', function (data) {
+                $("input[name='subMajorId']").val(data.value);
+            });
+
+            config.refresh();
+
+
+        };
+        config.onTableDone = function () {
+
+        };
+        config.refresh = function () {
+
+        };
+        function gotoReport(obj) {
+            var prizeId = $(obj).attr("prizeId"),
+                prizeName = $(obj).html(),
+                prizeType = $(obj).attr("prizeType"),
+                subMajors = JSON.parse($(obj).attr("majors"));
+
+            //如果是专业类和混排类需要选择专业
+            if (prizeType == 2 || prizeType == 3) {
+                $("input[name='subMajorId']").val('');
+                var html = '';
+                $.each(subMajors, function (i, v) {
+                    html += '<input type="radio" title="' + v.BriefName + '" name="subMajor" value="'+v.MajorId+'" lay-filter="subMajorId"/>';
+                });
+                $("#radioContainer").html(html);
+                layui.form.render();
+                layer.open({
+                    type: 1,
+                    btn: ['确认', '关闭'],
+                    title: "奖项:" + prizeName,
+                    area: ['400px', '300px'],
+                    content: $('#contentContainer'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+                    yes: function (index) {
+                        var subMajorId = $("input[name='subMajorId']").val();
+                        if (!subMajorId) {
+                            layer.msg("请先选择专业", { icon: 5, anim: 6 });
+                        } else {
+                            layer.close(index);
+                            showReport(prizeId, subMajorId, '');
+                        }
+                    }
+                });
+            } else {
+                showReport(prizeId, '', '');
+            }
+        }
+        //打开申报窗口
+        function showReport(prizeId, subMajorId, projectId) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + $(".item[prizeId='" + prizeId + "']").html();
+            top.layer.open({
+                type: 2,
+                title: title,
+                closeBtn:0,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/ProjectReport/Post?prizeId=" + prizeId + "&subMajorId=" + subMajorId + "&projectId=" + projectId,
+                btn: ['暂存', '提交', '关闭'],
+                success: function (layero, index) {
+                    //全屏弹窗
+                    console.log(layero);
+                    $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                        top.layer.close(index);
+                    });
+
+                },
+                yes: function (index, layero) {
+                    var iframeWin = top.window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                    iframeWin.submit();
+                },
+                btn2: function (index, layero) {
+                    var iframeWin = top.window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit2) { iframeWin.submit2(); return false; }
+                },
+                btn3: function (index, layero) {
+                    var iframeWin = top.window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit3) { iframeWin.submit3(); return false; }
+                }
+
+            })
+
+        }
+    </script>
+}

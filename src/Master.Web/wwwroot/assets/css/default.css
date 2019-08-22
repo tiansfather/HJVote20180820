@@ -1,0 +1,126 @@
+﻿select{
+    padding:3px;
+}
+.ztree *{
+    font-size:14px!important;
+}
+.layui-card-header .layui-icon{
+    right:auto!important;
+    left:15px!important;
+    margin-top:-8px!important;
+    color:green;
+}
+.layui-card-header{
+    padding-left:35px!important;
+
+}
+.layui-tab-title .layui-this:after{
+    border-radius:10px 10px 0 0;
+    border-color:#000;
+    border-bottom:1px solid #fff;
+}
+.layui-tab-title{
+    border-color: #000 !important;
+}
+.bold {
+    font-weight: bold;
+}
+.layui-layer-iframe .layui-layer-btn{
+    text-align:left;
+}
+.formPreview {
+    border-top: 1px solid #e6e6e6;
+    border-left: 1px solid #e6e6e6;
+    overflow: hidden;
+    margin: 10px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box; /* Firefox */
+    -webkit-box-sizing: border-box; /* Safari */
+}
+.formPreview .layout{
+    /*padding:2px;*/
+}
+.formPreview select{
+    padding:1px;
+}
+    .formPreview .layout-height1 {
+        height: 30px;
+    }
+
+    .formPreview .layout-height2 {
+        height: 60px;
+    }
+
+    .formPreview .layout-height3 {
+        height: 90px;
+    }
+
+    .formPreview .layout-height4 {
+        height: 120px;
+    }
+
+    .formPreview .layout-height5 {
+        height: 150px;
+    }
+
+    .formPreview .layout-height6 {
+        height: 180px;
+    }
+
+    .formPreview .layout-height7 {
+        height: 210px;
+    }
+
+    .formPreview .layout-height8 {
+        height: 240px;
+    }
+
+    .formPreview .layout-height9 {
+        height: 270px;
+    }
+
+    .formPreview .layout-height10 {
+        height: 300px;
+    }
+    .formPreview .layout-height11 {
+        height: 330px;
+    }
+    .formPreview .layout-height12 {
+        height: 360px;
+    }
+    .formPreview .layout-height13 {
+        height: 390px;
+    }
+    .formPreview .layout-height14 {
+        height: 420px;
+    }
+    .formPreview .layout-height15 {
+        height: 450px;
+    }
+    .formPreview .layout-height16 {
+        height: 480px;
+    }
+    .formPreview .layout-height17 {
+        height: 510px;
+    }
+    .formPreview .layout-height18 {
+        height: 540px;
+    }
+    .formPreview .layout-height19 {
+        height: 570px;
+    }
+    .formPreview .layout-height20 {
+        height: 600px;
+    }
+
+    .formPreview .layout {
+        border-right: 1px solid #e6e6e6;
+        border-bottom: 1px solid #e6e6e6;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box; /* Firefox */
+        -webkit-box-sizing: border-box; /* Safari */
+    }
+
+    .formPreview .current {
+        border: 2px dashed green !important;
+    }

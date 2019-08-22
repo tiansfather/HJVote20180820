@@ -1,0 +1,149 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    ViewData["Title"] = "DownloadList";
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("样例下载管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane layui-hide" onsubmit="return doSearch();" id="app">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("赛事")</label>
+                        <div class="layui-input-inline">
+                            <select asp-items="@(new SelectList(matches,"Id","Name"))" name="matchId" lay-filter="MatchId">
+                                <option value="">--选择赛事--</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("专业大类")</label>
+                        <div class="layui-input-inline">
+                            <select name="majorId" lay-filter="MajorId">
+                                <option value="">--选择专业大类--</option>
+                                <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("专业小类")</label>
+                        <div class="layui-input-inline">
+                            <select name="subMajorId">
+                                <option value="">--选择专业小类--</option>
+                                <option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+                            </select>
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn  " fornonerow="1" buttonname="@L("新建样例清单")" type="button" params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:[&quot;存为草稿&quot;,&quot;发布&quot;,&quot;关闭&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/MatchResource/SubmitDownloadList" onclick="func.callModuleButtonEvent()">@L("新建样例清单")</button>
+                </div>
+            </form>
+
+
+
+            <table autoevent="1" id="DownloadList" lay-filter="DownloadList" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/MatchResource/GetDownloadListPageResult',where:{where:'matchInstanceId=null and matchResourceType=3'}, page:true, id:'DownloadList', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+                <thead>
+                    <tr>
+                        <th lay-data="{align:'center',field:'matchName'}">@L("赛事名称")</th>
+                        <th lay-data="{align:'center',field:'majorName'}">@L("专业大类")</th>
+                        <th lay-data="{align:'center',field:'subMajorName'}">@L("专业小类")</th>
+                        <th lay-data="{align:'center',field:'matchResourceStatus',templet:'#statusTpl'}">@L("状态")</th>
+                        <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script type="text/html" id="statusTpl">
+        {{#if(d.matchResourceStatus==1){}}
+        <span class="layui-badge layui-bg-cyan">@L("草稿")</span>
+        {{#}else if(d.matchResourceStatus==2){}}
+        <span class="layui-badge layui-bg-green">@L("已发布")</span>
+        {{#}}}
+    </script>
+    <script type="text/html" id="toolbar">
+        <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="DownloadList" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:[&quot;存为草稿&quot;,&quot;发布&quot;,&quot;关闭&quot;]}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/MatchResource/SubmitDownloadList" onclick="func.callModuleButtonEvent()">@L("编辑")</a>
+        @*<a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.role.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>*@
+    </script>
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.loadMajors(matchId);
+            });
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.loadSubMajors(majorId);
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    allMajors: [],
+                    mainMajors: [],
+                    subMajors: []
+                },
+                methods: {
+                    loadMajors: function (matchId) {
+                        abp.services.app.major.getTreeJson(matchId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            app.subMajors = [];
+                            refresh();
+                        });
+                    },
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    }
+
+                },
+                mounted: function () {
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+        };
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
+        }
+        function doSearch() {
+            var where = { where: 'matchInstanceId=null and matchResourceType=3' };
+            var matchId = $("select[name='matchId']").val();
+            if (matchId) {
+                where.where += ' and matchId=' + matchId;
+            }
+            var majorId = $("select[name='majorId']").val();
+            if (majorId) {
+                where.where += ' and majorId=' + majorId;
+            }
+            var subMajorId = $("select[name='subMajorId']").val();
+            if (subMajorId) {
+                where.where += ' and subMajorId=' + subMajorId;
+            }
+            console.log(where);
+            layui.table.reload('DownloadList', {
+                where: where
+
+            })
+
+            return false;
+        }
+    </script>
+}

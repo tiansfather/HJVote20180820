@@ -1,0 +1,44 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ImportErrorView";
+}
+
+<div id="app" class="layui-hide">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th>行号</th>
+                <th>列号</th>
+                <th>错误信息</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="(item,index) in errors">
+                <td>{{item.row}}</td>
+                <td>{{item.column}}</td>
+                <td>{{item.message}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+@section scripts{ 
+    <script>
+        config.ready = function () {
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    errors: layui.sessionData("errors").importErrors
+                },
+                mounted: function () {
+                    $("#app").removeClass("layui-hide");
+
+                }
+            });
+            
+
+        }
+    </script>
+}

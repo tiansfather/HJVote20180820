@@ -1,0 +1,170 @@
+﻿@using Master.Matches
+@using Master.Web.Components
+@model Master.Matches.Match
+@{
+    ViewData["Title"] = "Index";
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i>专家专业绑定</div>
+        <div class="layui-card-body">
+            <div class="layui-row layui-col-space10">
+                <div class="layui-col-xs3">
+                    <div class="LAY-app-message-btns layui-form layui-row layui-col-space10" style="margin-bottom: 10px;">
+                        <div >
+                            <select asp-items="@(new SelectList(matches,"Id","Name",Model?.Id))" lay-filter="matchSelect"></select>
+                        </div>
+                    </div>
+                    <ul id="tree" class="ztree"
+                        style="padding: 2px; border: 1px solid #ddd; overflow: auto;min-height:500px"></ul>
+                </div>
+                <div class="layui-col-xs9 ">
+
+                    <div id="userDiv" style="display:none">
+                        <blockquote class="layui-elem-quote">
+                            已绑定专家
+                            <button id="selUserBtn" class="layui-btn layui-btn-normal layui-btn-sm" type="button" fornonerow="1" buttonname="选入专家" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Select/SelUser?key=User" onclick="func.callModuleButtonEvent()">选入专家</button>
+                            <button class="layui-btn layui-btn-danger layui-btn-sm" moduleKey="User" type="button" buttonname="移出专家" lay-event="Move" confirmmsg="确认将这些专家移出?" buttonactiontype="Ajax" buttonactionurl="moveExpertsOutMajor" onclick="func.callModuleButtonEvent()" callback="loadUser">移出专家</button>
+
+                        </blockquote>
+                        <table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{ page:false, id:'User', skin: 'row', even: true,initSort:{field:'Name',type:'asc'}}">
+                            <thead>
+                                <tr>
+                                    <th lay-data="{checkbox:true,fixed:'left'}"></th>
+                                    <th lay-data="{align:'center',field:'name'}">@L("姓名")</th>
+                                    <th lay-data="{align:'center',field:'userName'}">@L("登录账号")</th>
+                                    <th lay-data="{align:'center',field:'organizationName'}">@L("所属单位")</th>
+                                    <th lay-data="{align:'center',templet:'#rankTpl'}">@L("等级")</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+<script type="text/html" id="rankTpl">
+    <input type="radio" name="sex_{{d.id}}" title="高级" value="1"  dataid="{{d.majorExpertId}}" {{d.majorExpertRank=="1"?"checked":""}}>
+    <input type="radio" name="sex_{{d.id}}" title="资深" value="2" dataid="{{d.majorExpertId}}" {{d.majorExpertRank=="2"?"checked":""}}>
+</script>
+    <script>
+        var majorId;
+        var searchKeys = {};
+        var ztree = function () {
+            var zTreeObj;
+            var setting = {
+                view: { selectedMulti: false },
+                data: {
+                    key: {
+                        name: 'briefName',
+                        title: 'briefName'
+                    },
+                    simpleData: {
+                        enable: true,
+                        idKey: 'id',
+                        pIdKey: 'parentId',
+                        rootPId: 'null'
+                    }
+                },
+                callback: {
+                    onClick: function (event, treeId, treeNode) {
+                        if (treeNode.level != 1) {
+                            $("#userDiv").hide();
+                            return;
+                        }
+                        console.log(treeNode);
+                        majorId = treeNode.id;
+                        loadUser();
+                    }
+                }
+            };
+            var load = function () {
+                abp.services.app.major.getTreeJson(@Model?.Id).done(function (json) {
+                    zTreeObj = $.fn.zTree.init($("#tree"), setting);
+                    //过滤
+                    json = json.filter(function (o) { return o.isActive });
+                    //var newNode = { briefName: "根节点", id: null, parentId: "" };
+                    //json.push(newNode);
+                    zTreeObj.addNodes(null, json);
+                    //mainList({ orgId: "" });
+                    zTreeObj.expandAll(true);
+                });
+                //$.getJSON(url, function (json) {
+                //    zTreeObj = $.fn.zTree.init($("#tree"), setting);
+                //    var newNode = { Name: "根节点", Id: null, ParentId: "" };
+                //    json.push(newNode);
+                //    zTreeObj.addNodes(null, json);
+                //    //mainList({ orgId: "" });
+                //    zTreeObj.expandAll(true);
+                //});
+            };
+            load();
+            return {
+                reload: load
+            };
+        }();
+        config.ready = function () {
+            layui.form.on('select(matchSelect)', function (data) {
+                location.href = '?matchId=' + data.value;
+                console.log(data.elem); //得到select原始DOM对象
+                console.log(data.value); //得到被选中的值
+                console.log(data.othis); //得到美化后的DOM对象
+            });      
+
+            layui.form.on('radio', function (data) {
+                var majorExpertId = $(data.elem).attr("dataid");
+                var val = data.value;
+                func.runAsync(abp.services.app.major.setMajorExpertRank(majorExpertId, val)
+                    .done(function () { 
+                        layer.msg("提交成功");
+
+                    }));
+            });
+
+            func.bringBackFuncs["User"] = function (data) {
+                console.log(data);
+                var userIds = data.map(function (o) { return o.id; });
+                func.runAsync(abp.services.app.major.bindExpertsToMajor(majorId, userIds).done(function () {
+                    layer.msg("加入成功");
+                    loadUser();
+                }));
+                return true;
+            };
+        };
+        config.refresh = function () {
+            
+        };
+        config.reloadTable = function () {
+
+
+        }
+        function loadUser() {
+            
+            $("#userDiv").show();
+            var searchKeys = { searchType: 'BindExpertSelect', majorId: majorId };
+            $("#selUserBtn").attr("buttonactionurl", "/Select/SelUser?key=User&where=" + encodeURIComponent('IsActive=true') + "&searchKeys=" + encodeURIComponent(JSON.stringify(searchKeys)));
+            
+            layui.table.reload('User', {
+                url:'/api/services/app/major/GetExpert?majorId='+majorId
+            });
+
+        }
+
+        function moveExpertsOutMajor(data, option) {
+            return abp.services.app.major.moveExpertsOutMajor(majorId, data, option);
+
+        }
+    </script>
+}
+
+
+

@@ -1,0 +1,140 @@
+﻿@using System.Globalization
+@using Abp.Configuration
+@using Abp.Configuration.Startup
+@using Abp.Web.Security.AntiForgery
+@using Master
+@using Master.Configuration
+@inject Master.Timing.AppTimes AppTimes
+@inject IAbpAntiForgeryManager AbpAntiForgeryManager
+@inject IMultiTenancyConfig MultiTenancyConfig
+@inject ISettingManager SettingManager;
+@{
+    Layout = null;
+    AbpAntiForgeryManager.SetCookie(Context);
+
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <title>评优系统</title>
+    <!--[if lt IE 9]>
+    <meta http-equiv="refresh" content="0;ie.html" />
+    <![endif]-->
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true">
+    <link rel="stylesheet" href="/assets/layuiadmin/style/admin.css" media="all" asp-append-version="true">
+    <link href="~/assets/css/default.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/lib/pace/pace-theme-barber-shop.css" rel="stylesheet" />
+    <!-- View specific styles -->
+    @RenderSection("styles", required: false)
+    <script type="text/javascript">
+        // This is used to get the application's root path from javascript. It's useful if you're running application in a virtual directory under IIS.
+        var abp = abp || {};
+        abp.appPath = '@ApplicationPath';
+    </script>
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/lib/pace/pace.min.js" asp-append-version="true"></script>
+    <script>
+        layui.config({
+			base: config.layuiBase //静态资源所在路径
+			, version: 201811061
+        }).extend($.extend({
+            index: config.layuiIndex //主入口模块
+        }, config.layuiExtends));
+
+
+    </script>
+</head>
+<body class="gray-bg" @*style="overflow-y:scroll" *@>
+	<div class="layui-anim layui-anim-upbit" data-anim="layui-anim-upbit">
+		@RenderBody()
+	</div>
+
+	<!-- 全局js -->
+	<!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+	<script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+	<script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+	<!-- View specific scripts -->
+	@RenderSection("scripts", required: false)
+	<script type="text/html" id="activeTpl">
+		{{#if(d.isActive){}}
+		<span class="layui-badge layui-bg-blue">@L("有效")</span>
+		{{#}else{}}
+		<span class="layui-badge layui-bg-gray">@L("无效")</span>
+		{{#}}}
+	</script>
+	<script type="text/html" id="isOriginalTpl">
+		{{#if(d.isOriginal=="是"){}}
+		<span class="layui-badge layui-bg-green">@L("是")</span>
+		{{#}}}
+	</script>
+	<script type="text/html" id="matchInstanceStatusTpl">
+		{{#if(d.matchInstanceStatus==1){}}
+		<span class="layui-badge layui-bg-gray">草稿</span>
+		{{#}else if(d.matchInstanceStatus==2){}}
+		<span class="layui-badge layui-bg-orange">申报评选中</span>
+		{{#}else if(d.matchInstanceStatus==3){}}
+		<span class="layui-badge layui-bg-blue">评选中</span>
+		{{#}else if(d.matchInstanceStatus==4){}}
+		<span class="layui-badge layui-bg-green">评选完成</span>
+		{{#}}}
+	</script>
+	@*<script type="text/html" id="projectStatusTpl">
+			{{#if(d.projectStatus==0){}}
+			<span>@L("草稿")</span>
+			{{#}else if(d.projectStatus==1){}}
+			<span>@L("待初审")</span>
+			{{#}else if(d.projectStatus==2){}}
+			<span>@L("待专业鉴定")</span>
+			{{#}else if(d.projectStatus==3){}}
+			<span>@L("待审批")</span>
+			{{#}else if(d.projectStatus==4){}}
+			<span>@L("待评选")</span>
+			{{#}else if(d.projectStatus==5){}}
+			<span>@L("初评中")</span>
+			{{#}else if(d.projectStatus==6){}}
+			<span>@L("终评中")</span>
+			{{#}else if(d.projectStatus==7){}}
+			<span>@L("结束")</span>
+			{{#}else if(d.projectStatus==-1){}}
+			<span class="layui-badge layui-bg-red">@L("退回")</span>
+			{{#}}}
+		</script>*@
+	<script type="text/html" id="projectStatusTpl">
+		{{#if(d.projectStatus!="退回"){}}
+		<span>{{d.projectStatus}}</span>
+		{{#}else {}}
+		<span class="layui-badge layui-bg-red">@L("退回")</span>
+		{{#}}}
+	</script>
+	<script>
+		layui.use(config.layuiModules, function () {
+			//表单初始化
+			func.initForm();
+			//调用layui加载完事件
+			config.ready();
+			if (!parent.$("#LAY_app_tabs").is(":visible")) {
+				//如果是申报人或科管或集团科管只允许一个Tab页
+				if (top.$("#LAY_app_tabsheader li").size() > 1) {
+					parent.$("#LAY_app_tabsheader li").eq(0).remove();
+					parent.$("#LAY_app_body .layadmin-tabsbody-item").eq(0).remove();
+					//var id = parent.$("#LAY_app_tabsheader li").eq(0).attr("lay-id");
+					//console.log(id);
+					//top.layui.element.tabDelete("layadmin-layout-tabs", id);//删除
+				}
+
+
+			}
+		})
+	</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@using Master.Prizes
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item">
+            <label class="layui-form-label">赛事</label>
+            <div class="layui-input-block">
+                <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-filter="MatchId" lay-verify="required" v-model="currentItem.matchId">
+                    <option value="">--请选择赛事--</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">奖项名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="PrizeName" lay-verify="required" autocomplete="off" class="layui-input" v-model="currentItem.prizeName">
+            </div>
+        </div>
+        <div class="layui-form-item" pane>
+            <label class="layui-form-label">奖项类型</label>
+            <div class="layui-input-block">
+                <input type="radio" name="prizeType" lay-skin="primary" value="1" title="综合类" :checked="currentItem.prizeType==1" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+                <input type="radio" name="prizeType" lay-skin="primary" value="2" title="专业类" :checked="currentItem.prizeType==2" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+                <input type="radio" name="prizeType" lay-skin="primary" value="3" title="混排类" :checked="currentItem.prizeType==3" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+                <input type="radio" name="prizeType" lay-skin="primary" value="4" title="基本类" :checked="currentItem.prizeType==4" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">专业大类</label>
+            <div class="layui-input-block">
+                <select name="MajorId" v-model="currentItem.majorId" lay-filter="MajorId" lay-verify="required">
+                    <option value="">--请选择专业大类--</option>
+                    <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" v-if="currentItem.prizeType!=4" pane>
+            <label class="layui-form-label" style="padding:8px 5px">对应专业小类</label>
+            <div class="layui-input-block">
+                <tempalte v-if="currentItem.prizeType==1">
+                    <div v-for="(item,index) in currentItem.subMajors">
+                        <input type="checkbox" lay-skin="primary" :value="item.id" :title="item.name" lay-filter="SubMajorId" :checked="item.checked"  :disabled="item.checked && currentItem.id && isInApply">
+                        <input type="text" style="height:20px" size="5" :disabled="!item.checked" v-model="item.percent" lay-verify="requried" />%
+                        <input type="text" style="height:20px" size="5" :disabled="!item.checked" v-model="item.ratio" lay-verify="" />
+                    </div>
+                </tempalte>
+                <template v-if="currentItem.prizeType==2 || currentItem.prizeType==3">
+                    <div v-for="(item,index) in currentItem.subMajors">
+                        <input type="checkbox" lay-skin="primary" :checked="item.checked" name="SubMajorId"  :value="item.id" :title="item.name" lay-filter="SubMajorId">
+                    </div>
+                </template>
+            </div>
+        </div>
+        <div class="layui-form-item" pane>
+            <label class="layui-form-label">状态</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="IsActive" value="true" lay-skin="switch" lay-text="有效|无效" :checked="currentItem.isActive" lay-filter="IsActive" :disabled="currentItem.isActive && isInApply && currentItem.id">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea placeholder="" class="layui-textarea" name="Remarks" v-model="currentItem.remarks"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="PrizeAddSubmit" id="PrizeAddSubmit">@L("提交")</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.currentItem.matchId = matchId;
+                app.currentItem.subMajorId = "";
+                app.currentItem.subMajors = [];
+                app.loadMajors(matchId);
+            });
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.currentItem.majorId = majorId;
+                app.loadSubMajors(majorId);
+            });
+            layui.form.on('switch(IsActive)', function (data) {
+                app.currentItem.isActive = data.elem.checked;
+            });
+            layui.form.on('radio(PrizeType)', function (data) {
+                var prizeType = data.value;
+                app.currentItem.prizeType = prizeType;
+                config.refresh();
+            });
+            layui.form.on('checkbox(SubMajorId)', function (data) {
+                var subMajorId = data.value;
+                var subMajor = app.currentItem.subMajors.filter(function (o) { return o.id == subMajorId })[0];
+                subMajor.checked = data.elem.checked;
+            });
+            layui.form.on('submit', function (data) {
+                var checkedSubMajors = app.currentItem.subMajors.filter(function (o) { return o.checked });
+                //数据有效性检测
+                //对于综合类，需要至少选择两个子专业
+                if (app.currentItem.prizeType == 1) {
+                    
+                    if (checkedSubMajors.length < 2) {
+                        layer.msg('必须至少选择两个专业小类', { icon: 5, anim: 6 });
+                        return false;
+                    }
+                    var totalPercent = 0;
+                    for (var i = 0; i < checkedSubMajors.length; i++) {
+                        var subMajor = checkedSubMajors[i];
+                        if (!subMajor.percent || isNaN(subMajor.percent) || !subMajor.ratio || isNaN(subMajor.ratio)) {
+                            layer.msg('请正确填写专业小类所占权重百分比', { icon: 5, anim: 6 });
+                            return false;
+                        }
+                        totalPercent += parseInt(subMajor.percent);
+                    }
+                    if (totalPercent != 100) {
+                        layer.msg('专业小类所占权重百分比之和必须为1', { icon: 5, anim: 6 });
+                        return false;
+                    }
+                } else if (app.currentItem.prizeType == 2 || app.currentItem.prizeType == 3) {
+                    //专业类混排类至少选择一个
+                    if (checkedSubMajors.length < 1) {
+                        layer.msg('专业小类不能为空', { icon: 5, anim: 6 });
+                        return false;
+                    }
+                }
+                func.runAsync(abp.services.app.prize.submitPrize(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("Prize");
+                    parent.config.refresh();
+
+                }))
+            })
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    isInApply:false,
+                    currentItem: {isActive:true,matchId:"",prizeName:null,prizeType:1,majorId:"",remarks:null,subMajors:[]},
+                    majors:[]
+                    
+                },
+                computed: {
+                    mainMajors: function () {
+                        return this.majors.filter(function (o) { return o.parentId == null; });
+                    }
+
+                },
+                methods: {
+                    loadItem: function (id) {
+                        if (id) {
+                            abp.services.app.prize.getPrize(id).done(function (data) {
+                                app.currentItem = data;
+                                app.loadMajors(data.matchId,data.majorId);
+                            })
+                        }
+
+                    },
+                    loadMajors: function (matchId, majorId) {
+                        abp.services.app.match.getIfMatchInApply(matchId).done(function (data) {
+                            app.isInApply = data;
+                        });
+                        abp.services.app.major.getTreeJson(matchId).done(function (data) {
+                            console.log(data);
+                            app.majors = data.filter(function (o) { return o.isActive; });
+                            if (majorId) {
+                                app.loadSubMajors(majorId);
+                            }
+                            config.refresh();
+                        })
+                    },
+                    loadSubMajors: function (majorId) {
+                        var subMajors = app.majors.filter(function (o) { return o.parentId == majorId; })
+                            .map(function (o) { return { id: o.id, name: o.briefName, percent: null, checked: false } });
+                        for (var i = 0; i < subMajors.length; i++) {                             
+                            if (this.currentItem.subMajors.filter(function (o) { return o.id == subMajors[i].id; }).length == 0) {
+                                this.currentItem.subMajors.push(subMajors[i]);
+                            }
+                        }
+                        
+                        config.refresh();
+                    }
+
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+
+            });
+
+        }
+        config.refresh = function () {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
+
+        }
+        function submit() {
+            $("#PrizeAddSubmit").click();
+
+        }
+    </script>
+}
+

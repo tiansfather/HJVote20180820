@@ -1,0 +1,68 @@
+﻿@using Abp.Application.Navigation;
+@using Master.Menu;
+@using Abp.Extensions;
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+}
+
+
+
+<ul class="layui-nav layui-layout-right" lay-filter="layadmin-layout-right">
+
+    @*<li class="layui-nav-item" lay-unselect>
+            <a lay-href="app/message/index.html" layadmin-event="message" lay-text="消息中心">
+                <i class="layui-icon layui-icon-notice"></i>
+
+                <!-- 如果有新消息，则显示小圆点 -->
+                <span class="layui-badge-dot"></span>
+            </a>
+        </li>
+        <li class="layui-nav-item layui-hide-xs" lay-unselect>
+            <a href="javascript:;" layadmin-event="theme">
+                <i class="layui-icon layui-icon-theme"></i>
+            </a>
+        </li>
+        <li class="layui-nav-item layui-hide-xs" lay-unselect>
+            <a href="javascript:;" layadmin-event="note">
+                <i class="layui-icon layui-icon-note"></i>
+            </a>
+        </li>*@
+    <li class="layui-nav-item layui-hide-xs" lay-unselect>
+        <a href="javascript:;" custom-event="lock" title="@L("锁屏")">
+            <i class="layui-icon layui-icon-zlock-l"></i>
+        </a>
+    </li>
+    <li class="layui-nav-item layui-hide-xs" lay-unselect>
+        <a href="javascript:;" >
+            您好,@Model.User.Name,现在是@(DateTime.Now.ToString("yyyy年MM月dd日 HH点mm分"))
+        </a>
+    </li>
+    <li class="layui-nav-item layui-hide-xs" lay-unselect>
+        <a href="javascript:;" tips="@L("修改密码")" fornonerow="1" buttonname="@L("修改密码")" params="{&quot;area&quot;: [&quot;500px&quot;, &quot;400px&quot;]}" buttonactiontype="Form" buttonactionurl="/Account/ChangePassword" onclick="func.callModuleButtonEvent()">
+            修改密码
+        </a>
+    </li>
+    <li class="layui-nav-item layui-hide-xs" lay-unselect>
+        <a asp-action="Logout" asp-controller="Account" tips="@L("退出")">
+            退出
+        </a>
+    </li>
+    @*<li class="layui-nav-item" lay-unselect>
+        <a href="javascript:;">
+            <cite>@Model.User.Name</cite>
+        </a>
+        <dl class="layui-nav-child">
+            <dd><a lay-href="set/user/password.html">修改密码</a></dd>
+            <hr />
+            <dd style="text-align: center;"><a asp-action="Logout" asp-controller="Account">退出</a></dd>
+        </dl>
+    </li>*@
+
+    @*<li class="layui-nav-item layui-hide-xs" lay-unselect>
+            <a href="javascript:;" layadmin-event="about"><i class="layui-icon layui-icon-more-vertical"></i></a>
+        </li>
+        <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-unselect>
+            <a href="javascript:;" layadmin-event="more"><i class="layui-icon layui-icon-more-vertical"></i></a>
+        </li>*@
+</ul>

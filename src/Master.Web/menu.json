@@ -1,0 +1,218 @@
+[
+  {
+    "name": "systemmanager",
+    "displayName": "系统管理",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "systemmanager.organization",
+        "displayName": "组织机构管理",
+        "icon": "layui-icon layui-icon-group",
+        "url": "/Organization"
+      },
+      {
+        "name": "systemmanager.user",
+        "displayName": "人员管理",
+        "icon": "layui-icon layui-icon-user",
+        "url": "/User"
+      },
+      {
+        "name": "systemmanager.speciality",
+        "displayName": "专家专业维护",
+        "icon": "layui-icon layui-icon-link",
+        "url": "/Speciality"
+      },
+      {
+        "name": "systemmanager.chargerbinding",
+        "displayName": "大专业负责人绑定",
+        "icon": "layui-icon layui-icon-link",
+        "url": "/ChargerBinding"
+      },
+      {
+        "name": "systemmanager.database",
+        "displayName": "数据管理",
+        "icon": "layui-icon layui-icon-app",
+        "url": "/DataBase"
+      }
+    ]
+  },
+  {
+    "name": "matchmanager",
+    "displayName": "赛事管理",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "matchmanager.match",
+        "displayName": "赛事管理",
+        "icon": "layui-icon layui-icon-diamond",
+        "url": "/Matches"
+      },
+      {
+        "name": "matchmanager.major",
+        "displayName": "专业分类管理",
+        "icon": "layui-icon layui-icon-zcontrol",
+        "url": "/Majors"
+      },
+      {
+        "name": "matchmanager.prize",
+        "displayName": "奖项管理",
+        "icon": "layui-icon layui-icon-zbookmark",
+        "url": "/Prizes"
+      },
+      {
+        "name": "matchmanager.formdesign",
+        "displayName": "表单设计器",
+        "icon": "layui-icon layui-icon-layouts",
+        "url": "/MatchResource/FormDesign"
+      },
+      {
+        "name": "matchmanager.uploadlist",
+        "displayName": "上传清单管理",
+        "icon": "layui-icon layui-icon-upload-drag",
+        "url": "/MatchResource/UploadList"
+      },
+      {
+        "name": "matchmanager.downloadlist",
+        "displayName": "样例下载管理",
+        "icon": "layui-icon layui-icon-download-circle",
+        "url": "/MatchResource/DownloadList"
+      },
+      {
+        "name": "matchmanager.ratingtable",
+        "displayName": "评分表管理",
+        "icon": "layui-icon layui-icon-form",
+        "url": "/MatchResource/RateTable"
+      }
+    ]
+  },
+  {
+    "name": "projectreporter",
+    "displayName": "项目申报",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "projectreporter.submitreport",
+        "displayName": "填写项目申报",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/ProjectReport"
+      },
+      {
+        "name": "projectreporter.myreport",
+        "displayName": "查看我的申报",
+        "icon": "layui-icon layui-icon-zpaper",
+        "url": "/ProjectReport/My"
+      },
+      {
+        "name": "projectreporter.rejectreport",
+        "displayName": "被退回的申报",
+        "icon": "layui-icon layui-icon-return",
+        "url": "/ProjectReport/Reject"
+      }
+    ]
+  },
+  {
+    "name": "submanager",
+    "displayName": "项目初审",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "submanager.verify",
+        "displayName": "申报项目初审",
+        "icon": "layui-icon layui-icon-bianji",
+        "url": "/SubManager"
+      },
+      {
+        "name": "submanager.myreport",
+        "displayName": "本公司的申报项目",
+        "icon": "layui-icon layui-icon-list",
+        "url": "/SubManager/My"
+      }
+    ]
+  },
+  {
+    "name": "majormanager",
+    "displayName": "专业评审",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "majormanager.verify",
+        "displayName": "申报项目专业审核",
+        "icon": "layui-icon layui-icon-bianji",
+        "url": "/MajorManager"
+      },
+      {
+        "name": "majormanager.myreport",
+        "displayName": "本专业的所有申报",
+        "icon": "layui-icon layui-icon-list",
+        "url": "/MajorManager/My"
+      }
+    ]
+  },
+  {
+    "name": "groupmanager",
+    "displayName": "集团科管管理",
+    "icon": "layui-icon layui-icon-zzglobe",
+    "url": "",
+    "items": [
+      {
+        "name": "groupmanager.verify",
+        "displayName": "申报项目审批",
+        "icon": "layui-icon layui-icon-bianji",
+        "url": "/GroupManager"
+      },
+      {
+        "name": "groupmanager.verifymajor",
+        "displayName": "申报项目越权审批",
+        "icon": "layui-icon layui-icon-bianji",
+        "url": "/GroupManager/VerifyMajor"
+      },
+      {
+        "name": "groupmanager.myreport",
+        "displayName": "查看所有申报项目",
+        "icon": "layui-icon layui-icon-list",
+        "url": "/GroupManager/My"
+      },
+      {
+        "name": "groupmanager.projects",
+        "displayName": "待评选项目管理",
+        "icon": "layui-icon layui-icon-app",
+        "url": "/GroupManager/Projects"
+      },
+      {
+        "name": "groupmanager.reviews",
+        "displayName": "评选活动准备",
+        "icon": "layui-icon layui-icon-form",
+        "url": "/Reviews/Index"
+      },
+      {
+        "name": "groupmanager.reviewmanager",
+        "displayName": "评选活动管理",
+        "icon": "layui-icon layui-icon-form",
+        "url": "/Reviews/Manager"
+      },
+      {
+        "name": "groupmanager.initialreview",
+        "displayName": "初评情况管理",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/Reviews/InitialReview"
+      },
+      {
+        "name": "groupmanager.finalreview",
+        "displayName": "终评情况查看",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/Reviews/FinalReview"
+      },
+      {
+        "name": "groupmanager.notice",
+        "displayName": "系统公告",
+        "icon": "layui-icon layui-icon-speaker",
+        "url": "/Notices/"
+      }
+    ]
+  }
+]

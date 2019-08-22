@@ -1,0 +1,263 @@
+﻿@using Master.Matches
+@using Master.Reviews
+@model Review
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ReviewRoundNext";
+    var reviewDetail = Model.ReviewRounds.Last();
+    var matchInstance = ViewData["MatchInstance"] as MatchInstance;
+
+    var reviewtype = ViewData["reviewType"].ToString();
+    var newround = reviewtype == "AddIn" ? reviewDetail.Round : reviewDetail.Round + 1;
+    var newturn = reviewtype == "AddIn" ? reviewDetail.Turn + 1 : 1;
+    var projectids = ViewData["projectIds"].ToString();
+}
+
+@section styles{
+    <link href="~/lib/powerfloat/css/powerFloat.css" rel="stylesheet" />
+    <style>
+        .reviewmethodsetting {
+            line-height: 30px;
+        }
+
+            .reviewmethodsetting input {
+                text-align: right;
+            }
+    </style>
+}
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item" style="margin-bottom:2px">
+            <label class="layui-form-label" style="padding:8px 5px">评选活动名称</label>
+            <div class="layui-input-block">
+                <input  type="text" class="layui-input" readonly value="@Model.ReviewName" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:2px">
+            <label class="layui-form-label" style="padding:8px 5px">评审轮次</label>
+            <div class="layui-input-block">
+                <input type="text" :value="currentRoundTurn" readonly class="layui-input" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:2px">
+            <label class="layui-form-label" style="padding:8px 5px">目标数量</label>
+            <div class="layui-input-block">
+                <input type="text" v-model="currentItem.targetNumber" class="layui-input" lay-verify="required|number" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:2px" pane>
+            <label class="layui-form-label" style="padding:8px 5px">评审方法</label>
+            <div class="layui-input-block">
+                <input type="radio" value="1" title="本轮平均分" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" v-if="reviewType=='Next'"/>
+                <input type="radio" value="2" title="与上轮加权平均分" v-if="currentItem.round>1 && reviewType=='Next'" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
+                <input type="radio" value="3" title="投票"  v-if="currentItem.turn>1||true" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:2px" pane>
+            <label class="layui-form-label" style="padding:8px 5px">参数设定</label>
+            <div class="layui-input-block reviewmethodsetting" style="padding-left:5px;">
+                <label id="methodsetting1" v-if="(currentItem.reviewMethod==1||currentItem.reviewMethod==2) && currentItem.reviewMethodSetting.rateType==0">
+                    分制<input type="text" v-model="currentItem.reviewMethodSetting.maxScore" lay-verify="number" style="width:40px" />
+                    最低<input type="text" v-model="currentItem.reviewMethodSetting.minScore" lay-verify="number" style="width:40px" />
+                    @*步进<input type="text" v-model="currentItem.reviewMethodSetting.scoreStep" lay-verify="number" style="width:40px" />*@
+                </label>
+                <label v-if="currentItem.reviewMethod==1||currentItem.reviewMethod==2"><input type="checkbox" name="cutoff" v-model="currentItem.reviewMethodSetting.cutOff" lay-ignore />去掉最高分最低分</label>
+                <label id="methodsetting2" v-if="currentItem.reviewMethod==2">
+                    上轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightLast" style="width:40px" lay-verify="number" />%
+                    本轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightNow" style="width:40px" lay-verify="number" />%
+                </label>
+                <label id="methodsetting3" v-if="currentItem.reviewMethod==3 ">
+                    每位评委投满<input type="text" v-model="currentItem.reviewMethodSetting.voteNumber" style="width:40px" lay-verify="number" />票
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-bottom:2px" pane v-if="currentItem.reviewMethod!=3">
+            <label class="layui-form-label" style="padding:8px 5px">打分方式</label>
+            <div class="layui-input-block">
+                <input type="radio" value="0" title="直接打分" v-model="currentItem.reviewMethodSetting.rateType" lay-filter="rateType" name="rateType" />
+                <input type="radio" value="1" title="按评分表打分" :disabled="!currentItem.hasRateTable" v-model="currentItem.reviewMethodSetting.rateType" lay-filter="rateType" name="rateType" />
+            </div>
+        </div>
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit" id="btnsubmit">提交</button>
+            </div>
+        </div>
+    </form>
+    <div style="margin-top:10px;">
+        参选项目
+        <hr />
+        <table id="projectlist" lay-filter="projectlist"></table>
+    </div>
+
+</div>
+
+@section scripts{
+    <script src="/lib/powerfloat/js/jquery-powerFloat.js"></script>
+    <script type="text/html" id="projectTpl">
+        <a href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
+    </script>
+    <script type="text/html" id="excludeTpl">
+        <a class="layui-btn layui-btn-xs showexclude" lay-event="showexclude" count="{{d.excludeExpertIDs?d.excludeExpertIDs.split(',').length:0}}" ajaxurl="/Show/ExcludeExperts?ids={{d.excludeExpertIDs?d.excludeExpertIDs:""}}&projectid={{d.id}}">查看[{{d.excludeExpertIDs?d.excludeExpertIDs.split(',').length:0}}]</a>
+    </script>
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('submit', function (data) {
+                if (app.currentItem.targetNumber <= 0) {
+                    layer.msg("目标数量必须大于0", { icon: 5, anim: 6 })
+                    return false;
+                }
+                if (app.currentItem.targetNumber > window.projectdata.length) {
+                    layer.msg("目标数量不能大于参选项目总数", { icon: 5, anim: 6 })
+                    return false;
+                }
+                if (app.currentItem.reviewMethod == 1 && (app.currentItem.reviewMethodSetting.maxScore <= 0 || app.currentItem.reviewMethodSetting.minScore <= 0 )) {
+                    layer.msg("请正确设置参数", { icon: 5, anim: 6 })
+                    return false;
+                }
+                if (app.currentItem.reviewMethod == 2 && (app.currentItem.reviewMethodSetting.maxScore <= 0 || app.currentItem.reviewMethodSetting.minScore <= 0 ||  app.currentItem.reviewMethodSetting.weightLast <= 0 || app.currentItem.reviewMethodSetting.weightNow <= 0)) {
+                    layer.msg("请正确设置参数", { icon: 5, anim: 6 })
+                    return false;
+                }
+                if (app.currentItem.reviewMethod == 2 && (app.currentItem.reviewMethodSetting.weightLast + app.currentItem.reviewMethodSetting.weightNow != 100)) {
+                    layer.msg("本轮权重与上轮权重之和必须为100", { icon: 5, anim: 6 })
+                    return false;
+                }
+                if (app.currentItem.reviewMethod == 3 && (app.currentItem.reviewMethodSetting.voteNumber <= 0)) {
+                    layer.msg("请正确设置参数", { icon: 5, anim: 6 })
+                    return false;
+                }
+                //提交
+                func.runAsync(abp.services.app.review.submitReviewRound(app.currentItem).done(function () {
+                    parent.layer.msg("提交成功");
+                    parent.layer.closeAll('iframe');
+                    parent.config.refresh();
+                }))
+            });
+            layui.form.on("radio(reviewMethod)", function (data) {
+                app.currentItem.reviewMethod = data.value;
+                refresh();
+            });
+            layui.form.on("radio(rateType)", function (data) {
+                app.currentItem.reviewMethodSetting.rateType = data.value;
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    reviewType:"@reviewtype",
+                    currentItem: {
+                        reviewId: @Model.Id,reviewName:'',id:0,reviewStatus:0, round: @newround, turn: @newturn, targetNumber: null, reviewMethod: 1, reviewMethodSetting: { maxScore: 10, minScore: 5, scoreStep: 1, cutOff: false, weightLast: 50, weightNow: 50, voteNumber: 5,rateType:0,sourceProjectIds:'' },hasRateTable:false
+                    }
+
+                },
+                methods: {
+                    loadItem: function () {
+                        var that = this;
+                        if (this.reviewType == "AddIn") {
+                            this.currentItem.reviewMethod = 3;//补充评审只能投票
+                        }
+                        this.currentItem.sourceProjectIds = "@projectids";
+                        //获取当前评选是否有评分表
+                        abp.services.app.review.getIfHasRateTable(this.currentItem.reviewId).done(function (data) {
+                            app.currentItem.hasRateTable = data;
+                            refresh();
+                            $("#app").removeClass("layui-hide");
+                            refresh();
+                        })
+                        that.loadProject();
+                    },
+                    loadProject: function () {
+                        if (this.currentItem.reviewId) {
+                            abp.services.app.project.getReviewProjectsByReviewId(this.currentItem.reviewId, this.currentItem.sourceProjectIds)
+                                .done(function (data) {
+                                    window.projectdata = data;
+                                    if (!window.projecttable) {
+                                        window.projecttable = layui.table.render({
+                                            elem: '#projectlist',
+                                            data: data,
+                                            page: true
+                                            , cols: [[
+                                                { field: 'sort', title: '序号', width: 60, align: 'center' }
+                                                //, { title: '排序操作', width: 100 ,templet:'#sortTpl'}
+                                                , { title: '回避专家', width: 150, templet: '#excludeTpl' }
+                                                , { field: 'projectName', title: '项目名称', templet: '#projectTpl' }
+                                                , { field: 'prizeName', title: '奖项名称', width: 180 }
+                                                , { field: 'subMajorName', title: '奖项小类', width: 180 }
+                                                , { field: 'designOrganizationName', title: '申报单位' }
+                                            ]]
+                                            , done: function (res, curr, count) {
+                                                $(".showexclude[count!=0]").powerFloat({
+                                                    targetMode: "ajax",
+                                                    target: function () {
+                                                        return $(this).attr("ajaxurl");
+                                                    },
+                                                    hoverHold: true,
+                                                    position: "6-8"
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        projecttable.reload({ data: data });
+                                    }
+
+                                });
+
+
+                        }
+
+                    }
+
+                },
+                computed: {
+                    currentRoundTurn: function () {
+                        return "第" + this.currentItem.round + "轮第" + this.currentItem.turn + "次";
+
+                    }
+
+                },
+                mounted: function () {
+                    this.loadItem();
+
+                }
+
+            });
+
+        }
+
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select,.layui-form-radio").remove();
+                layui.form.render();
+
+            })
+
+        }
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+        }
+
+        function submit() {
+            app.currentItem.reviewStatus = 0;//未发布状态
+            doSubmit();
+        }
+        function submit2() {
+            app.currentItem.reviewStatus = 1;//评审中状态
+            doSubmit();
+        }
+        function doSubmit() {
+            $("#btnsubmit").click();
+        }
+    </script>
+}
+

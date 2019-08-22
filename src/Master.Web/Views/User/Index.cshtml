@@ -1,0 +1,149 @@
+﻿@using Master.Web.Components
+@using Master.Majors
+@using Master.Authentication
+@{
+    ViewData["Title"] = "Index";
+    var specialties = ViewData["specialities"] as List<Speciality>;
+    var roles = ViewData["roles"] as List<Role>;
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+	<div class="layui-card">
+		<div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("人员管理")</div>
+		<div class="layui-card-body">
+			<form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+				<div class="layui-form-item">
+					<div class="layui-inline">
+						<label class="layui-form-label">@L("姓名")</label>
+						<div class="layui-input-inline">
+							<input type="text" id="name" name="name" autocomplete="off" class="layui-input">
+						</div>
+						<label class="layui-form-label">所属单位</label>
+						<div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+							 name="OrganizationId" value="" class="layui-input-inline" style="position:relative">
+						</div>						
+						
+					</div>
+				</div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">专业</label>
+                    <div class="layui-input-inline">
+                        <select name="specialityId">
+                            <option value="">--请选择--</option>
+                            @foreach (var speciality in specialties.OrderBy(o => o.Sort))
+                            {
+                                <option value="@speciality.Id">@speciality.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <label class="layui-form-label">角色</label>
+                    <div class="layui-input-inline">
+                        <select name="roleId">
+                            <option value="">--请选择--</option>
+                            @foreach (var role in roles)
+                            {
+                                <option value="@role.Id">@role.DisplayName</option>
+
+                            }
+                        </select>
+                    </div>
+                    <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    <button class="layui-btn  " fornonerow="1" buttonname="@L("添加")" type="button" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/User/Add" onclick="func.callModuleButtonEvent()">@L("添加")</button>
+                </div>
+			</form>
+
+
+			<table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/User/GetPageResult', page:true, id:'User',where:{where:'1=1',orderField:'creationtime',orderType:'desc'}, skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+				<thead>
+					<tr>
+						<th lay-data="{align:'center',field:'name',sort:true}">@L("姓名")</th>
+						<th lay-data="{align:'center',field:'userName',sort:true}">@L("登录账号")</th>
+						<th lay-data="{align:'center',field:'roleName'}">@L("账号角色")</th>
+						<th lay-data="{align:'center',field:'organizationName',sort:true}">@L("所属单位")</th>
+						<th lay-data="{align:'center',field:'speciality',templet:'#specialityTpl'}">@L("专业")</th>
+						<th lay-data="{align:'center',field:'isActive',sort:true,templet:'#activeTpl'}">@L("状态")</th>
+						<th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+
+	</div>
+</div>
+
+<script type="text/html" id="toolbar">
+
+	<a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="User" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;]}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/User/Edit" onclick="func.callModuleButtonEvent()" ">@L("编辑")</a>
+	@*<a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.role.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>*@
+</script>
+<script type="text/html" id="specialityTpl">
+	{{#  layui.each(d.specialities, function(index, item){ }}
+	<span class="layui-badge " title="{{item}}">{{item}}</span>
+	{{#  }); }}
+</script>
+@section scripts{
+	<script>
+		config.ready = function () {
+			var element = layui.element,
+				table = layui.table;
+			table.on('sort(User)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+				//console.log(obj.field); //当前排序的字段名
+				//console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+				//console.log(this); //当前排序的 th 对象
+
+				//尽管我们的 table 自带排序功能，但并没有请求服务端。
+				//有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+				var orderField = obj.field;
+				if (orderField == "organizationName") {
+					orderField = "Organization.BriefName";
+
+				}
+				table.reload('User', {
+					initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。 layui 2.1.1 新增参数
+					, where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+						orderfield: orderField,
+						ordertype: obj.type
+					}
+				});
+			});
+
+			config.refresh();
+			$('div[cytype="dropDownTool"]').dropDownTool();
+
+		};
+		config.onTableDone = function () {
+
+		};
+		config.refresh = function () {
+
+		};
+		function doSearch() {
+			var where = { where: '1=1' };
+			var name = $("#name").val();
+			if (name) {
+				where.where += " and Name.Contains(\"" + name + "\") ";
+
+			}
+			var organizationId = $("input[name='OrganizationId']").val();
+			if (organizationId) {
+				where.where += " and OrganizationId=" + organizationId;
+			}
+			var searchKeys = {};
+			var specialityId = $("[name='specialityId']").val();
+			if (specialityId) {
+				searchKeys.specialityId = specialityId;
+            }
+            var roleId = $("[name='roleId']").val();
+            if (roleId) {
+                searchKeys.roleId = roleId;
+            }
+			where.searchKeys = JSON.stringify(searchKeys);
+			layui.table.reload('User', {
+				where: where
+
+			})
+
+			return false;
+		}
+	</script>
+}

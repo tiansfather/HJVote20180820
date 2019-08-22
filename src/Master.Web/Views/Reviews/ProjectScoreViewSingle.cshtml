@@ -1,0 +1,113 @@
+﻿@using Master.Reviews
+@using Master.Projects
+@model List<ProjectMajorScoreDto>
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ProjectScoreViewSingle";
+}
+<blockquote class="layui-elem-quote">总分数:<span class="layui-badge layui-bg-green">@ViewBag.FinalScore</span><span class="layui-badge layui-bg-gray">@*最终专业得分和总分都将转换为百分制进行比较*@</span></blockquote>
+<div class="layui-collapse" lay-accordion="">    
+    @foreach (var projectMajorScore in Model)
+    {
+        <div class="layui-colla-item ">
+            <h2 class="layui-colla-title">@projectMajorScore.SubMajorName  <span class="layui-badge">@projectMajorScore.SubMajorScore</span><span class="layui-badge layui-bg-gray">@projectMajorScore.Tip</span><i class="layui-icon layui-colla-icon"></i></h2>
+            <div class="layui-colla-content layui-show">
+                <div class="layui-collapse" lay-accordion="">
+                    @foreach (var projectMajorRoundScore in projectMajorScore.ProjectMajorRoundScoreDtos)
+                    {
+                        <div class="layui-colla-item">
+                            <h2 class="layui-colla-title">第@(projectMajorRoundScore.Round)轮  &nbsp;&nbsp;<span class="layui-badge">@(projectMajorRoundScore.Score)</span><i class="layui-icon layui-colla-icon"></i></h2>
+                            <div class="layui-colla-content">
+                                <div >
+                                    <table class="layui-table">
+                                        <colgroup>
+                                            <col width="150">
+                                            <col width="150">
+                                            <col width="100" />
+                                            <col>
+                                        </colgroup>
+                                        <tbody>
+                                            @foreach(var expertScore in projectMajorRoundScore.ProjectMajorRoundExpertScoreDtos)
+                                            {
+                                                <tr>
+                                                    <td>@expertScore.ExpertName</td>
+                                                    <td>
+                                                        @if (expertScore.IsAvoid)
+                                                        {
+                                                            <span class="layui-badge">避</span>
+                                                        }
+                                                        else if (projectMajorRoundScore.IsVote)
+                                                        {
+                                                            if (expertScore.VoteFlag)
+                                                            {
+                                                                <span class="layui-badge layui-bg-green">Y</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="layui-badge layui-bg-gray">N</span>
+                                                            }
+
+                                                        }
+                                                        else
+                                                        {
+                                                            @expertScore.Score
+
+
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @foreach (var vote in expertScore.SubVotes)
+                                                        {
+                                                            if (vote == null)
+                                                            {
+                                                        <span class="layui-badge-rim">&nbsp;</span>
+                                                            }
+                                                            else if (vote.Value)
+                                                            {
+                                                                <span class="layui-badge layui-bg-green">Y</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="layui-badge layui-bg-gray">N</span>
+                                                            }
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (projectMajorRoundScore.HasRateTable && expertScore.Score > 0)
+                                                        {
+                                                            <button type="button" class="layui-btn layui-btn-xs" onclick="showRateTable(@expertScore.ExpertId,@projectMajorRoundScore.ReviewRoundId)">查看评分表</button>
+
+                                                        }
+                                                    </td>
+                                                </tr>
+
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    }
+                </div>
+            </div>
+        </div>
+
+    }
+
+</div>
+
+@section scripts{ 
+    <script>
+        function showRateTable(expertId, reviewRoundId) {
+            top.layer.open({
+                        type: 2,
+                        title: '查看评分表',
+                        closeBtn: 1,
+                        area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Reviews/RateTableView?reviewRoundId=" + reviewRoundId + "&projectId=" + $.getUrlParam("projectId") + "&expertId=" + expertId
+                    });
+        }
+    </script>
+}

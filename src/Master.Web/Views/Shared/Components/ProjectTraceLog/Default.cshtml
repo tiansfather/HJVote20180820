@@ -1,0 +1,29 @@
+﻿@using Master.Projects
+@model List<ProjectTraceLog>
+@{
+    ViewData["Title"] = "Default";
+}
+
+<table class="layui-table" style="width:600px" lay-size="sm">
+    <colgroup>
+        <col width="120"/>
+        <col width="120" />
+        <col width="120" />
+        <col />
+    </colgroup>
+    <tbody>
+        @foreach (var log in Model)
+        {
+            <tr class="@(log.TargetStatus==ProjectStatus.Reject?"layui-bg-orange":"")">
+                <td>@log.ActionName</td>
+                <td>@log.CreatorUser.Name</td>
+                <td>@log.CreationTime.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@log.Remarks</td>
+            </tr>
+
+        }
+
+    </tbody>
+</table>
+
+

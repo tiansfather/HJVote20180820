@@ -1,0 +1,849 @@
+﻿@using Master.Prizes
+@using Master.Matches
+@using Abp.Domain.Entities;
+@using Master.Organizations;
+@model Prize
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Post";
+    var allSubMajors = Model.PrizeSubMajors.Where(o => o.Checked);
+    var prizeSubMajors = allSubMajors;
+    var organizations = ViewData["organizations"] as List<Organization>;
+    var subMajorId = ViewData["subMajorId"].ToString();
+    var thirdLevelMajors = ViewData["ThirdLevelMajors"] as List<string>;//第三级专业
+    int? prizeSubMajorId = null;
+    //如果是专业类或混排类，只需要列出对应选中的专业
+    if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
+    {
+        prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == int.Parse(subMajorId));
+        prizeSubMajorId = prizeSubMajors.First().Id;
+
+    }
+    var matchResources = ViewData["matchResources"] as List<MatchResource>;
+}
+@section styles{
+    @*<style>
+        .notVerify {
+            border: 1px solid red;
+        }
+    </style>*@
+    <style>
+        .layui-collapse {
+            border: none;
+        }
+
+        .layui-colla-item {
+            border: none;
+        }
+
+        .layui-colla-title {
+            background: none;
+            border-bottom: 1px solid #e6e6e6;
+            cursor: default;
+        }
+
+            .layui-colla-title span, .layui-colla-title i {
+                cursor: pointer;
+            }
+
+        .layui-colla-content {
+            border: none;
+        }
+
+        #mainForm .layout-padding-left20 {
+            padding-left: 20px;
+        }
+
+        #mainForm .layout {
+            line-height: 30px;
+        }
+    </style>
+}
+
+@if (ViewBag.ProjectId != null)
+{
+    <vc:project-trace-log project-id="ViewBag.ProjectId"></vc:project-trace-log>
+
+}
+<div class="layui-tab layui-hide" id="app">
+    <ul class="layui-tab-title">
+        <li class="layui-this">基本信息</li>
+        @foreach (var prizeSubMajor in prizeSubMajors)
+        {
+            <li>@prizeSubMajor.Major.BriefName</li>
+        }
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+
+            <div class="layui-collapse">
+                <div class="layui-colla-item">
+                    <h2 class="layui-colla-title"><span>项目基本信息</span></h2>
+                    <div class="layui-colla-content layui-show">
+                        <div class="formPreview" id="mainForm">
+                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>项目名称<font color="red">*</font>:</label>
+                                </div>
+                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                    <input type="text" v-model="project.projectName" style="width:200px" />
+                                </div>
+                            </div>
+                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>归档编号<font color="red">*</font>:</label>
+                                </div>
+                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                    <input type="text" v-model="project.projectSN" style="width:200px" />
+                                    <label><input type="checkbox" :checked="project.isOriginal" v-model="project.isOriginal" />原创</label>
+                                </div>
+                            </div>
+                            <div class="layout layui-col-md12 layout-height3" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
+                                    <label>申报单位<font color="red">*</font>:</label>
+                                </div>
+                                <div class="layout layui-col-md10 layout-height3" style="border-right:0">
+                                    <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label>单位名称<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                            <select v-model="project.designOrganizationId">
+                                                <option value="">--请选择--</option>
+                                                @foreach (var organization in organizations.Where(o => o.ParentId == null).OrderBy(o => o.Sort))
+                                                {
+                                                    <optgroup label="@organization.BriefName">
+                                                        @foreach (var subOrganization in organizations.Where(o => o.ParentId == organization.Id).OrderBy(o => o.Sort))
+                                                        {
+                                                            <option value="@subOrganization.Id">@subOrganization.BriefName</option>
+                                                        }
+                                                    </optgroup>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label>联系人<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                            <input type="text" v-model="project.designOrganizationContact" />
+                                        </div>
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label>电话<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                            <input type="text" v-model="project.designOrganizationPhone" />
+                                        </div>
+                                    </div>
+                                    <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label>手机<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                            <input type="text" v-model="project.designOrganizationMobile" />
+                                        </div>
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label>邮箱<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                            <input type="text" v-model="project.designOrganizationEmail" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>申报奖项:</label>
+                                </div>
+                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                    @Model.PrizeName
+                                </div>
+                            </div>
+                            @if (prizeSubMajors.Count() > 0)
+                            {
+                                <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                    <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                        <label>专业类别:</label>
+                                    </div>
+                                    <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                        @if (Model.PrizeType == PrizeType.Multiple)
+                                        {
+                                            foreach (var subMajor in allSubMajors)
+                                            {
+                                                <label><input type="checkbox" @(subMajor.Checked ? "checked" : "") disabled />@subMajor.Major.BriefName</label>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            foreach (var subMajor in allSubMajors)
+                                            {
+                                                <label><input type="radio" disabled @(subMajor.MajorId == int.Parse(subMajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
+                                            }
+
+                                            <button type="button" class="layui-btn layui-btn-xs" onclick="changeSubMajor()" v-if="!project.id">修改</button>
+                                        }
+
+                                    </div>
+                                </div>
+                                @if (thirdLevelMajors.Count > 0)
+                                {
+                                    <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                            <label></label>
+                                        </div>
+                                        <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                            @foreach (var thirdLevelMajor in thirdLevelMajors)
+                                            {
+                                                <label><input type="checkbox" value="@thirdLevelMajor" v-model="project.thirdLevelMajors" />@thirdLevelMajor</label>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>是否有合作单位<font color="red">*</font>:</label>
+                                </div>
+                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                    <label><input type="radio" v-model="project.hasCoorparation" :value="true" />有</label>
+                                    <label><input type="radio" v-model="project.hasCoorparation" :value="false" />无</label>
+                                    <input style="margin-left:20px" type="text" v-show="project.hasCoorparation" v-model="project.coorparation" />
+                                </div>
+                            </div>
+                            @if (prizeSubMajors.Count() > 0)
+                            {
+                                <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
+                                    <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
+                                        <label>我方承担合作内容:</label>
+                                    </div>
+                                    <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
+                                        @foreach (var subMajor in prizeSubMajors)
+                                        {
+                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                <label>@subMajor.Major.BriefName:</label>
+                                            </div>
+                                            <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').fangAn" />方案</label>
+                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').chuShe" />初设</label>
+                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').shiGongTu" />施工图</label>
+                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').hasOther" />其它</label>
+                                                <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').other" />
+                                                <label style="margin-left:10px;">合作单位</label>
+                                                <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').coorperation" />
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>建设单位:</label>
+                                </div>
+                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                    <input type="text" v-model="project.buildingCompany" />
+                                </div>
+                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                    <label>建设地点<font color="red">*</font>:</label>
+                                </div>
+                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                    国<input type="text" v-model="project.buildingCountry" style="width:50px;margin-left:10px" />
+                                    省<input type="text" v-model="project.buildingProvince" style="width:50px;margin-left:10px" />
+                                    市<input type="text" v-model="project.buildingCity" style="width:50px;margin-left:10px" />
+                                </div>
+                            </div>
+                            @if (prizeSubMajors.Count() > 0)
+                            {
+                                <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
+                                    <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
+                                        <label>参与人员:</label>
+                                    </div>
+                                    <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
+                                        @foreach (var subMajor in prizeSubMajors)
+                                        {
+                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                <label>@subMajor.Major.BriefName:</label>
+                                            </div>
+                                            <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                                @for (var i = 1; i <= 10; i++)
+                                                {
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                @{
+                    //父专业的表单设计信息
+                    var mainMajorFormResoure = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DynamicForm && o.SubMajorId == null);
+                    //父专业的下载样例
+                    var mainMajorDownLoadList = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DownloadList && o.SubMajorId == null);
+                    if (mainMajorFormResoure != null)
+                    {
+                        <div class="layui-colla-item">
+                            <h2 class="layui-colla-title">
+                                <span>其它信息</span>
+                                <vc:download-list match-resource="mainMajorDownLoadList" location="1"></vc:download-list>
+                            </h2>
+                            <div class="layui-colla-content layui-show">
+                                <div class="formPreview">
+                                    <layout :list="getSubMajorInfo('').layouts"></layout>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    //父专业的上传清单信息
+                    var mainMajorUploadList = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.UploadList && o.SubMajorId == null);
+                    <div class="layui-colla-item">
+                        <h2 class="layui-colla-title">
+                            <button type="button" class="layui-btn uploadfile layui-btn-sm" value="" onclick="event.stopPropagation(); " style="float:right;margin-top:6px;" subMajorId=""><i class="layui-icon">&#xe67c;</i>上传附件</button>
+                            <span>附件</span>
+                            <vc:download-list match-resource="mainMajorDownLoadList" location="2"></vc:download-list>
+                        </h2>
+                        <div class="layui-colla-content layui-show">
+                            <vc:upload-list match-resource="mainMajorUploadList" sub-major-id="" view-mode="false"></vc:upload-list>
+
+                        </div>
+                    </div>
+
+                }
+
+
+            </div>
+        </div>
+        @foreach (var prizeSubMajor in prizeSubMajors)
+        {
+            <div class="layui-tab-item">
+                <div class="layui-collapse">
+                    @{
+                        //子专业的表单设计信息
+                        var subMajorFormResoure = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DynamicForm && o.SubMajorId == prizeSubMajor.MajorId);
+                        //子专业的下载样例
+                        var subMajorDownLoadList = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DownloadList && o.SubMajorId == prizeSubMajor.MajorId);
+                        if (subMajorFormResoure != null)
+                        {
+                            <div class="layui-colla-item">
+                                <h2 class="layui-colla-title">
+                                    <span>专业信息</span>
+                                    <vc:download-list match-resource="subMajorDownLoadList" location="1"></vc:download-list>
+                                </h2>
+                                <div class="layui-colla-content layui-show">
+                                    <div class="formPreview">
+                                        <layout :list="getSubMajorInfo('@prizeSubMajor.MajorId').layouts"></layout>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        //子专业的上传清单信息
+                        var subMajorUploadList = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.UploadList && o.SubMajorId == prizeSubMajor.MajorId);
+                        <div class="layui-colla-item">
+                            <h2 class="layui-colla-title">
+                                <button type="button" class="layui-btn uploadfile layui-btn-sm" value="上传附件" onclick="event.stopPropagation(); " style="float:right;margin-top:6px;" subMajorId="@prizeSubMajor.MajorId"><i class="layui-icon">&#xe67c;</i>上传附件</button>
+                                <span>附件</span>
+                                <vc:download-list match-resource="subMajorDownLoadList" location="2"></vc:download-list>
+                            </h2>
+                            <div class="layui-colla-content layui-show">
+                                <vc:upload-list match-resource="subMajorUploadList" sub-major-id="@prizeSubMajor.MajorId" view-mode="false"></vc:upload-list>
+                            </div>
+                        </div>
+
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+</div>
+<div id="contentContainer" style="padding:20px;display:none">
+    <input type="hidden" name="subMajorId" />
+    请选择要申报的专业
+    <hr />
+    <div id="radioContainer" class="layui-form">
+
+    </div>
+</div>
+<div class="layui-upload-list" id="uploadListContainer" style="padding:0 20px;display:none">
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th>文件名</th>
+                <th>大小</th>
+                <th>进度</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="uploadList"></tbody>
+    </table>
+</div>
+@section scripts{
+    <script>
+        Vue.component('layout', {
+            template: '<div ><template v-for="(item,index) in list"><div v-if="item.type==\'layout\'" :formtips="item.tips" :class="[\'layout-height\'+item.height,\'layui-col-md\'+item.span,\'layout\',{current:item.isCurrent}]" :style="[{color:item.color,background:item.background,\'text-align\':item.align,height:item.height,padding:getPadding(item),\'border-right\':hasChildLayout(item)?\'0\':\'1px solid #e6e6e6\',\'border-bottom\':hasChildLayout(item)?\'0\':\'1px solid #e6e6e6\'}]" ><layout :list="item.children"></layout></div><label v-if="item.type==\'label\'" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background}]" :class="{current:item.isCurrent}" v-html="item.text"></label><input v-if="item.type==\'input\'" :rel="item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"/><input v-if="item.type==\'date\'" :rel="item.id" :id="\'mydate\'+item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" class="mydate" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"/><select v-if="item.type==\'select\'" :rel="item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><option v-for="(option,optionIndex) in getOption(item.selectValues)" :value="option">{{option}}</option></select><label v-if="item.type==\'radio\'" :formtips="item.tips" v-for="(option,optionIndex) in getOption(item.selectValues)" style="margin-left:5px" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><input  type="radio" :rel="item.id" :value="option" :title="option" :name="item.formName||\'c\'+item.id" :checked="item.value==option" />{{option}}</label><label v-if="item.type==\'checkbox\'" :formtips="item.tips" v-for="(option,optionIndex) in getOption(item.selectValues)" style="margin-left:5px" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><input  type="checkbox" :rel="item.id" :value="option" :title="option" :name="item.formName" :checked="item.value.indexOf(option)>=0" />{{option}}</label><textarea v-if="item.type==\'textarea\'" :rel="item.id" :formtips="item.tips" :class="[\'layout-height\'+item.height,{current:item.isCurrent,notVerify:item.required&&!item.value}]" :style="[{color:item.color,background:item.background,\'text-align\':item.align,height:item.height,width:item.width}]" :value="item.value"></textarea></template></div>',
+            //+'<div v-if="item.type==\'layout\'" :class="\'layui-col-md\'+item.span"></div>'+
+
+            props: {
+                list: Array
+            },
+            data: function () {
+                return {
+
+                }
+            },
+            methods: {
+                getOption: function (selectValue) {
+                    var result = [];
+                    if (selectValue) {
+                        result = selectValue.split(',');
+                    }
+                    return result;
+                },
+                getPadding: function (item) {
+                    if (this.hasChildLayout(item)) {
+                        return "0";
+                    } else {
+                        return item.padding || "3px";
+                    }
+
+                },
+                hasChildLayout: function (item) {
+                    return item.children.filter(function (o) { return o.type == 'layout'; }).length > 0;
+				}
+            }
+        });
+        function showPDF(filename, filepath) {
+            top.layer.open({
+                type: 2,
+                title: filename,
+                closeBtn: 0,
+                shadeClose: false,
+                shade: 0.8,
+				area: ['100%', '100%'],
+				content: '/pdfviewer/web/viewer.html?file=' + filepath,
+                //content: filepath,
+                success: function (layero, index) {
+                    //全屏弹窗
+                    console.log(layero);
+                    $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                        top.layer.close(index);
+                    });
+
+                },
+            });
+        }
+        var app;
+        var allSubMajors=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(allSubMajors.Select(o =>new { o.MajorId ,o.Major.BriefName}) ));
+        var prizeSubMajors =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(prizeSubMajors.Select(o => o.MajorId) ));
+        prizeSubMajors.push('');//子专业id为空表示主专业
+        config.ready = function () {
+            layui.form.on('radio(subMajorId)', function (data) {
+                $("input[name='subMajorId']").val(data.value);
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    project: {projectMajorInfos:[]}
+                },
+                methods: {
+                    loadItem: function (id) {
+                        var that = this;
+                        if (!id) {
+                            that.project = { id: 0,projectSN:'@Html.Raw(ViewData["prizeRemarks"])', prizeId:@Model.Id, matchInstanceId:@Model.MatchInstanceId, prizeSubMajorId: '@prizeSubMajorId', DesignOrganizationId: null, isOriginal: false, projectMajorInfos: [],thirdLevelMajors:[] };
+                            //获取表单设计
+                            abp.services.app.matchResource.getFormDesignDetail(@Model.MatchInstanceId,@Model.MajorId).done(function (data) {
+                                that.project.projectMajorInfos.length = 0;
+                                //构建数据
+                                for (var i = 0; i < prizeSubMajors.length; i++) {
+                                    var formDesign = data.filter(function (o) { return o.subMajorId == prizeSubMajors[i]; })[0];
+                                    var layouts = [];
+                                    if (formDesign) { layouts = formDesign.layouts; }
+                                    that.project.projectMajorInfos.push({ majorId: prizeSubMajors[i], files: [], layouts: layouts });
+                                }
+                                $("#app").removeClass("layui-hide");
+                                refresh();
+                            });
+                        } else {
+                            abp.services.app.project.getProject(id).done(function (data) {
+                                that.project = data;
+                                //获取表单设计
+                                abp.services.app.matchResource.getFormDesignDetail(@Model.MatchInstanceId,@Model.MajorId).done(function (data) {
+                                    //构建数据
+                                    for (var i = 0; i < prizeSubMajors.length; i++) {
+                                        var formDesign = data.filter(function (o) { return o.subMajorId == prizeSubMajors[i]; })[0];
+                                        var projectMajorInfo = that.project.projectMajorInfos.filter(function (o) { return prizeSubMajors[i]?o.majorId == prizeSubMajors[i]:!o.majorId; })[0];
+                                        var layouts = [];
+                                        //if (projectMajorInfo && formDesign && projectMajorInfo.layouts.length == 0) { projectMajorInfo.layouts = formDesign.layouts; }
+                                        //先读取表单设计
+                                        if (formDesign) {
+                                            layouts = formDesign.layouts;
+                                        }
+                                        if (projectMajorInfo) {
+                                            if (projectMajorInfo.layouts.length > 0) {
+                                                //将已提交的数据复制到表单数据中
+                                                app.syncFormData(projectMajorInfo.layouts, layouts);
+                                            }
+                                            projectMajorInfo.layouts = layouts;
+                                        }
+
+                                        //that.project.projectMajorInfos.push({ majorId: prizeSubMajors[i], files: [], layouts: layouts });
+                                    }
+                                    $("#app").removeClass("layui-hide");
+                                    refresh();
+                                });
+                                //$("#app").removeClass("layui-hide");
+                                //refresh();
+                            })
+
+                        }
+
+                    },
+                    getSubMajorInfo: function (subMajorId) {
+                        var majorInfo = this.project.projectMajorInfos.filter(function (o) { return subMajorId ? o.majorId == subMajorId : !o.majorId })[0];
+                        if (!majorInfo ) {
+                            majorInfo = { majorId: subMajorId,files:[],layouts:[] };
+                            this.project.projectMajorInfos.push(majorInfo);
+                        }
+                        return majorInfo ;
+                    },
+                    removeFile: function (subMajorId, index) {
+                        abp.message.confirm('确认删除此项?', function () {
+                            //var majorInfo = app.project.projectMajorInfos.filter(function (o) { return o.majorId == subMajorId })[0];
+                            var majorInfo = app.getSubMajorInfo(subMajorId);
+                            majorInfo.files.splice(index, 1);
+                        });
+
+                    },
+                    //同步提交表单数据至表单设计数据
+                    syncFormData: function (projectLayouts, formDesignLayouts) {
+                        if (!projectLayouts || !formDesignLayouts) {
+                            return;
+                        }
+                        for (var i = 0; i < formDesignLayouts.length; i++) {
+                            var formDesignControl = formDesignLayouts[i];
+                            var projectControl = projectLayouts.filter(function (o) { return o.id == formDesignControl.id })[0];
+                            if (projectControl) {
+                                formDesignControl.value = projectControl.value;
+                                app.syncFormData(projectControl.children, formDesignControl.children);
+                            }
+
+                        }
+                    },
+                    loadFormData: function () {
+                        for (var i = 0; i < app.project.projectMajorInfos.length; i++) {
+                            app.loadFormDataInner(app.project.projectMajorInfos[i].layouts);
+
+                        }
+
+                    },
+                    loadFormDataInner: function (layouts) {
+                        for (var i = 0; i < layouts.length; i++) {
+                            var control = layouts[i];
+                            if (control.type == 'layout') {
+                                this.loadFormDataInner(control.children);
+                            } else {
+                                if (control.type == 'radio' || control.type == 'checkbox') {
+                                    var valarr = [];
+                                    $("[rel='" + control.id + "']:checked").each(function () {
+                                        valarr.push($(this).val());
+                                    })
+                                    control.value = valarr.join(',');
+
+                                } else {
+                                    control.value = $("[rel='" + control.id + "']").val();
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("projectId");
+                    this.loadItem(id);
+
+                }
+            });
+        }
+
+        function refresh() {
+            Vue.nextTick(function () {
+                //由于与vue兼容问题，需要重新定义面板事件
+                $(".layui-colla-title span,.layui-colla-title i").click(function (e) {
+                    var titleObj = $(this).parent();
+                    titleObj.next(".layui-colla-content").toggleClass("layui-show");
+                    var icon = "&#xe602;";
+                    if (titleObj.next(".layui-colla-content").is(".layui-show")) {
+                        icon = "&#xe61a;";
+                    }
+                    titleObj.find(".layui-colla-icon").html(icon);
+                })
+                $(".mydate").each(function () {
+                    layui.laydate.render({
+                        elem: '#' + $(this).attr("id") //指定元素
+                    });
+                });
+                var files;
+                //上传配置
+                layui.upload.render({
+                    elem: '.uploadfile',
+                    field: 'file',
+                    accept: 'file',
+                    acceptMime: 'application/pdf',
+                    exts: 'PDF',
+                    multiple: true,
+                    number: 10,
+                    size: 20480,
+                    url: '/file/upload/'
+                    , choose: function (obj) {
+                        if (window.isReUpload) { window.isReUpload = false; return; }
+                        var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+                        console.log(this.files);
+                        $("#uploadList").html('');
+                        for (var index in this.files) {
+                            var file = files[index];
+                            var tr = $(['<tr id="upload-' + index + '" index="' + index + '" class="uploaditem" uploaded=0>'
+                                , '<td width="30%">' + file.name + '</td>'
+                                , '<td width="10%">' + (file.size / 1014).toFixed(1) + 'kb</td>'
+                                , '<td width="30%"><div class="layui-progress layui-progress-big" lay-showPercent="true" lay-filter="progress_' + index + '"><div class= "layui-progress-bar" lay-percent="0%" ><span class="layui-progress-text">0%</span></div></div></td>'
+                                , '<td class="status" width="20%"><i class="layui-icon layui-icon-loading layui-icon layui-anim layui-anim-rotate layui-anim-loop"></i></td>'
+                                , '<td>'
+                                , '<button class="layui-btn layui-btn-xs demo-reload layui-hide" type="button">重传</button>'
+                                , '</td>'
+                                , '</tr>'].join(''));
+                            tr.data("file", file);
+                            //单个重传
+                            tr.find('.demo-reload').on('click', function () {
+                                window.isReUpload = true;//重传标记
+                                var index = $(this).closest("tr").attr("index");
+                                var file = $(this).closest("tr").data("file");
+                                console.log("重新上传" + index);
+                                $(this).addClass("layui-hide");
+                                $(this).closest("tr").find(".status").html('<i class="layui-icon layui-icon-loading layui-icon layui-anim layui-anim-rotate layui-anim-loop"></i>');
+                                obj.upload(index, file);
+                            });
+
+                            $("#uploadList").append(tr);
+                        }
+                        //读取本地文件
+                        //obj.preview(function (index, file, result) {
+                        //    var tr = $(['<tr id="upload-' + index + '">'
+                        //        , '<td>' + file.name + '</td>'
+                        //        , '<td>' + (file.size / 1014).toFixed(1) + 'kb</td>'
+                        //        , '<td width="150"><div class="layui-progress layui-progress-big" lay-showPercent="true" lay-filter="progress_' + index + '"><div class= "layui-progress-bar" lay-percent="0%" ><span class="layui-progress-text">0%</span></div></div></td>'
+                        //        ,'<td class="status"></td>'
+                        //        , '<td>'
+                        //        , '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
+                        //        , '</td>'
+                        //        , '</tr>'].join(''));
+
+                        //    //单个重传
+                        //    tr.find('.demo-reload').on('click', function () {
+                        //        obj.upload(index, file);
+                        //    });
+
+                        //    $("#uploadList").append(tr);
+                        //});
+                        window.uploadlistlayer = layer.open({
+                            type: 1,
+                            shade: false,
+                            btn: null,
+                            title: "上传进度",
+                            area: ['80%', '80%'],
+                            content: $('#uploadListContainer'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            success: function () {
+
+                            }
+                        });
+                    }, xhr: function (index, e) {
+                        var percent = e.loaded / e.total;//计算百分比
+                        percent = Math.round(parseFloat(percent.toFixed(2)) * 100);//解决小数点问题
+                        layui.element.progress('progress_' + index + '', percent + '%');
+                        //console.log(index+"-----" + percent);
+                    }
+                    , before: function (obj) {
+                        loadLayerIndex = top.layer.msg('@L("正在拼命上传中")...', {
+                            icon: 16
+                            , shade: false, time: 0, offset: 't'
+                        });
+                    }
+                    , done: function (res, index, upload) {
+
+                        //如果上传失败
+                        if (!res.result.success) {
+                            $("#upload-" + index).attr("uploaded", 1).find(".status").html("上传失败:" + res.result.msg);
+                            $("#upload-" + index).find(".demo-reload").removeClass("layui-hide");
+                            layui.element.progress('progress_' + index + '', '0%');
+                            layer.msg(res.result.msg, { icon: 5, anim: 6 });
+                        }
+                        //上传成功
+                        else {
+                            console.log(index + "上传成功");
+                            $("#upload-" + index).attr("uploaded", 1).find(".status").html("上传完成");
+                            $("#upload-" + index).hide();
+                            //delete files[index]; //删除文件队列已经上传成功的文件
+                            var subMajorId = this.item.attr("subMajorId");
+                            var subMajorInfo = app.getSubMajorInfo(subMajorId);
+                            subMajorInfo.files.push({ fileName: res.result.fileName, filePath: res.result.filePath, fileType: '' });
+                            delete this.files[index];
+                        }
+                        //已全部上传
+                        if ($(".uploaditem[uploaded=0]").size() == 0) {
+                            top.layer.close(loadLayerIndex);
+                            //全部成功
+                            if (Object.keys(this.files).length == 0) {
+                                layer.close(window.uploadlistlayer);
+                            }
+
+                        }
+                    }, error: function (index,upload) {
+                        console.log("error:" + index);
+                        $("#upload-" + index).attr("uploaded", 1).find(".status").html("上传失败:请稍候重试");
+                        $("#upload-" + index).find(".demo-reload").removeClass("layui-hide");
+                        layui.element.progress('progress_' + index + '', '0%');
+                    }
+                    , allDone: function (res) {
+                        console.log('allDone');
+                        top.layer.close(loadLayerIndex);
+
+                    }
+                });
+
+            });
+        }
+        //专业类和混排类重新选择子专业
+        function changeSubMajor() {
+            var html = '';
+            $.each(allSubMajors, function (i, v) {
+                html += '<input type="radio" title="' + v.BriefName + '" name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId"/>';
+            });
+            $("#radioContainer").html(html);
+            layui.form.render();
+            layer.open({
+                type: 1,
+                shade: false,
+                btn: ['确认', '关闭'],
+                title: "奖项:@Model.PrizeName" ,
+                area: ['400px', '300px'],
+                content: $('#contentContainer'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+                yes: function (index) {
+                    var subMajorId = $("input[name='subMajorId']").val();
+                    if (!subMajorId) {
+                        layer.msg("请先选择专业", { icon: 5, anim: 6 });
+                    } else {
+                        layer.close(index);
+                        location.href = '?prizeId=' + $.getUrlParam("prizeId") + "&subMajorId=" + subMajorId + "&projectId=" + $.getUrlParam("projectId");
+                    }
+                }
+            });
+        }
+        function checkRequired(datas) {
+            for (var i = 0; i < datas.length; i++) {
+                var control = datas[i];
+                if (control.required && !control.value) {
+                    throw "请填写" + (control.formName||"未知控件名称");
+                }
+                control.children && checkRequired(control.children);
+            }
+        }
+        function submit() {
+            if (app.project.projectSource ==2) {
+                //如果是导入项目做的修改，直接转发布提交
+                return submit2();
+            }
+            if (!app.project.projectName) {
+                layer.msg("项目名称不能为空", { icon: 5, anim: 6 });
+                return false;
+            }
+            app.project.projectStatus = 0;//草稿状态
+            app.loadFormData();//同步自定义表单数据
+            func.runAsync(abp.services.app.project.submitProject(app.project).done(function () {
+                top.layer.msg("@L("提交成功")");
+                top.layer.closeAll("iframe");
+                top.$(".layui-show iframe").get(0).contentWindow.func.reload("Project");
+            }));
+        }
+        function submit2() {
+            if (app.project.projectSource !=2) {
+                //非导入项目设置项目状态为发布
+                app.project.projectStatus = 1;//发布状态
+            }
+
+            var flag = true;
+            //表单必填验证
+            var requiredField = [
+                { field: 'projectName', msg: '项目名称' },
+                { field: 'projectSN', msg: '归档编号' },
+                { field: 'designOrganizationId', msg: '申报单位名称' },
+                { field: 'designOrganizationContact', msg: '申报单位联系人' },
+                { field: 'designOrganizationPhone', msg: '申报单位电话' },
+                { field: 'designOrganizationMobile', msg: '申报单位手机' },
+                { field: 'designOrganizationEmail', msg: '申报单位电邮' },
+                //{ field: 'buildingCountry', msg: '建造国家' },
+                //{ field: 'buildingProvince', msg: '建造省份' },
+                //{ field: 'buildingCity', msg: '建造城市' },
+            ];
+            $.each(requiredField, function (i, v) {
+                if (!app.project[v.field]) {
+                    layer.msg("请填写"+v.msg , { icon: 5, anim: 6 });
+                    flag = false;
+                    return false;
+                }
+            });
+            if (flag && app.project.hasCoorparation && !app.project.coorparation) {
+                layer.msg("请填写合作单位" , { icon: 5, anim: 6 });
+                flag = false;
+                return false;
+            }
+            if (flag && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
+                layer.msg("请填写建设地点", { icon: 5, anim: 6 });
+                flag = false;
+                return false;
+            }
+            if (flag) {
+                app.loadFormData();//同步自定义表单数据
+                //自定义表单验证
+                //表单设计器必填验证
+                try {
+                    app.project.projectMajorInfos.forEach(function (o) {
+                        checkRequired(o.layouts);
+                    })
+                    //checkRequired(app.currentItem.datas);
+                } catch (ex) {
+                    layer.msg(ex, { icon: 5, anim: 6 });
+                    flag = false;
+                    return false;
+                }
+            }
+            //上传文件验证
+            if (flag) {
+                $("table[fileMusts]").each(function () {
+                    var fileMusts = JSON.parse($(this).attr("fileMusts"));
+                    var subMajorName = $(this).attr("subMajorName");
+                    for (var i = 0; i < fileMusts.length; i++) {
+                        if ($(this).find("option[value='" + fileMusts[i] + "']:checked").size() == 0) {
+                            flag = false;
+                            layer.msg(subMajorName+"下的"+fileMusts[i] + "是必传文件", { icon: 5, anim: 6 });
+                            return false;
+                        }
+                    }
+                })
+            }
+            if (flag) {
+                
+                func.runAsync(abp.services.app.project.submitProject(app.project).done(function () {
+                    top.layer.msg("@L("提交成功")");
+                    top.layer.closeAll("iframe");
+                    top.$(".layui-show iframe").get(0).contentWindow.func.reload("Project");
+                }));
+            }
+
+        }
+    </script>
+}

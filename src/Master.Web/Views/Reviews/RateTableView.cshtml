@@ -1,0 +1,52 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model List<MatchResourceRateTable>
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    var totalScore = Model[0].TotalScore;
+    var projectReviewDetail = ViewData["projectReviewDetail"] as ProjectReviewDetail;
+    var rateTableDetails = projectReviewDetail.RateTableDetails;
+}
+
+@section styles{
+    <link rel="stylesheet" href="/assets/huajian/css/layui.css">
+}
+
+<blockquote class="layui-elem-quote" style="font-weight:bold;font-size:18px;">总分：<span id="score">@projectReviewDetail.Score</span></blockquote>
+<div class="layui-form">
+
+    <table class="layui-table" lay-size="lg">
+        <colgroup>
+            <col width="55">
+            <col width="120">
+            <col>
+            <col width="80">
+            <col width="88">
+        </colgroup>
+        <thead>
+            <tr>
+                <th><div align="center">序号</div></th>
+                <th><div align="center">打分项</div></th>
+                <th><div align="center">详细描述</div></th>
+                <th><div align="center">权重</div></th>
+                <th><div align="center">@(totalScore)分</div></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rateItem in Model)
+            {
+                var itemScore = rateTableDetails.Single(o => o.Sort == rateItem.Sort).Score;
+                <tr class="item">
+                    <td align="center">@rateItem.Sort</td>
+                    <td align="center">@rateItem.Name</td>
+                    <td align="left">@rateItem.Description</td>
+                    <td align="center">@(rateItem.Percent) %</td>
+                    <td style="font-weight:bold;color:blue" align="center">
+                       @itemScore
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+

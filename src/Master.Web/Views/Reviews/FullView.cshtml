@@ -1,0 +1,105 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model ReviewRound
+@{
+    //全屏公示
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ReviewRoundViewFinish";
+    var review = Model.Review;
+    var reviewMethodSetting = Model.ReviewMethodSetting;
+    var matchInstance = ViewData["MatchInstance"] as MatchInstance;
+    //显示的最大次数
+    var maxshowturn = Model.Turn == 1 ? review.ReviewRounds.Where(o => o.ReviewStatus == ReviewStatus.Reviewed && o.Round == Model.Round).Max(o => o.Turn) : Model.Turn;
+}
+@section styles{
+    <style>
+
+        table th, table td {
+            font-size: 18px !important;
+        }
+
+        tr.highlight, .layui-table tbody tr.highlight:hover {
+            background-color: rgb(255,206,206) !important
+        }
+    </style>
+}
+<table class="layui-table" lay-filter="projectlist" id="projectlist"></table>
+<script type="text/html" id="projectTpl">
+    <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')" class="{{d.needConfirm?'confirm':''}}">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="btnTpl">
+    <a class="layui-btn layui-btn-xs" lay-event="view">查看</a>
+</script>
+@for (var i = 2; i <= maxshowturn; i++)
+{
+    <script type="text/html" id="score@(i)">
+        {{d.subScores[@(i - 2)]}}
+    </script>
+}
+
+@section scripts{
+    <script>
+        config.ready = function () {
+            layui.table.render({
+                id: 'projectlist',
+                elem: '#projectlist'
+                , url: '/api/services/app/Review/GetReviewRoundDetail?reviewRoundId=@Model.Id'
+                //, height: 'full-455'
+                , cols: [[
+                     { align: 'center',field: 'rank', width: 80 ,title:'排名'}
+                    , { align: 'center',field: 'sort', width: 80 ,title:'序号'}
+                    , { align: 'center', field: 'score', width: 120, title: '@(Model.ReviewMethod==ReviewMethod.Weighting?"加权得分":"本轮结果")' }
+                    @if (Model.ReviewMethod == ReviewMethod.Weighting)
+                    {
+                       @Html.Raw(", { align: 'center',field: 'oriScore', width: 120 ,title: '本轮结果'}")
+                    }
+                    @for(var i = 2; i <= maxshowturn; i++)
+                    { @Html.Raw(",{ align: 'center', field: 'score"+i+"', width: 120, title: '补投"+(i-1)+"' ,templet:'#score"+i+"'}")}
+                    , { align: 'center', field: 'projectName',  templet: '#projectTpl', title: '项目名称' }
+                    , { field: 'prizeName', title: '奖项名称', width: 180 }
+                    , { field: 'subMajorName', title: '奖项小类', width: 180 }
+                    , { field: 'designOrganizationName', title: '申报单位', width: 180, }
+                    , { width: 100, align: 'center', toolbar: '#btnTpl', fixed: 'right', title: '评审详情' }
+                ]]
+                , done: function (res, curr, count) {
+                    $("a.confirm").closest("tr").addClass("highlight");
+                        if ($("a.confirm").size() > 0) {
+                        $("#addinReviewBtn").show();//有同分的则进行补充评审
+                        }
+                    }
+            });
+            //监听工具条
+            layui.table.on('tool(projectlist)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent === 'view') { //评审明细
+                    layer.open({
+                        type: 2,
+                        title: '项目名称:'+data.projectName,
+                        closeBtn: 1,
+                        area: ['500px', '500px'],
+                        shadeClose: false,
+                        content: "/Reviews/ProjectReviewDetail?reviewRoundId=@Model.Id&projectId=" + data.id
+                    });
+                }
+            });
+
+        }
+
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+
+        }
+    </script>
+}
+

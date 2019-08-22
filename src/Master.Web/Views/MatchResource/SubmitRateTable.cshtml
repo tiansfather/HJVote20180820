@@ -1,0 +1,210 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">赛事</label>
+                <div class="layui-input-block">
+                    <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-filter="MatchId" lay-verify="required" v-model="currentItem.matchId">
+                        <option value="">--请选择赛事--</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">@L("专业大类")</label>
+                <div class="layui-input-inline">
+                    <select name="MajorId" lay-filter="MajorId" v-model="currentItem.majorId" lay-verify="required">
+                        <option value="">--选择专业大类--</option>
+                        <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">@L("专业小类")</label>
+                <div class="layui-input-inline">
+                    <select name="SubMajorId" v-model="currentItem.subMajorId" lay-filter="SubMajorId" lay-verify="required">
+                        <option value="">--选择专业小类--</option>
+                        <option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">@L("总分")</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" lay-verify="required" v-model="currentItem.totalScore"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <button class="layui-btn" type="button" @@click="addFile">@L("新建评分项")</button>
+        </div>
+
+        <table class="layui-table">
+            <colgroup>
+                <col width="80">
+                <col width="150">
+                <col />
+                <col width="100"/>
+                <col width="100"/>
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>排序</th>
+                    <th>名称</th>
+                    <th>详细描述</th>
+                    <th>分值占比</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in currentItem.datas" :data="item">
+                    <td><input type="text" v-model="item.sort" class="layui-input" style="width:30px" @@blur="resortFile" /></td>
+                    <td><input type="text" v-model="item.name" class="layui-input" lay-verify="required" /></td>
+                    <td><input type="text" v-model="item.description" class="layui-input" lay-verify="required" /></td>
+                    <td><input type="text" v-model="item.percent" class="layui-input" lay-verify="required|number" style="width:40px;float:left"/><div class="layui-form-mid layui-word-aux">%</div></td>
+                    <td><button type="button" class="layui-btn layui-btn-danger layui-btn-sm" @@click="removeFile(index)">删除</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="Submit" id="Submit">@L("提交")</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.currentItem.matchId = matchId;
+                app.currentItem.majorId = "";
+                app.currentItem.subMajorId = "";
+                app.subMajors = [];
+                app.loadMajors(matchId);
+            });
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.currentItem.majorId = majorId;
+                app.loadSubMajors(majorId);
+            });
+            layui.form.on('select(SubMajorId)', function (data) {
+                var subMajorId = data.value;
+                app.currentItem.subMajorId = subMajorId;
+            });
+            layui.form.on('submit', function () {
+                if (app.currentItem.datas.length == 0) {
+                    layer.msg('请至少录入一条记录', { icon: 5, anim: 6 });
+                    return false;
+                }
+                //检测占比和为100
+                var totalPercent = 0;
+                for (var i = 0; i < app.currentItem.datas.length; i++) {
+                    app.currentItem.datas[i].totalScore = app.currentItem.totalScore;
+                    totalPercent += parseInt(app.currentItem.datas[i].percent);
+                }
+                if (totalPercent != 100) {
+                    layer.msg('分值占比之和必须为1,请重新检查', { icon: 5, anim: 6 });
+                    return false;
+
+                }
+                func.runAsync(abp.services.app.matchResource.submitMatchResourceRateTable(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("RateTable");
+                    parent.config.refresh();
+
+                }))
+
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentItem: {id:0, matchId: "",totalScore:100, majorId: "", subMajorId: "", datas: [], matchResourceStatus:1,matchResourceType:4},
+                    allMajors:[],
+                    mainMajors: [],
+                    subMajors: []
+                },
+                methods: {
+                    loadItem: function (id) {
+                        if (id) {
+                            abp.services.app.matchResource.getMatchResource(id).done(function (data) {
+                                app.currentItem = data;
+                                app.currentItem.totalScore = data.datas[0].totalScore;
+                                app.loadMajors(data.matchId, data.majorId);
+                            })
+                        }
+
+                    },
+                    loadMajors: function (matchId,majorId) {
+                        abp.services.app.major.getTreeJson(matchId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            if (majorId) {
+                                app.loadSubMajors(majorId);
+
+                            }
+                            refresh();
+                        });
+                    },
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    },
+                    addFile: function () {
+                        this.currentItem.datas.push({ sort: this.currentItem.datas.length+1, name: "", description:"",percent:0});
+                        refresh();
+                    },
+                    removeFile: function (index) {
+                        abp.message.confirm('确认删除此项?', function () {
+                            app.currentItem.datas.splice(index, 1);
+                            app.resortFile();
+                        });
+                    },
+                    resortFile: function () {
+                        this.currentItem.datas = this.currentItem.datas.sort(function (a, b) { return a.sort > b.sort; });
+                        for (var i = 0; i < this.currentItem.datas.length; i++) {
+                            this.currentItem.datas[i].sort = i + 1;
+                        }
+                        refresh();
+                    },
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
+        }
+        function submit() {
+            app.currentItem.matchResourceStatus = 1;//草稿
+            $("#Submit").click();
+        }
+        function submit2() {
+            app.currentItem.matchResourceStatus = 2;//发布
+            $("#Submit").click();
+
+        }
+    </script>
+}

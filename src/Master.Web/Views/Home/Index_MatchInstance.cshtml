@@ -1,0 +1,165 @@
+﻿@using Master.Web.Startup
+@using Master.Web
+@using Master.Configuration;
+@using Master.Web.Views.Shared.Components.SideBarNav;
+@using Master.Web.Views.Shared.Components.TopBarNav;
+@inject Master.Timing.AppTimes AppTimes
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewData["SoftTitle"]</title>
+    <meta name="keywords" content="华建集团">
+    <meta name="description" content="华建集团">
+    <meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta content="telephone=no, address=no" name="format-detection">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
+    <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
+
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/layui.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/font-awesome.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css">
+</head>
+<body class="layui-layout-body" style="overflow:auto">
+
+    <div id="LAY_app">
+        <div class="layui-layout layui-layout-admin">
+            <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
+
+            <div class="layui-row" style="margin-top:80px;margin-bottom:80px">
+                <div id="app" class="layui-hide layui-col-md8">
+                    <div class="main_pc_nr" style="position:static;margin:0px auto;width:auto;">
+                        <div class="main_anniu">
+                            <ul>
+                                <a href="#_" v-for="(item,index) in matchInstances" @@click="gotoMatchInstance(item.id)">
+                                    <li>
+                                        {{item.matchName}}<br>
+                                        {{item.identifier}}
+                                    </li>
+                                </a>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="main_pc_nr_none" v-if="matchInstances.length==0" style="position:static;margin:50px auto;">
+                        <div class="main_anniu_none">
+                            <ul>
+                                <li><i class="huadongjz fa-exclamation-triangle"></i></li>
+                                <li>当前没有可以操作的赛事！</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4" style="padding-right:50px;">
+                    <div class="layui-card">
+                        @*<div class="layui-card-header">系统公告</div>*@
+                        <div class="layui-card-body ">
+                            <table autoevent="1" id="Notice" lay-filter="Notice" class="layui-table " lay-data="{cellMinWidth:'80', url:'/api/services/app/Notice/GetPageResult', page:false, id:'Notice', skin: 'line',where:{where:'noticestatus=2'}, even: false,done:config.onTableDone,initSort:{field:'publishtime',type:'desc'}}">
+                                <thead>
+                                    <tr>
+                                        <th lay-data="{align:'center',field:'title',templet:'#noticeTpl'}">@L("系统公告")</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 辅助元素，一般用于移动设备下遮罩 -->
+            <div class="layadmin-body-shade" layadmin-event="shade"></div>
+        </div>
+        <footer>
+            <p>
+                华东建筑集团有限公司 版权所有<br>
+                本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器
+            </p>
+        </footer>
+    </div>
+    <script type="text/html" id="noticeTpl">
+        <div style="text-align:left">
+            <a href="#_" fornonerow="1" buttonname="{{d.title}}" type="button" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Notices/View?id={{d.id}}" onclick="func.callModuleButtonEvent()">{{d.title}}({{d.publishTimeShort}})</a>
+        </div>
+
+    </script>
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+
+
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/assets/js/index.js" asp-append-version="true"></script>
+    <script>
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            initIndex();
+            checkToken();
+        });
+
+    </script>
+
+
+
+    <div class="layui-layer-move"></div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                matchInstances: []
+
+            },
+            methods: {
+                loadMatchInstances: function () {
+                    func.runAsync(abp.services.app.matchInstance.getAvailableMatchInstance().done(function (data) {
+                        app.matchInstances = data;
+                        $("#app").removeClass("layui-hide");
+                    }));
+                },
+                gotoMatchInstance: function (matchInstanceId) {
+                    func.runAsync(abp.services.app.matchInstance.getIfMatchInstanceAvailable(matchInstanceId).done(function (data) {
+                        if (data) {
+                            $.cookie("matchInstanceId", matchInstanceId, { expires: 365, path: '/' });
+                            location.href = '/Home/MatchInstance';
+                        } else {
+                            layer.msg("此赛事目前不可用", { icon: 5, anim: 6 });
+                        }
+                    }));
+                    
+
+                }
+
+            },
+            mounted: function () {
+                
+                this.loadMatchInstances();
+
+            }
+
+        });
+    </script>
+</body>
+</html>
+

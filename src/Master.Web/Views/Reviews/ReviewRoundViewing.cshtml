@@ -1,0 +1,95 @@
+﻿@using Master.Reviews
+@using Master.Authentication
+@model ReviewRound
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ReviewRoundViewing";
+
+    //所有参选专家
+    var experts = ViewData["Experts"] as List<User>;
+    //专家打分明细
+    var expertReviewDetails = Model.ExpertReviewDetails;
+    //已投票专家数
+    var votedExpertCount = expertReviewDetails.Where(o => o.FinishTime != null).Count();
+    //专家投票详情
+    var expertvotedetails = experts.Select(o =>
+    {
+        var expertvote = expertReviewDetails.SingleOrDefault(v => v.ExpertID == o.Id);
+        var finishtime = "";
+        if (expertvote != null && expertvote.FinishTime != null)
+        {
+            finishtime = Convert.ToDateTime(expertvote.FinishTime).ToString("yyyy-MM-dd HH:mm");
+        }
+        return new { o.Name, o.UserName, FinishTime = finishtime };
+    });
+}
+
+
+<blockquote class="layui-elem-quote" style="font-weight:bold">
+    当前状态： 专家评审中(@votedExpertCount/@(experts.Count))
+    <button class="layui-btn layui-btn-danger" type="button" onclick="withDraw(@Model.Id)" style="margin-left:20px">撤回评审</button>
+</blockquote>
+
+<vc:review-setting review-round-id="@Model.Id"></vc:review-setting>
+
+<div class="layui-row layui-col-space10">
+    <div class="layui-col-md6">
+        <table class="layui-table center" >
+            <colgroup>
+                <col width="150">
+                <col width="150">
+                <col width="150">
+                <col width="150">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th style="text-align:center">专家姓名</th>
+                    <th style="text-align:center">登录帐号</th>
+                    <th style="text-align:center">提交情况</th>
+                    <th style="text-align:center">提交时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var expertvote in expertvotedetails)
+                {
+                    <tr>
+                        <td>@expertvote.Name</td>
+                        <td>@expertvote.UserName</td>
+                        <td>
+                            @if (expertvote.FinishTime == "")
+                            {
+                                <span style="color:red">未提交</span>
+                            }
+                            else
+                            {
+                                <span style="color:green">已提交</span>
+                            }
+                        </td>
+                        <td>@expertvote.FinishTime</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="layui-col-md6" style="padding-top:20px;">
+        <button class="layui-btn" type="button" onclick="location.reload()">刷新</button>
+    </div>
+</div>
+
+@section scripts{ 
+    <script>
+        //撤回评审
+        function withDraw(reviewRoundId) {
+            abp.message.confirm("确认撤回此评审?", function () {
+                func.runAsync(abp.services.app.review.withDraw(reviewRoundId).done(function () {
+                    parent.layer.msg("提交成功");
+                    parent.layer.closeAll('iframe');
+                    parent.config.refresh();
+
+                }))
+
+            })
+
+        }
+    </script>
+}

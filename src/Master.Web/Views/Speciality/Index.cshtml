@@ -1,0 +1,85 @@
+﻿
+@{
+    
+}
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("专家专业维护")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <button type="button" class="layui-btn " onclick="add()">@L("添加专业")</button>
+                </div>
+            </form>
+                    
+                    <table autoevent="1" id="Speciality" lay-filter="Speciality" class="layui-table " lay-data="{cellMinWidth:'80', url:'/api/services/app/Speciality/GetAll', page:false, id:'Speciality',  even: false}">
+                        <thead>
+							<tr>
+								<th lay-data="{field:'name',edit:'text'}" style="text-align:center">@L("专业名称")</th>
+								<th lay-data="{field:'sort',edit:'text'}" style="text-align:center">@L("排序")</th>
+								<th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+							</tr>
+                        </thead>
+                    </table>
+                </div>
+        </div>
+</div>
+            
+
+            @section scripts{
+<script type="text/html" id="toolbar">
+
+    <a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="Speciality" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.speciality.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>
+</script>
+                <script>
+        config.ready = function () {
+            //监听单元格编辑
+            layui.table.on('edit(Speciality)', function (obj) {
+                var value = obj.value //得到修改后的值
+                    , data = obj.data //得到所在行所有键值
+                    , field = obj.field; //得到字段
+                //layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
+				if (field == "name") {
+					if (!value.trim()) {
+						layer.msg("名称不能为空", { icon: 5, anim: 6 });
+						layui.table.reload('Speciality');
+						return false;
+					}
+					func.runAsync(abp.services.app.speciality.update(data.id, value, {
+						error: function () {
+							layui.table.reload('Speciality');
+						}
+					}).done(function () {
+						layer.msg('更新成功');
+					}));
+				} else if (field == "sort") {
+					if (!value.trim() || isNaN(value.trim())) {
+						layer.msg("请正确输入序号", { icon: 5, anim: 6 });
+						layui.table.reload('Speciality');
+						return false;
+					}
+					func.runAsync(abp.services.app.speciality.setSort(data.id, value, {
+						error: function () {
+							layui.table.reload('Speciality');
+						}
+					}).done(function () {
+						layer.msg('更新成功');
+					}));
+				}
+                
+            });
+        }
+        function add() {
+            layer.prompt({ title: '@L("请输入专业名称")', formType: 0 }, function (text, index) {
+                layer.close(index);
+                if (!text.trim()) {
+                    layer.msg("专业名称不能为空", { icon: 5, anim: 6 });
+                    return false;
+                }
+                func.runAsync(abp.services.app.speciality.add(text).done(function () {
+                    layui.table.reload('Speciality');
+                }));
+                    });
+        }
+                </script>
+            }

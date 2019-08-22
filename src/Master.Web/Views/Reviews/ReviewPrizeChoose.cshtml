@@ -1,0 +1,107 @@
+﻿@using Master.Web.Components
+@using Master.Matches;
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+}
+
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item">
+            <label class="layui-form-label">专业大类</label>
+            <div class="layui-input-block">
+                <select name="MajorId" lay-filter="MajorId" v-model="currentItem.majorId" lay-verify="required">
+                    <option value="">--选择专业大类--</option>
+                    <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">专业小类</label>
+            <div class="layui-input-block">
+                <select name="SubMajorId" v-model="currentItem.subMajorId" lay-filter="SubMajorId">
+                    <option value="">--选择专业小类--</option>
+                    <option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" pane>
+            <label class="layui-form-label">评选类型</label>
+            <div class="layui-input-block">
+                <input type="radio" name="reviewType" autocomplete="off" value="1" title="初评" v-model="currentItem.reviewType">
+                <input type="radio" name="reviewType" autocomplete="off" value="2" title="终评" v-model="currentItem.reviewType">
+            </div>
+        </div>
+
+    </form>
+</div>
+
+@section scripts{ 
+    <script>
+        var matchInstanceId=@matchInstance.Id;
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.currentItem.majorId = majorId;
+                app.loadSubMajors(majorId);
+                refresh();
+            });
+            layui.form.on('select(SubMajorId)', function (data) {
+                var subMajorId = data.value;
+                app.currentItem.subMajorId = subMajorId;
+            });
+            layui.form.on('radio', function (data) {
+                app.currentItem.reviewType = data.value;
+            })
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentItem: { matchInstanceId: matchInstanceId, majorId: "", subMajorId: "", reviewType: 1 },
+                    allMajors: [],
+                    mainMajors: [],
+                    subMajors: []
+                },
+                methods: {
+                    loadMajors: function (matchInstanceId, majorId) {
+                        abp.services.app.major.getTreeJson(null,matchInstanceId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            if (majorId) {
+                                app.loadSubMajors(majorId);
+
+                            }                            
+                            $("#app").removeClass("layui-hide");
+                            refresh();
+                        });
+                    },
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    },
+                },
+                mounted: function () {
+                    this.loadMajors(matchInstanceId);
+                    refresh();
+                }
+            });
+        };
+
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                layui.form.render();
+            })            
+        }
+
+        function submit() {
+            if (!app.currentItem.majorId) {
+                layer.msg("请选择专业大类", { icon: 5, anim: 6 });
+                return false;
+            }
+            parent.setReviewPrize(app.currentItem);
+        }
+    </script>
+}

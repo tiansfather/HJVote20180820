@@ -1,0 +1,86 @@
+﻿@using Master.Web.Components
+@using Master.Authentication
+@using Master.Majors
+@{
+	Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+	ViewData["Title"] = "Add";
+
+	var roles = ViewData["roles"] as List<Role>;
+	var specialties = ViewData["specialities"] as List<Speciality>;
+}
+
+<div>
+	<form class="layui-form layui-form-pane">
+		<div class="layui-form-item">
+			<label class="layui-form-label">姓名</label>
+			<div class="layui-input-block">
+				<input type="text" name="name" lay-verify="required" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">账号</label>
+			<div class="layui-input-block">
+				<input type="text" name="username" lay-verify="required" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">密码</label>
+			<div class="layui-input-block">
+				<input type="password" name="password" lay-verify="required" autocomplete="off" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">所属单位</label>
+			<div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+				 name="OrganizationId" value="" class="layui-input-inline" style="position:relative">
+			</div>
+		</div>
+		<div class="layui-form-item" pane="">
+			<label class="layui-form-label">启用</label>
+			<div class="layui-input-block">
+				<input type="checkbox" checked="" value="true" name="isactive" lay-skin="switch" lay-filter="isactive" title="启用" lay-text="ON|OFF">
+			</div>
+		</div>
+		<div class="layui-form-item" pane="">
+			<label class="layui-form-label">角色</label>
+			<div class="layui-input-block">
+				@foreach (var role in roles)
+				{
+					<input type="radio" name="userrole" lay-skin="primary" title="@role.DisplayName" value="@role.Id">
+
+				}
+
+			</div>
+		</div>
+		<div class="layui-form-item" pane="">
+			<label class="layui-form-label">专业</label>
+			<div class="layui-input-block">
+
+				<select name="speciality" xm-select="select1" xm-select-search="" xm-select-search-type="dl">
+					@foreach (var specialtiy in specialties)
+					{
+						<option value="@(specialtiy.Id)">@specialtiy.Name</option>
+					}
+				</select>
+
+			</div>
+		</div>
+		<vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="User",ButtonKey="Add"})"></vc:form-submit>
+		@*<div class="layui-form-item">
+			<div class="layui-input-block">
+				<button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+			</div>
+		</div>*@
+	</form>
+</div>
+
+@section scripts{
+    <script>
+        config.ready=function(){
+			$('div[cytype="dropDownTool"]').dropDownTool();
+			layui.use('formSelects', function () {
+
+			})
+        }
+    </script>
+}

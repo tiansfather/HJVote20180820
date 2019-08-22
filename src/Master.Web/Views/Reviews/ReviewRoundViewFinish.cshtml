@@ -1,0 +1,216 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model ReviewRound
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ReviewRoundViewFinish";
+    var review = Model.Review;
+    var reviewMethodSetting = Model.ReviewMethodSetting;
+    var matchInstance = ViewData["MatchInstance"] as MatchInstance;
+    //显示的最大次数
+    var maxshowturn = Model.Turn == 1 ? review.ReviewRounds.Where(o => o.ReviewStatus == ReviewStatus.Reviewed && o.Round == Model.Round).Max(o => o.Turn) : Model.Turn;
+}
+@section styles{ 
+    <style>
+        tr.highlight, .layui-table tbody tr.highlight:hover {
+            background-color: rgb(255,206,206) !important
+        }
+    </style>
+}
+<blockquote class="layui-elem-quote" style="font-weight:bold">
+    当前状态：专家评审完成
+</blockquote>
+
+<vc:review-setting review-round-id="@Model.Id"></vc:review-setting>
+
+<h2>本轮评选结果</h2>
+<hr />
+
+<table class="layui-table" lay-filter="projectlist" id="projectlist"></table>
+<script type="text/html" id="projectTpl">
+    <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')" class="{{d.needConfirm?'confirm':''}}">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="btnTpl">
+    <a class="layui-btn layui-btn-xs" lay-event="view">查看</a>
+</script>
+@for (var i = 2; i <= maxshowturn; i++)
+{
+    <script type="text/html" id="score@(i)">
+        {{d.subScores[@(i - 2)]}}
+    </script>
+}
+@section scripts{
+    <script type="text/html" id="toolbarTpl">
+        <div class="layui-btn-container">
+            本轮评选结果：
+            @if (!review.ReviewRounds.ToList().Exists(o => o.ReviewStatus != ReviewStatus.Reviewed))
+            {
+                <button id="addinReviewBtn" type="button" class="layui-btn layui-btn-sm" style="display:none" onclick="reviewAddIn()">补充评审</button>
+
+                @*第一轮次出现创建一轮评审*@
+                if (Model.Turn == 1 && Model.Round == review.ReviewRounds.Max(o => o.Round))
+                {
+                    <button type="button" class="layui-btn layui-btn-sm" onclick="reviewNext()">创建下一轮评审</button>
+                }
+            }
+
+            <button type="button" class="layui-btn layui-btn-blue layui-btn-sm" onclick="exportReview()">导出至Excel</button>
+
+            <button type="button" class="layui-btn layui-btn-warm layui-btn-sm" onclick="showfull()" style="float:right">全屏公示</button>
+        </div>
+    </script>
+    <script>
+        config.ready = function () {
+            layui.table.render({
+                id: 'projectlist',
+                toolbar: '#toolbarTpl', defaultToolbar: null
+                ,elem: '#projectlist'
+                , url: '/api/services/app/Review/GetReviewRoundDetail?reviewRoundId=@Model.Id'
+                //, height: 'full-455'
+                , cols: [[
+                    { checkbox: true }
+                    , { align: 'center',field: 'rank', width: 60 ,title:'排名'}
+                    , { align: 'center',field: 'sort', width: 60 ,title:'序号'}
+                    , { align: 'center', field: 'score', width: 100, title: '@(Model.ReviewMethod==ReviewMethod.Weighting?"加权得分":"本轮结果")' }
+                    @if (Model.ReviewMethod == ReviewMethod.Weighting)
+                    {
+                       @Html.Raw(", { align: 'center',field: 'oriScore', width: 100 ,title: '本轮结果'}")
+                    }
+                    @for(var i = 2; i <= maxshowturn; i++)
+                    { @Html.Raw(",{ align: 'center', field: 'score"+i+"', width: 100, title: '补投"+(i-1)+"' ,templet:'#score"+i+"'}")}
+                    , { align: 'center', field: 'projectName',  templet: '#projectTpl', title: '项目名称' }
+                    , { field: 'prizeName', title: '奖项名称', width: 180 }
+                    , { field: 'subMajorName', title: '奖项小类', width: 180 }
+                    , { field: 'designOrganizationName', title: '申报单位', width: 180, }
+                    , { width: 100, align: 'center', toolbar: '#btnTpl', fixed: 'right', title: '评审详情' }
+                ]]
+                , done: function (res, curr, count) {
+                    $("a.confirm").closest("tr").addClass("highlight");
+                        if ($("a.confirm").size() > 0) {
+                        $("#addinReviewBtn").show();//有同分的则进行补充评审
+                        }
+                    }
+            });
+            //监听工具条
+            layui.table.on('tool(projectlist)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent === 'view') { //评审明细
+                    layer.open({
+                        type: 2,
+                        title: '项目名称:'+data.projectName,
+                        closeBtn: 1,
+                        area: ['600px', '80%'],
+                        shadeClose: false,
+                        content: "/Reviews/ProjectReviewDetail?reviewRoundId=@Model.Id&projectId=" + data.id
+                    });
+                }
+            });
+
+        }
+
+        //补充评审
+        function reviewAddIn() {
+            var ids = [];
+            $("a.confirm").each(function () {
+                ids.push($(this).attr("projectid"));
+            });
+            var url = "/Reviews/ReviewRoundNext?projectids=" + ids.join(',') + "&reviewID=@review.Id&ReviewType=AddIn";
+            openUrl(url);
+        }
+        //下一轮
+        function reviewNext() {
+            var checkStatus = layui.table.checkStatus('projectlist');
+            if (checkStatus.data.length == 0) {
+                abp.message.error("请先选择项目");
+                return false;
+            }
+            var ids = checkStatus.data.map(function (o) { return o.id; });
+            console.log(ids);
+            var url="/Reviews/ReviewRoundNext?projectids=" + ids.join(',') + "&ReviewID=@review.Id&ReviewType=Next";
+            if (checkStatus.data.length !=@Model.TargetNumber) {
+                abp.message.confirm('您当前选择的项目数量与目标数量不一致！您确定继续吗？如点击确定，系统将按照您选择的项目创建下一轮评审。', function () {
+                    openUrl(url);
+                })
+            } else {
+                openUrl(url);
+
+            }
+        }
+
+        function openUrl(url) {
+            parent.layer.open({
+                type: 2,
+                title: "创建评审活动",
+                shadeClose: false,
+                shade: 0.8,
+                area: ['90%', '90%'],
+                content: url,
+                btn: ['保存', '发布', '关闭'],
+                yes: function (index, layero) {
+                    var iframeWin = parent.window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                    iframeWin.submit();
+                },
+                btn2: function (index, layero) {
+                    var iframeWin = parent.window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit2) { iframeWin.submit2(); return false; }
+                },
+                btn3: function (index, layero) {
+                    var iframeWin = parent.window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit3) { iframeWin.submit3(); return false; }
+                }
+            });
+        }
+
+        function exportReview() {
+            var layIndex=layer.msg('正在导出,请稍候', { icon: 16, time: 0, shade: [0.4, '#393D49'] });
+            abp.services.app.review.exportReviewRound(@Model.Id).done(function (data) {
+                console.log(data);
+                layer.close(layIndex);
+                _hidden.location.href = '/File/DownLoad?fileName=' + data.fileName + "&filePath=" + data.filePath;
+                //window.open( '/File/DownLoad?fileName=' + data.fileName+"&filePath="+data.filePath);
+            }).error(function () {
+                layer.close(layIndex);
+            });
+            @*TF.ajaxDo("/Export/ReviewDetail?detailid=@Model.Id" , function (obj) {
+                var filepath = obj.filepath;
+                layer.closeAll();
+                _hidden.location.href = '/Export/File?path=' + filepath;
+            });*@
+        }
+        //全屏公示
+        function showfull() {
+            var index = top.layer.open({
+                type: 2,
+                title:'@(review.ReviewName)第@(Model.RoundC)轮第@(Model.Turn)次结果公示',
+                content: '/Reviews/FullView?reviewRoundId=@Model.Id',
+                area: ['100%', '100%'],
+                closeBtn: 0,
+                success:function(layero, index) {
+                    //全屏弹窗
+                    console.log(layero);
+                    $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                        top.layer.close(index);
+                    });
+
+                }
+            });
+        }
+
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+
+        }
+    </script>
+}

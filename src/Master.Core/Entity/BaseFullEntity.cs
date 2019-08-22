@@ -1,0 +1,25 @@
+﻿using Abp.Domain.Entities;
+using Abp.Domain.Entities.Auditing;
+using Master.Authentication;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
+
+namespace Master.Entity
+{
+    /// <summary>
+    /// 基类
+    /// </summary>
+    public abstract class BaseFullEntity : FullAuditedEntity, IExtendableObject,IHaveRemarks
+    {
+        public virtual string ExtensionData { get; set; }
+        public virtual string Remarks { get; set; }
+        [ForeignKey("CreatorUserId")]
+        public virtual User CreatorUser { get; set; }
+        [ForeignKey("LastModifierUserId")]
+        public virtual User LastModifierUser { get; set; }
+        [ForeignKey("DeleterUserId")]
+        public virtual User DeleterUser { get; set; }
+    }
+}

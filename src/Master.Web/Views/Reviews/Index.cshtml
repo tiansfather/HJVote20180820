@@ -1,0 +1,166 @@
+﻿@using Master.Matches
+    @{
+        ViewData["Title"] = "Index";
+        var matchInstance = ViewData["matchInstance"] as MatchInstance;
+        
+    }
+
+
+    <div class="layui-fluid" id="LAY-app-message">
+        <div class="layui-card">
+            <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("评选活动准备")</div>
+            <div class="layui-card-body">
+                <form class="layui-form layui-form-pane" onsubmit="return doSearch();" id="app">
+					<div class="layui-form-item">
+						<div class="layui-inline">
+							<label class="layui-form-label" style="padding:8px 5px;">@L("评选活动名称")</label>
+							<div class="layui-input-inline">
+								<input type="text" id="reviewName" name="reviewName" autocomplete="off" class="layui-input">
+							</div>							
+						</div>
+						<div class="layui-inline">
+							<label class="layui-form-label">专业大类</label>
+							<div class="layui-input-inline">
+								<select name="majorId" lay-filter="MajorId">
+									<option value="">--选择专业大类--</option>
+									<option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+								</select>
+							</div>
+						</div>
+						<div class="layui-inline">
+							<label class="layui-form-label">专业小类</label>
+							<div class="layui-input-inline">
+								<select name="subMajorId" lay-filter="SubMajorId">
+									<option value="">--选择专业小类--</option>
+									<option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+								</select>
+							</div>
+							<button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+						</div>
+					</div>                    
+                </form>
+
+
+
+                <table autoevent="1" id="Review" lay-filter="Review" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-170',toolbar:'#toolbarTpl',defaultToolbar:null, url:'/api/services/app/Review/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id'}, page:true, id:'Review', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
+                    <thead>
+                        <tr>
+                            <th lay-data="{align:'center',type:'checkbox',fixed:'left'}"></th>
+                            <th lay-data="{align:'left',field:'reviewName',width:'30%'}">@L("评选活动名称")</th>
+                            <th lay-data="{align:'center',field:'reviewMajorName',minWidth:150}">@L("评选专业")</th>
+                            <th lay-data="{align:'center',field:'reviewType',templet:'#reviewTypeTpl'}">@L("评选类型")</th>
+                            <th lay-data="{align:'center',field:'projectCount'}">@L("参选项目")</th>
+                            <th lay-data="{align:'center',field:'expertCount'}">@L("参选专家")</th>
+                            <th lay-data="{align:'center',field:'remarks'}">@L("备注")</th>
+                            <th lay-data="{width:120, align:'center', toolbar: '#btnTpl',fixed:'right'}">@L("操作")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    <script type="text/html" id="toolbarTpl">
+        <div class="layui-btn-container" >
+            <button class="layui-btn layui-btn-sm" fornonerow="1"  buttonname="@L("新建评选活动")" type="button" params="{&quot;area&quot;: [&quot;600px&quot;, &quot;400px&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ReviewPrizeChoose" onclick="func.callModuleButtonEvent()">新建评选活动</button>
+        </div>
+    </script>
+    <script type="text/html" id="btnTpl">
+        <a dataid="{{d.id}}" buttonname="@L("编辑评选活动")" modulekey="Review" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:[&quot;保存&quot;, &quot;关闭&quot;]}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ReviewEdit" onclick="func.callModuleButtonEvent()">@L("编辑")</a>
+        <a dataid="{{d.id}}"  modulekey="Review" class="layui-btn layui-btn-xs layui-btn-danger"  lay-event="Delete" confirmmsg="确认删除此评选活动?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>
+    </script>
+    <script type="text/html" id="reviewTypeTpl">
+        {{#if(d.reviewType==1){}}
+        初评
+        {{#}else{}}
+        终评
+        {{#}}}
+    </script>
+
+    @section scripts{
+        <script>        
+			var app;
+			
+			config.ready = function () {
+				layui.form.on('select(MajorId)', function (data) {
+					var majorId = data.value;
+					app.majorId = majorId;
+					app.subMajorId = null;
+					app.loadSubMajors(majorId);
+				});
+				layui.form.on('select(SubMajorId)', function (data) {
+					var subMajorId = data.value;
+					app.subMajorId = subMajorId;
+				});
+				app = new Vue({
+                el: '#app',
+					data: {
+						majorId: null,
+						subMajorId:null,
+                    item: {},
+                    allMajors: [],
+                    mainMajors: [],
+                    subMajors: []
+                },
+                methods: {
+                    loadMajors: function (matchInstanceId) {
+                        abp.services.app.major.getTreeJson(null, matchInstanceId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            app.subMajors = [];
+                            refresh();
+                        });
+                    },
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    }
+
+                },
+                mounted: function () {
+                    this.loadMajors(@matchInstance.Id);
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+			}
+        function doSearch() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id ' };
+
+            var reviewName = $("#reviewName").val();
+            if (reviewName) {
+                where.where += ' and reviewName.Contains(\"' + reviewName + '\") ';
+			}
+			if (app.majorId) {
+				where.where += ' and majorId=' + app.majorId;
+			}
+			if (app.subMajorId) {
+				where.where += ' and subMajorId=' + app.subMajorId;
+			}
+            console.log(where);
+            layui.table.reload('Review', {
+                where: where
+            });
+
+            return false;
+            }
+            //选择专业及评审类型回调
+            function setReviewPrize(obj) {
+                func.runAsync(abp.services.app.review.addReview(obj).done(function () {
+                    layer.msg("提交成功");
+                    layer.closeAll("iframe");
+                    layui.table.reload('Review');
+                }));
+			}   
+
+			function refresh() {
+				Vue.nextTick(function () {
+					$(".layui-form-switch,.layui-form-select").remove();
+					//$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+					layui.form.render();
+
+				})
+			}
+        </script>
+    }
+

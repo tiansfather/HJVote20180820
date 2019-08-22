@@ -1,0 +1,49 @@
+﻿@model List<Master.Matches.MatchResourceUploadList>
+@{
+    ViewData["Title"] = "Default";
+    var subMajorId = ViewData["subMajorId"].ToString();
+
+    var fileNameMusts = Model.Where(o => o.FileMust).Select(o => o.FileName + (o.FileMust ? "(必送)" : ""));
+}
+
+<table class="layui-table" fileMusts='@(Newtonsoft.Json.JsonConvert.SerializeObject(fileNameMusts))' subMajorName="@ViewData["subMajorName"]">
+    <colgroup>
+        <col />
+        <col />
+        <col width="150" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>文件名称</th>
+            <th>文件类别</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="(item,index) in getSubMajorInfo('@subMajorId').files">
+			<td >
+				<a  style="color:blue;text-decoration:underline;cursor:pointer" @@click.prevent="showPDF(item.fileName,item.filePath)">{{item.fileName}}</a>
+			</td>
+            <td>
+                @if (Model.Count>0)
+                {
+                    <select v-model="item.fileType">
+                        <option value="">--请选择--</option>
+                        @foreach (var upload in Model)
+                        {
+                            var fileType = upload.FileName + (upload.FileMust ? "(必送)" : "");
+                            <option value="@fileType">@fileType</option>
+
+                        }
+                    </select>
+                }
+                else
+                {
+                    <input type="text" v-model="item.fileType" />
+                }
+            </td>
+            <td><button type="button" class="layui-btn layui-btn-danger layui-btn-xs" @@click="removeFile('@subMajorId',index)">删除</button></td>
+        </tr>
+    </tbody>
+</table>
+

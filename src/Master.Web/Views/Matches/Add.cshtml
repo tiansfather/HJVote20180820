@@ -1,0 +1,48 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div>
+    <form class="layui-form layui-form-pane">
+        <div class="layui-form-item">
+            <label class="layui-form-label">赛事</label>
+            <div class="layui-input-block">
+                <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-verify="required"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">届</label>
+            <div class="layui-input-block">
+                <input type="text" name="Identifier" lay-verify="required" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">年份</label>
+            <div class="layui-input-block">
+                <select name="Year">
+                    @for (var i = DateTime.Now.Year - 1; i < DateTime.Now.Year + 1; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea placeholder="" class="layui-textarea" name="Remarks"></textarea>
+            </div>
+        </div>
+        <vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="MatchInstance",ButtonKey="Add"})"></vc:form-submit>
+        @*<div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+            </div>
+        </div>*@
+    </form>
+</div>

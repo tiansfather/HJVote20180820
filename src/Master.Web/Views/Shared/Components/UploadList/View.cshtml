@@ -1,0 +1,27 @@
+﻿@model List<Master.Matches.MatchResourceUploadList>
+@{
+    ViewData["Title"] = "Default";
+    var subMajorId = ViewData["subMajorId"].ToString();
+}
+
+<table class="layui-table" >
+    <colgroup>
+        <col />
+        <col />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>文件名称</th>
+            <th>文件类别</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="(item,index) in getSubMajorInfo('@subMajorId').files">
+            <td ><a style="color:blue;text-decoration:underline" :href="'/File/Download?filename='+item.fileName+'&filepath='+item.filePath" @@click.prevent="showPDF(item.fileName,item.filePath)">{{item.fileName}}</a></td>
+            <td>
+                {{item.fileType}}
+            </td>
+        </tr>
+    </tbody>
+</table>
+

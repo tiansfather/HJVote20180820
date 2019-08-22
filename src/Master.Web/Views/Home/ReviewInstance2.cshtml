@@ -1,0 +1,208 @@
+﻿@using Master.Web.Startup
+@using Master.Web
+@using Master.Configuration;
+@using Master.Web.Views.Shared.Components.SideBarNav;
+@using Master.Web.Views.Shared.Components.TopBarNav;
+@using Master.Reviews;
+@using Master.Projects;
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@inject Master.Timing.AppTimes AppTimes
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+    var review = ViewData["reviewInstance"] as Review;
+    var currentRound = review.CurrentReviewRound;
+    List<ReviewProject> reviewProjects = ViewData["ReviewProjects"] as List<ReviewProject>;
+    List<Project> projects = ViewData["Projects"] as List<Project>;
+    List<ProjectReviewDetail> projectReviewDetails = ViewData["ProjectReviewDetails"] as List<ProjectReviewDetail>;
+
+    JsonSerializerSettings settings = new JsonSerializerSettings();
+    settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+    settings.Formatting = Formatting.Indented;
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>@ViewData["SoftTitle"]</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/style/admin.css" media="all" asp-append-version="true" />
+    <link href="~/assets/css/index.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/assets/css/default.css" rel="stylesheet" />
+    <style id="style-1-cropbar-clipper">
+        /* Copyright 2014 Evernote Corporation. All rights reserved. */
+        .en-markup-crop-options {
+            top: 18px !important;
+            left: 50% !important;
+            margin-left: -100px !important;
+            width: 200px !important;
+            border: 2px rgba(255,255,255,.38) solid !important;
+            border-radius: 4px !important;
+        }
+
+            .en-markup-crop-options div div:first-of-type {
+                margin-left: 0px !important;
+            }
+    </style>
+    <style>
+        #instanceTip {
+            position: static;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            padding: 8px 15px;
+            border: 1px solid #000;
+            background: #fff;
+        }
+    </style>
+</head>
+<body style="height:1000px;background:#fff">
+
+    <div id="LAY_app">
+        <div class="layui-layout layui-layout-admin">
+            <div class="layui-header" style="position:static">
+                <!-- 头部区域 -->
+                <ul class="layui-nav layui-layout-left">
+
+
+                    @*<li class="layui-nav-item layui-hide-xs" lay-unselect="">
+                            <input type="text" placeholder="搜索..." autocomplete="off" class="layui-input layui-input-search" layadmin-event="serach" lay-action="template/search.html?keywords=">
+                        </li>*@
+                </ul>
+                @await Component.InvokeAsync(typeof(TopBarNavViewComponent), Model)
+
+            </div>
+            <div id="instanceTip">
+                @(review.ReviewName)--第@(currentRound.RoundC)轮第@(currentRound.Turn)次
+
+            </div>
+            <blockquote class="layui-elem-quote fixtop">
+                <input type="button" class="layui-btn layui-btn-normal layui-btn-lg" value="暂存" />
+                <input type="button" class="layui-btn  layui-btn-lg" value="提交" />
+                <input type="button" class="layui-btn layui-btn-primary layui-btn-lg" value="返回首页" onclick="location.href='/'" style="float:right" />
+            </blockquote>
+
+            <div class="wrap_content" style="padding:20px;font-size:18px;">
+                <div class="wrap_table layui-form">
+                    <table class="layui-table" lay-size="lg">
+                        <colgroup>
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            {
+                                <col width="110">
+                            }
+                            else
+                            {
+                                <col width="55">
+                            }
+                            <col width="55">
+                            <col>
+                            <col width="200">
+                            <col width="150">
+                            <col width="150">
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            {
+                                <col width="88">
+                            }
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <th><div align="center">得分</div></th>
+                                }
+                                else
+                                {
+                                    <th><div align="center">投票</div></th>
+                                }
+                                <th><div align="center">序号</div></th>
+                                <th><div align="center">项目名称</div></th>
+                                <th><div align="center">奖项</div></th>
+                                <th><div align="center">专业</div></th>
+                                <th><div align="center">申报单位</div></th>
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <th><div align="center">回 避</div></th>
+                                }
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reviewProject in reviewProjects.OrderBy(o => o.Sort))
+                            {
+                                var project = projects.Single(o => o.Id == reviewProject.Id);
+                                <tr projectid="@project.Id">
+                                    @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                    {
+                                        <td></td>
+                                    }
+                                    else
+                                    {
+                                        <td align="center">
+                                            <input type="checkbox" name="voteflag" lay-filter="voteflag">
+                                        </td>
+                                    }
+                                    <td align="center">@reviewProject.Sort</td>
+                                    <td>@project.ProjectName</td>
+                                    <td align="center">@project.Prize.PrizeName</td>
+                                    <td align="center">@project.PrizeSubMajor?.Major.BriefName</td>
+                                    <td align="center">@project.DesignOrganization.BriefName</td>
+                                    @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                    {
+                                        <td>
+                                            <input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch">
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 辅助元素，一般用于移动设备下遮罩 -->
+            <div class="layadmin-body-shade" layadmin-event="shade"></div>
+        </div>
+    </div>
+
+
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/lib/fixedScroll/fixedScroll.js"></script>
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/assets/js/index.js" asp-append-version="true"></script>
+    <script>
+        var projectdetails =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(projectReviewDetails));
+        var method ="@(currentRound.ReviewMethod==ReviewMethod.Vote?"vote":"score")";
+        var requirevotenumber=@currentRound.ReviewMethodSetting.VoteNumber;
+
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            initIndex();
+            $(".fixtop").fixedScroll();
+
+        });
+
+
+    </script>
+
+
+
+    <div class="layui-layer-move"></div>
+</body>
+</html>
+

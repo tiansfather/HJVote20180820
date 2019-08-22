@@ -1,0 +1,112 @@
+﻿@using Master.Matches
+@model List<Master.Prizes.Prize>
+    @{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+    int? organizationId = ViewBag.OrganizationId;
+
+    string organizationIdStr = organizationId!=null?organizationId.ToString():"0";
+    }
+
+
+    <div class="layui-fluid" id="LAY-app-message">
+        <div class="layui-card">
+            <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("本公司的申报项目")</div>
+            <div class="layui-card-body">
+                <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                    <div class="layui-form-item" style="width:800px">
+                        <label class="layui-form-label">@L("项目名称")</label>
+                        <div class="layui-input-block">
+                            <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item" pane style="width:800px">
+                        <label class="layui-form-label">@L("申报奖项")</label>
+                        <div class="layui-input-block">
+                            @foreach (var prize in Model)
+                        {
+                            <input type="checkbox" name="prize" lay-skin="primary" value="@prize.Id" title="@prize.PrizeName">
+                        }
+
+                        </div>
+                        <button style="position:absolute;top:0px;left:820px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    </div>
+                </form>
+
+
+
+                <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and creatoruser.organizationId=@organizationIdStr and projectsource=1 and projectstatus!=0'}, page:true, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+                    <thead>
+                        <tr>
+                            <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
+                            <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl'}">@L("项目名称")</th>
+                            <th lay-data="{align:'center',field:'reportSN'}">@L("申报序号")</th>
+                            <th lay-data="{align:'center',field:'prizeName'}">@L("奖项大类")</th>
+                            <th lay-data="{align:'center',field:'subMajorName'}">@L("奖项子类")</th>
+                            <th lay-data="{align:'center',field:'designOrganizationName'}">@L("申报单位")</th>
+                            <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl'}">@L("是否原创")</th>
+                            <th lay-data="{align:'center',field:'isOriginal',templet:'#projectStatusTpl'}">@L("状态")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    <script type="text/html" id="projectNameTpl">
+        <a href="#_" style="color:blue;text-decoration:underline;" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
+    </script>
+
+
+    @section scripts{
+    <script>
+        function doSearch() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id  and creatoruser.organizationId=@organizationIdStr and projectstatus!=0 and projectsource=1' };
+
+            var projectName = $("#projectName").val();
+            if (projectName) {
+                where.where += ' and projectName.Contains(\"' + projectName + '\") ';
+            }
+            var prizes = getCheckboxValue("prize");
+            if (prizes.length > 0) {
+                var tmpWhere = [];
+                $.each(prizes, function (i, v) {
+                    tmpWhere.push('PrizeId=' + v);
+                });
+                where.where += ' and (' + tmpWhere.join(' or ') + ')';
+            }
+            console.log(where);
+            layui.table.reload('Project', {
+                where: where
+
+            })
+
+            return false;
+        }
+
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                closeBtn:0,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/SubManager/View?projectId=" + projectId,
+                btn: ['关闭'],
+                success: function (layero, index) {
+                    //全屏弹窗
+                    console.log(layero);
+                    $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                        top.layer.close(index);
+                    });
+
+                }
+            })
+
+        }
+    </script>
+    }
+

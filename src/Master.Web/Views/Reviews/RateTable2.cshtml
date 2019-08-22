@@ -1,0 +1,57 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model List<MatchResourceRateTable>
+@{
+	Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+}
+
+@section styles{
+	<link rel="stylesheet" href="/assets/huajian/css/layui.css">
+}
+
+    <div class="layui-form">
+        @if (Model == null)
+        {
+            <h2 style="text-align:center;font-size:20px;">不存在评分标准</h2>
+        }
+        else
+        {
+            <blockquote class="layui-elem-quote">@ViewBag.MajorName</blockquote>
+            <table class="layui-table" lay-size="lg">
+                <colgroup>
+                    <col width="55">
+                    <col width="250">
+                    <col>
+                    <col width="80">
+                    <col width="88">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th><div align="center">序号</div></th>
+                        <th><div align="center">打分项</div></th>
+                        <th><div align="center">详细描述</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rateItem in Model)
+                    {
+
+                        <tr class="item">
+                            <td align="center">@rateItem.Sort</td>
+                            <td align="center">@rateItem.Name</td>
+                            <td align="left">@rateItem.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>
+
+@section scripts{ 
+    <script>
+        function submit(){
+            parent.layer.closeAll("iframe");
+        }
+    </script>
+}

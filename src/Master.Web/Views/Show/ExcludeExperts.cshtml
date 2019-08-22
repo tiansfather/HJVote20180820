@@ -1,0 +1,33 @@
+﻿@using Master.Authentication
+@model List<User>
+@{
+    Layout = null;
+    //var projectid = Request.QueryString["projectid"];
+}
+
+<div style="padding:10px;">
+    <table class="layui-table">
+
+        <thead>
+            <tr>
+                <th>专家姓名</th>
+                <th>登录帐号</th>
+                <th>所属单位</th>
+                @*<th>操作</th>*@
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var expert in Model)
+            {
+                <tr>
+                    <td>@expert.Name</td>
+                    <td>@expert.UserName</td>
+                    <td>@expert.Organization?.DisplayName</td>
+                    @*<td>
+                        <div class="layui-table-cell laytable-cell-2-6"> <a class="layui-btn layui-btn-mini layui-btn-danger" onclick="removeExcludeExpert(@projectid,@expert.ID)">移除</a> </div>
+                    </td>*@
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

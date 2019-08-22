@@ -1,0 +1,192 @@
+﻿
+@using Abp.Extensions
+@using Abp.MultiTenancy
+@using Master;
+@using Abp.Web.Security.AntiForgery
+@using Master.Configuration;
+@inject IAbpAntiForgeryManager AbpAntiForgeryManager
+@model Master.Web.Models.Account.LoginFormViewModel
+@{
+    Layout = null;
+    //var softTitle = await SettingManager.GetSettingValueForApplicationAsync(AppSettingNames.SoftTitle);
+    var softTitle = "";
+    AbpAntiForgeryManager.SetCookie(Context);
+}
+
+
+
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>评优系统</title>
+    <meta name="keywords" content="华建集团">
+    <meta name="description" content="华建集团">
+    <meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta content="telephone=no, address=no" name="format-detection">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/assets/huajian/css/font-awesome.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css?ver=171205">
+</head>
+<body>
+    <!--[if lt IE 7]>
+    <p class="browsehappy">您使用的是<stront>过时</strong>的浏览器。请<a href="http://browsehappy.com/">升级您的浏览器</a>来提高你的经验。</p>
+    <![endif]-->
+    <header-login style="max-width:1270px">
+        <div class="logo"><img src="/assets/huajian/images/logo.png"></div>
+        <div class="ind-biaoti"><p style="font-family:SimHei;font-weight:bold">评优系统<!--预留小字输入<span></span>--></p></div>
+    </header-login>
+    <div id="index_pc_bj">
+        <div class="wrap_conter layui-form">
+            <input type="hidden" name="returnurl" value="@Model.ReturnUrl" />
+            <ul>
+                <li><h11>系统登录</h11></li>
+                <li>
+                    <dl>
+                        <dd><i class="huadongjz fa-user Login-account"></i><input name="username" id="username" type="text" class="pc_input1" placeholder="登录名" lay-verify="username"></dd>
+                        <dd><i class="huadongjz fa-unlock-alt Login-password"></i><input name="password" id="password" type="password" class="pc_input1" placeholder="密码" lay-verify="pass"></dd>
+                        <dd class="btn"><a href="#_" lay-submit id="btnSubmit"><strong>登 录</strong></a></dd>
+                    </dl>
+                </li>
+                <li><span><i class="huadongjz fa-exclamation-triangle Login-zhuyi"></i><h12>请注意妥善保管账号密码！</h12></span></li>
+            </ul>
+        </div>
+
+
+    </div>
+    <footer-login>
+        <p>
+            华东建筑集团有限公司 版权所有<br>
+            本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器
+        </p>
+    </footer-login>
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script>
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            var $ = layui.$
+                , setter = layui.setter
+                , admin = layui.admin
+                , form = layui.form
+                , router = layui.router()
+                , search = router.search;
+
+            form.render();
+            $('input[type=text]:first-child').focus();
+            form.verify({
+                username: function (value, item) { //value：表单的值、item：表单的DOM对象
+                    if (!value.trim()) {
+                        return "请输入用户名";
+                    }
+                    if (!new RegExp("^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$").test(value)) {
+                        return '用户名不能有特殊字符';
+                    }
+                    if (/(^\_)|(\__)|(\_+$)/.test(value)) {
+                        return '用户名首尾不能出现下划线\'_\'';
+                    }
+                    if (/^\d+\d+\d$/.test(value)) {
+                        return '用户名不能全为数字';
+                    }
+                }
+
+                //我们既支持上述函数式的方式，也支持下述数组的形式
+                //数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+                , pass: function (value, item) {
+                    if (!value.trim()) {
+                        return "请输入密码";
+                    }
+                }
+            });      
+            //提交
+            form.on('submit', function (obj) {
+                console.log(obj);
+
+                abp.ui.setBusy(
+                    $('body'),
+
+                    abp.ajax({
+                        contentType: 'application/x-www-form-urlencoded',
+                        url: "/api/tokenauth/authenticate",
+                        data: obj.field,
+                        success: function (data) {
+                            console.log(data);
+                            var returnUrl = $("input[name='returnUrl']").val();
+                            $.cookie("token", data.encryptedAccessToken, { expires: 365, path: '/' });
+                            layer.msg('登入成功', {
+                                icon: 1
+                                , time: 1000
+                            }, function () {
+                                location.href = $("input[name='returnurl']").val();
+                            })
+
+                        }
+                    })
+                );
+                //请求登入接口
+                //admin.req({
+                //    url: "/Account/Login" //实际使用请改成服务端真实接口
+
+                //    ,type:"post"
+                //    , data: obj.field
+                //    , done: function (res) {
+
+                //        //请求成功后，写入 access_token
+                //        layui.data(setter.tableName, {
+                //            key: setter.request.tokenName
+                //            , value: res.data.access_token
+                //        });
+
+                //        //登入成功的提示与跳转
+                //        layer.msg('登入成功', {
+                //            offset: '15px'
+                //            , icon: 1
+                //            , time: 1000
+                //        }, function () {
+                //            location.href = '../'; //后台主页
+                //        });
+                //    }
+                //});
+
+            });
+
+            $(document).on("keyup", function (data) {
+                if (data.keyCode == 13) {
+                    $("#btnSubmit").trigger("click");
+                }
+            })
+
+        });
+
+    </script>
+    <script>
+        //function login() {
+        //    var username = $("#username").val();
+        //    var password = $("#password").val();
+        //    if (!username || !password) {
+        //        TF.alert("请输入用户名和密码");
+        //    } else {
+        //        TF.loading();
+        //        TF.ajaxDo("/Account/Login?username=" + username + "&password=" + password, TF.ajaxDone);
+        //    }
+        //    return false;
+        //}
+    </script>
+</body>
+</html>

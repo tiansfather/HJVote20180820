@@ -1,0 +1,322 @@
+﻿@using Master.Matches
+@model List<Master.Prizes.Prize>
+@{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+}
+
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("待评选项目管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item" style="width:800px">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("项目名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("申报单位")</label>
+                        <div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+                             name="OrganizationId" value="" class="layui-input-inline" style="position:relative">
+                        </div>
+                        @*<div class="layui-input-inline">
+                            <input type="text" id="designOrganization" name="designOrganization" autocomplete="off" class="layui-input">
+                        </div>*@
+                    </div>
+                </div>
+                <div class="layui-form-item" pane style="width:800px">
+                    <label class="layui-form-label">@L("申报奖项")</label>
+                    <div class="layui-input-block">
+                        @foreach (var prize in Model)
+                        {
+                            <input type="checkbox" name="prize" lay-skin="primary" value="@prize.Id" title="@prize.PrizeName">
+                        }
+
+                    </div>
+                </div>
+                <div class="layui-form-item" pane style="width:800px">
+                    <label class="layui-form-label">@L("获得方式")</label>
+                    <div class="layui-input-block">
+                        <input type="checkbox" name="projectsource" lay-skin="primary" value="1" title="申报">
+                        <input type="checkbox" name="projectsource" lay-skin="primary" value="2" title="导入">
+                    </div>
+                    <button style="position:absolute;top:0px;left:820px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                </div>
+            </form>
+
+
+
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'150',height:'full-280',toolbar:'#toolbarTpl', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus>=4 '}, page:true, id:'Project',  even: false,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
+                <thead>
+                    <tr>
+                        <th lay-data="{templet:'#checkboxTpl',width:'70',fixed:'left'}">选择</th>
+                        <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
+                        <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',minWidth:'250',sort:true}">@L("项目名称")</th>
+                        <th lay-data="{align:'center',field:'projectSource',templet:'#projectSourceTpl',sort:true}">@L("获得方式")</th>
+                        <th lay-data="{align:'center',field:'reportSN',sort:true}">@L("归档编号")</th>
+                        <th lay-data="{align:'center',field:'prizeName',minWidth:'150',sort:true}">@L("奖项大类")</th>
+                        <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
+                        <th lay-data="{align:'center',field:'designOrganizationName',sort:true}">@L("申报单位")</th>
+                        <th lay-data="{align:'center',field:'coorperation'}">@L("合作单位")</th>
+                        <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl',sort:true}">@L("是否原创")</th>
+                        <th lay-data="{align:'center',field:'name',sort:true}">@L("申报人")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+<script type="text/html" id="checkboxTpl">
+    {{#if(d.projectSource==1){}}
+    <input type="checkbox" disabled lay-skin="primary" />
+    {{#}else{}}
+    <input type="checkbox" lay-skin="primary" value="{{d.id}}" class="laycheck"/>
+    {{#}}}
+</script>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container" >
+        <button class="layui-btn layui-btn-sm" id="uploadBtn">导入项目数据</button>
+        <button class="layui-btn layui-btn-sm layui-btn-danger" onclick="delProjects()">删除</button>
+    </div>
+</script>
+<script type="text/html" id="projectNameTpl">
+    <a href="#_" style="color:blue;text-decoration:underline;" onclick="showReport('{{d.id}}','{{d.prizeId}}','{{d.subMajorId}}','{{d.projectName}}',{{d.projectSource}})">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="projectSourceTpl">
+    {{#if(d.projectSource==1){}}
+    <span class="layui-badge layui-bg-green">@L("申报")</span>
+    {{#}else{}}
+    <span class="layui-badge layui-bg-blue">@L("导入")</span>
+    {{#}}}
+</script>
+
+@section scripts{
+    <script>
+        config.ready = function () {
+            var table = layui.table;
+            table.on('sort(Project)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                console.log(obj.field); //当前排序的字段名
+                console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+                console.log(this); //当前排序的 th 对象
+
+                //尽管我们的 table 自带排序功能，但并没有请求服务端。
+                //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+                var orderField = obj.field;
+                switch (obj.field) {
+                    case "prizeName":
+                        orderField = "Prize.PrizeName";
+                        break;
+                    case "subMajorName":
+                        orderField = "PrizeSubMajor.Major.DisplayName";
+                        break;
+                    case "designOrganizationName":
+                        orderField = "DesignOrganization.BriefName";
+                        break;
+                    case "creatorOrganizationName":
+                        orderField = "CreatorUser.Organization.BriefName";
+                        break;
+                    case "name":
+                        orderField = "CreatorUser.Name";
+                        break;
+
+                }
+                table.reload('Project', {
+                    initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。 layui 2.1.1 新增参数
+                    , where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                        orderField: orderField //排序字段
+                        , orderType: obj.type //排序方式
+                    }
+                });
+            });
+
+            $('div[cytype="dropDownTool"]').dropDownTool();
+        }
+        config.onTableDone = function () {
+            $(window).trigger("resize");
+            //上传配置
+                layui.upload.render({
+                    elem: '#uploadBtn',
+                    field: 'file',
+                    accept: 'file',
+                    acceptMime: 'Excel文件/xlsx',
+                    exts: 'xlsx',
+                    url: '/file/upload/'
+                    , before: function (obj) {
+                        loadLayerIndex = top.layer.msg('@L("正在上传")...', {
+                            icon: 16
+                            , shade: 0.01, time: 0
+                        });
+                    }
+                    , done: function (res) {
+                        top.layer.close(loadLayerIndex);
+                        //如果上传失败
+                        if (!res.success) {
+                            return layer.msg('@L("上传失败")');
+                        }
+                        //上传成功
+                        else {
+                            var filePath = res.result.filePath;
+                            loadLayerIndex = top.layer.msg('上传成功,正在导入...', {
+                                icon: 16
+                                , shade: 0.01, time: 0
+                            });
+                            abp.services.app.project.import(@matchInstance.Id,filePath).done(function (data) { 
+                                top.layer.close(loadLayerIndex);
+                                switch (data.code) {
+                                    case 0:
+                                        if (data.data.length>0) {
+                                            //展示详细错误
+                                            layui.sessionData('errors', {
+                                                key: 'importErrors'
+                                                , value: data.data
+                                            });
+                                            layer.open({
+                                                type: 2,
+                                                title: "导入错误详情",
+                                                shadeClose: false,
+                                                shade: 0.8,
+                                                area: ['80%', '80%'],
+                                                content: "/GroupManager/ImportErrorView",
+                                                btn: ['关闭']
+                                            })
+                                        } else {
+                                            //成功
+                                            layer.msg("导入成功");
+                                            layui.table.reload('Project');
+
+                                        }
+                                        
+                                        break;
+                                    case -1:
+                                        abp.message.error(data.msg);
+                                        break;
+
+                                }
+                            }).fail(function (data) {
+                                top.layer.close(loadLayerIndex);
+                            })
+
+                        }
+                    }
+                });
+
+        };
+        function doSearch() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4' };
+
+            var projectName = $("#projectName").val();
+            if (projectName) {
+                where.where += ' and projectName.Contains(\"' + projectName + '\") ';
+            }
+            var prizes = getCheckboxValue("prize");
+            if (prizes.length > 0) {
+                var tmpWhere = [];
+                $.each(prizes, function (i, v) {
+                    tmpWhere.push('PrizeId=' + v);
+                });
+                where.where += ' and (' + tmpWhere.join(' or ') + ')';
+            }
+            var organizationId = $("input[name='OrganizationId']").val();
+            if (organizationId) {
+                where.where += " and DesignOrganizationId=" + organizationId;
+
+            }
+            var projectsources = getCheckboxValue("projectsource");
+            if (projectsources.length > 0) {
+                var tmpWhere = [];
+                $.each(projectsources, function (i, v) {
+                    tmpWhere.push('projectsource=' + v);
+                });
+                where.where += ' and (' + tmpWhere.join(' or ') + ')';
+
+            }
+            console.log(where);
+            layui.table.reload('Project', {
+                where: where
+
+            })
+
+            return false;
+        }
+
+        //打开申报窗口
+        function showReport(projectId,prizeId,subMajorId,projectName,projectSource) {
+            var title = projectName;
+            if (projectSource == 1) {
+                //申报项目只能查看
+                top.layer.open({
+                    type: 2,
+                    title: title,
+                    shadeClose: false,
+                    closeBtn:0,
+                    shade: 0.8,
+                    area: ['100%', '100%'],
+                    content: "/GroupManager/View?projectId=" + projectId,
+                    btn: ['关闭'],
+                    success: function (layero, index) {
+                        //全屏弹窗
+                        console.log(layero);
+                        $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                            top.layer.close(index);
+                        });
+
+                    }
+                })
+            } else {
+                //导入项目可以修改
+                top.layer.open({
+                    type: 2,
+                    title: title,
+                    shadeClose: false,
+                    closeBtn:0,
+                    shade: 0.8,
+                    area: ['100%', '100%'],
+                    content: "/ProjectReport/Post?prizeId=" + prizeId + "&subMajorId=" + subMajorId + "&projectId=" + projectId,
+                    btn: ['提交', '关闭'],
+                    success: function (layero, index) {
+                        //全屏弹窗
+                        console.log(layero);
+                        $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                            top.layer.close(index);
+                        });
+
+                    },
+                    yes: function (index, layero) {
+                        var iframeWin = top.window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                        iframeWin.submit();
+                    }
+
+                })
+            }
+            
+
+        }
+
+        function delProjects() {
+            var ids_arr = [];
+            $("input.laycheck").each(function () {
+                if ($(this).next("div").is(".layui-form-checked")) {
+                    ids_arr.push($(this).val());
+                }
+            });
+            if (ids_arr.length == 0) {
+                layer.msg("请先选择记录", { icon: 5, anim: 6 });
+                return false;
+            }
+            abp.message.confirm("确认删除这些记录?", function () {
+                func.runAsync(abp.services.app.project.deleteEntity(ids_arr).done(function () {
+                    layer.msg("提交成功");
+                    layui.table.reload("Project");
+                }));
+
+            });
+            
+        }
+    </script>
+}
+

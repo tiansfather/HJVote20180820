@@ -1,0 +1,132 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@model Master.Matches.MatchInstance
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div>
+    <form class="layui-form layui-form-pane">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="MatchInstanceStatus" value="@((int)Model.MatchInstanceStatus)" />
+        <div class="layui-form-item">
+            <label class="layui-form-label">赛事</label>
+            <div class="layui-input-block">
+                <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name",Model.MatchId))" lay-verify="required"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">届</label>
+            <div class="layui-input-block">
+                <input type="text" name="Identifier" lay-verify="required" autocomplete="off" class="layui-input" value="@Model.Identifier">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">年份</label>
+            <div class="layui-input-block">
+                <select name="Year">
+                    @for (var i = DateTime.Now.Year - 1; i < DateTime.Now.Year + 1; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea placeholder="" class="layui-textarea" name="Remarks">@Model.Remarks</textarea>
+            </div>
+        </div>
+        <div class="layui-layer-btn layui-layer-btn-" style="text-align:center">
+            @if (Model.MatchInstanceStatus == MatchInstanceStatus.Draft)
+            {
+                <a class="layui-layer-btn0 layui-bg-blue" href="javascript:doSubmit(1)" rel="1">暂存</a>
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
+            }
+            @if (Model.MatchInstanceStatus == MatchInstanceStatus.Applying)
+            {
+                <a class="layui-layer-btn0 layui-bg-blue" href="javascript:doSubmit(1)" rel="1">暂存</a>
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(4)" rel="4">评选完成</a>
+                @*<a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>*@
+            }
+            @*@if (Model.MatchInstanceStatus == MatchInstanceStatus.Reviewing)
+        {
+            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
+            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>
+            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(4)" rel="4">评选完成</a>
+        }*@
+            @if (Model.MatchInstanceStatus == MatchInstanceStatus.Complete)
+            {
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
+                @*<a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>*@
+            }
+        </div>
+        @if (Model.MatchInstanceStatus != MatchInstanceStatus.Draft)
+        {
+        <div class="layui-layer-btn layui-layer-btn-" style="text-align:center">
+            @if (Model.MatchInstanceStatus == MatchInstanceStatus.Applying)
+            {
+            <a class="layui-layer-btn1 layui-bg-orange" href="javascript:doReSubmit()">重新发布</a>
+            }
+            
+            <a class="layui-layer-btn1 layui-bg-red" href="javascript:doClear()">清空本届赛事</a>
+        </div>
+        }
+
+        @*<div class="layui-form-item">
+            <button class="layui-btn layui-bg-blue layui-btn-sm" type="button" onclick="doSubmit()">暂存</button>
+            <button class="layui-btn" type="button" onclick="doSubmit()">发布</button>
+            <button class="layui-btn" type="button" onclick="doSubmit()">申报结束</button>
+            <button class="layui-btn" type="button" onclick="doSubmit()">评选完成</button>
+        </div>*@
+        <vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="MatchInstance",ButtonKey="Edit"})"></vc:form-submit>
+        @*<div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+            </div>
+        </div>*@
+    </form>
+</div>
+
+@section scripts{
+<script>
+        config.ready = function () {
+            $("select[name='Year']").val('@Model.Year');
+            layui.form.render();
+        }
+        function doSubmit(status) {
+            var str = $("a[rel='" + status + "']").html();
+            abp.message.confirm("确认" + str+"?", function () {
+                $("input[name='MatchInstanceStatus']").val(status);
+                submit();
+            });
+    }
+    function doReSubmit() {
+        abp.message.confirm("确认重新发布赛事?赛事相关配置将重新同步", function () {
+            func.runAsync(abp.services.app.matchInstance.reSubmitMatchInstance(@Model.Id).done(function (data) {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("MatchInstance");
+                    parent.config.refresh();
+                }));
+            });
+
+    }
+        function doClear() {
+            abp.message.confirm("确认清空本届赛事？", function () {
+                func.runAsync(abp.services.app.matchInstance.clearMatchInstance(@Model.Id).done(function (data) {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("MatchInstance");
+                    parent.config.refresh();
+                }));
+            });
+        }
+</script>
+}
+

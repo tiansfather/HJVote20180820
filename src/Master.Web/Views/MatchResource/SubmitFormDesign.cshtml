@@ -1,0 +1,681 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+@section styles{
+    <style>
+         .notVerify {
+            border: 1px solid red;
+        }
+    </style>
+
+}
+<div class="layui-hide" id="app">
+    <form>
+        <div class="layui-form layui-form-pane">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">赛事</label>
+                    <div class="layui-input-block">
+                        <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-filter="MatchId" lay-verify="required" v-model="currentItem.matchId">
+                            <option value="">--请选择赛事--</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">@L("专业大类")</label>
+                    <div class="layui-input-inline">
+                        <select name="MajorId" lay-filter="MajorId" v-model="currentItem.majorId" lay-verify="required">
+                            <option value="">--选择专业大类--</option>
+                            <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">@L("专业小类")</label>
+                    <div class="layui-input-inline">
+                        <select name="SubMajorId" v-model="currentItem.subMajorId" lay-filter="SubMajorId">
+                            <option value="">--选择专业小类--</option>
+                            <option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="display:none">
+                <div class="layui-input-block">
+                    <button class="layui-btn" type="button" lay-submit="" lay-filter="Submit" id="Submit">@L("提交")</button>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space5">
+            <div class="layui-col-md3">
+                <blockquote class="layui-elem-quote">
+                    <button class="layui-btn   layui-btn-xs" @@click="copyNode" type="button">复制</button>
+                    <button class="layui-btn   layui-btn-xs" @@click="pasteNode" type="button">粘贴</button>
+                    <button class="layui-btn   layui-btn-xs" @@click="doImport" type="button" :disabled="isInApply" :class="{'layui-btn-disabled':isInApply}">导入</button>
+                    <button class="layui-btn layui-btn-warm layui-btn-xs" @@click="doExport" type="button">导出</button>
+
+                </blockquote>
+                <ul id="tree" class="ztree" layouth="250"
+                    style="padding: 2px; border: 1px solid #ddd; overflow: auto;"></ul>
+            </div>
+            <div class="layui-col-md9">
+                <blockquote class="layui-elem-quote">表单预览</blockquote>
+                <div class="formPreview">
+                    <layout :list="currentItem.datas"></layout>
+                </div>
+                <div v-if="currentData" class="layui-form layui-form-pane">
+                    <blockquote class="layui-elem-quote">项信息:</blockquote>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">项类型</label>
+                        <div class="layui-input-block">
+                            <select v-model="currentData.type" lay-filter="ControlType">
+                                <option value="layout">容器</option>
+                                <option value="label">文本</option>
+                                <option value="input">输入框</option>
+                                <option value="date">日期</option>
+                                <option value="select">下拉列表</option>
+                                <option value="radio">单选</option>
+                                <option value="checkbox">多选</option>
+                                <option value="textarea">文本域</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">控件名称</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" v-model="currentData.formName" @@keyup="ztree.syncFromCurrentData()" />
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">相同名称的控件为一组</div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='layout'">
+                        <label class="layui-form-label">对齐</label>
+                        <div class="layui-input-block">
+                            <select v-model="currentData.align" lay-filter="TextAlign">
+                                <option value="left">居左</option>
+                                <option value="center">居中</option>
+                                <option value="right">居右</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='layout'">
+                        <label class="layui-form-label">容器跨度</label>
+                        <div class="layui-input-inline">
+                            <input type="text" class="layui-input" v-model="currentData.span" @@keyup="ztree.syncFromCurrentData()" />
+                        </div>
+                        <div class="layui-form-mid layui-word-aux">取值为1-12，父容器100%为12，即6代表父容器一半宽度</div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='label'">
+                        <label class="layui-form-label">文本内容</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.text" @@keyup="ztree.syncFromCurrentData()" placeholder="空格请用&nbsp;代替" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">提示内容</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.tips" @@keyup="ztree.syncFromCurrentData()" placeholder="换行请用<br/>代替" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='select'||currentData.type=='radio' || currentData.type=='checkbox'">
+                        <label class="layui-form-label">可选值</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.selectValues" placeholder="以,隔开内容" @@keyup="ztree.syncFromCurrentData()" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type!='layout' && currentData.type!='label'">
+                        <label class="layui-form-label">默认值</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.value" placeholder="" @@keyup="ztree.syncFromCurrentData()" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type!='layout' && currentData.type!='label'" pane>
+                        <label class="layui-form-label">必填</label>
+                        <div class="layui-input-block">
+                            <input type="checkbox" lay-skin="switch" lay-text="ON|OFF" lay-filter="Required" :checked="currentData.required">
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type!=='layout'">
+                        <label class="layui-form-label">颜色</label>
+                        <div class="layui-input-inline">
+                            <input type="text" value="" placeholder="请选择颜色" v-model="currentData.color" class="layui-input" id="color">
+                        </div>
+                        <div class="layui-inline" style="left: -11px;">
+                            <div id="color-trigger"></div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='layout'">
+                        <label class="layui-form-label">背景</label>
+                        <div class="layui-input-inline">
+                            <input type="text" value="" placeholder="请选择颜色" v-model="currentData.background" class="layui-input" id="background">
+                        </div>
+                        <div class="layui-inline" style="left: -11px;">
+                            <div id="background-trigger"></div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type!='layout' && currentData.type!='label'">
+                        <label class="layui-form-label">宽度</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.width" @@keyup="ztree.syncFromCurrentData()" placeholder="例：200px" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='layout' || currentData.type=='textarea'">
+                        <label class="layui-form-label">高度</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.height" @@keyup="ztree.syncFromCurrentData()" placeholder="取值1-20,如跨两行则设为2，以此类推" />
+                        </div>
+                    </div>
+                    <div class="layui-form-item" v-if="currentData.type=='layout'">
+                        <label class="layui-form-label">Padding</label>
+                        <div class="layui-input-block">
+                            <input type="text" class="layui-input" v-model="currentData.padding" @@keyup="ztree.syncFromCurrentData()" placeholder="例：10px 10px 10px 10px" />
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+
+
+
+
+
+    </form>
+
+
+</div>
+<div id="contentContainer" style="padding:20px;display:none">
+    <textarea style="width:100%;height:350px;"></textarea>
+</div>
+@section scripts{
+    <script>
+        Vue.component('layout', {
+            template: '<div ><template v-for="(item,index) in list"><div v-if="item.type==\'layout\'" :formtips="item.tips" :class="[\'layout-height\'+item.height,\'layui-col-md\'+item.span,\'layout\',{current:item.isCurrent}]" :style="[{color:item.color,background:item.background,\'text-align\':item.align,height:item.height,padding:getPadding(item),\'border-right\':hasChildLayout(item)?\'0\':\'1px solid #e6e6e6\',\'border-bottom\':hasChildLayout(item)?\'0\':\'1px solid #e6e6e6\'}]" ><layout :list="item.children"></layout></div><label v-if="item.type==\'label\'" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background}]" :class="{current:item.isCurrent}" v-html="item.text"></label><input v-if="item.type==\'input\'" :rel="item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"/><input v-if="item.type==\'date\'" :rel="item.id" :id="\'mydate\'+item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" class="mydate" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"/><select v-if="item.type==\'select\'" :rel="item.id" :value="item.value" :formtips="item.tips" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><option v-for="(option,optionIndex) in getOption(item.selectValues)" :value="option">{{option}}</option></select><label v-if="item.type==\'radio\'" :formtips="item.tips" v-for="(option,optionIndex) in getOption(item.selectValues)" style="margin-left:5px" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><input  type="radio" :rel="item.id" :value="option" :title="option" :name="item.formName||\'c\'+item.id" :checked="item.value==option" />{{option}}</label><label v-if="item.type==\'checkbox\'" :formtips="item.tips" v-for="(option,optionIndex) in getOption(item.selectValues)" style="margin-left:5px" :style="[item.style,{color:item.color,background:item.background,width:item.width}]" :class="{current:item.isCurrent,notVerify:item.required&&!item.value}"><input  type="checkbox" :rel="item.id" :value="option" :title="option" :name="item.formName" :checked="item.value.indexOf(option)>=0" />{{option}}</label><textarea v-if="item.type==\'textarea\'" :rel="item.id" :formtips="item.tips" :class="[\'layout-height\'+item.height,{current:item.isCurrent,notVerify:item.required&&!item.value}]" :style="[{color:item.color,background:item.background,\'text-align\':item.align,height:item.height,width:item.width}]" :value="item.value"></textarea></template></div>',
+            //+'<div v-if="item.type==\'layout\'" :class="\'layui-col-md\'+item.span"></div>'+
+
+            props: {
+                list: Array
+            },
+            data: function () {
+                return {
+
+                }
+            },
+            methods: {
+                getOption: function (selectValue) {
+                    var result = [];
+                    if (selectValue) {
+                        result = selectValue.split(',');
+                    }
+                    return result;
+                },
+                getPadding: function (item) {
+                    if (this.hasChildLayout(item)) {
+                        return "0";
+                    } else {
+                        return item.padding||"3px";
+                    }
+
+                },
+                hasChildLayout: function (item) {
+                    return item.children.filter(function (o) { return o.type == 'layout'; }).length > 0;
+                }
+            }
+        });
+        var app,ztree;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.currentItem.matchId = matchId;
+                app.currentItem.majorId = "";
+                app.currentItem.subMajorId = "";
+                app.subMajors = [];
+                app.loadMajors(matchId);
+            });
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.currentItem.majorId = majorId;
+                app.loadSubMajors(majorId);
+            });
+            layui.form.on('select(SubMajorId)', function (data) {
+                var subMajorId = data.value;
+                app.currentItem.subMajorId = subMajorId;
+            });
+            layui.form.on('select(ControlType)', function (data) {
+                var controlType = data.value;
+                app.currentData.type = controlType;
+                ztree.syncFromCurrentData();//同步vue信息至树节点
+            });
+            layui.form.on('select(TextAlign)', function (data) {
+                var align = data.value;
+                app.currentData.align = align;
+                ztree.syncFromCurrentData();//同步vue信息至树节点
+            });
+            layui.form.on('switch(Required)', function (data) {
+                app.currentData.required = data.elem.checked;
+                ztree.syncFromCurrentData();//同步vue信息至树节点
+            });
+            layui.form.on('submit', function () {
+                if (app.currentItem.datas.length == 0) {
+                    layer.msg('请至少录入一条记录', { icon: 5, anim: 6 });
+                    return false;
+
+                }
+                func.runAsync(abp.services.app.matchResource.submitMatchResourceFormDesign(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("FormDesign");
+                    parent.config.refresh();
+
+                }))
+
+            });
+            ztree = function () {
+                //var zTreeObj;
+                var setting = {
+                    view: {
+                        selectedMulti: false,
+                        addHoverDom: addHoverDom,
+                        removeHoverDom: removeHoverDom,
+                    },
+                    edit: {
+                        enable:true,
+                        showRemoveBtn: showRemoveBtn,
+                        showRenameBtn: false
+                    },
+                    data: {
+                        key: {
+                            name: 'name',
+                            title: ''
+                        }
+                    },
+                    callback: {
+                        beforeDrag: function (treeId, treeNodes) {
+                            for (var i = 0, l = treeNodes.length; i < l; i++) {
+                                if (treeNodes[i].drag === false) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        },
+                        beforeDrop: function (treeId, treeNodes, targetNode, moveType) {
+                            //不允许产生根节点
+                            if (targetNode.level == 0 && (moveType == "prev" || moveType == "next")) {
+                                return false;
+                            }
+                            return targetNode ? targetNode.drop !== false : true;
+                        },
+                        beforeRemove: function (treeId, treeNode) {
+                            if (app.isInApply) {
+                                abp.message.error("申报中赛事不允许删除表单设计节点");
+                                return false;
+                            }
+                            abp.message.confirm("确认删除节点?", function () {
+                                zTreeObj.removeNode(treeNode, false);
+                                app.currentData = null;
+                            });
+                            return false;
+                        },
+                        onDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
+                            app.syncTree();
+                        },
+                        onRemove: function(event, treeId, treeNode) {
+                            app.syncTree();
+                        },
+                        onClick: function (event, treeId, treeNode) {
+                            console.log(treeNode.id);
+                            app.syncTree();
+                            var control = app.findControlById(treeNode.id);
+                            app.setCurrent(control);
+                            refresh();
+                            //searchKeys.parentId = treeNode.id;
+                            //config.reloadTable();
+                        }
+                    }
+                };
+                var load = function (json) {
+
+                    zTreeObj = $.fn.zTree.init($("#tree"), setting);
+                    var zTree = $.fn.zTree.getZTreeObj("tree");
+                    zTree.setting.edit.drag.isCopy = true;
+                    zTree.setting.edit.drag.isMove = true;
+                    var newNode = { name: "根节点", children:json,drag:false };
+                    zTreeObj.addNodes(null, newNode);
+                    //mainList({ orgId: "" });
+                    zTreeObj.expandAll(true);
+                };
+                //load();
+                return {
+                    reload: load,
+                    nodes: function () {
+                        return zTreeObj.getNodes();
+                    },
+                    syncFromCurrentData: function () {
+                        var node = zTreeObj.getSelectedNodes()[0];
+                        node.type = app.currentData.type;
+                        node.text = app.currentData.text;
+                        node.span = app.currentData.span;
+                        node.value = app.currentData.value;
+                        node.selectValues = app.currentData.selectValues;
+                        node.padding = app.currentData.padding;
+                        node.width = app.currentData.width;
+                        node.height = app.currentData.height;
+                        node.color = app.currentData.color;
+                        node.align = app.currentData.align;
+                        node.tips = app.currentData.tips;
+                        node.required = app.currentData.required;
+                        node.formName = app.currentData.formName;
+                        node.background = app.currentData.background;
+                        node.name = ztree.generateName(app.currentData);
+                        zTreeObj.updateNode(node);
+                        refresh();
+                    },
+                    generateName: function (data) {
+                        switch (data.type) {
+                            case "layout":
+                                return "容器[" + data.formName+data.span + "]";
+                            case "label":
+                                return "文本[" + data.formName + "]";
+                            case "input":
+                                return "输入框[" + data.formName + "]";
+                            case "date":
+                                return "日期[" + data.formName + "]";
+                            case "select":
+                                return "下拉列表[" + data.formName + "]";
+                            case "radio":
+                                return "单选[" + data.formName + "]";
+                            case "checkbox":
+                                return "多选[" + data.formName + "]";
+                            case "textarea":
+                                return "文本域[" + data.formName + "]";
+
+                        }
+                    },
+                    generateNewId: function (node) {
+                        //递归设置树节点id为新id;用于复制粘贴产生的新节点;
+                        node.id = $.newid();
+                        $.each(node.children, function (i, v) {
+                            ztree.generateNewId(v);
+                        });
+                        zTreeObj.updateNode(node);
+                    },
+                    checkFirstNode: function () {
+                        var node = zTreeObj.getNodes()[0].children[0];
+                        zTreeObj.selectNode(node);
+                        //app.syncTree();
+                        //var control = app.findControlById(node.id);
+                        //app.setCurrent(control);
+                        //refresh();
+                    }
+                };
+            }();
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentNode:null,
+                    currentData: null,
+                    currentItem: {id:0, matchId: "", majorId: "", subMajorId: "", datas: [], matchResourceStatus:1,matchResourceType:1},
+                    allMajors:[],
+                    mainMajors: [],
+                    subMajors: [],
+                    isInApply:false
+                },
+                methods: {
+                    loadItem: function (id) {
+                        var that = this;
+                        if (id) {
+                            abp.services.app.matchResource.getMatchResource(id).done(function (data) {
+                                that.currentItem = data;
+                                ztree.reload(that.currentItem.datas);
+                                ztree.checkFirstNode();
+                                that.loadMajors(data.matchId, data.majorId);
+                            });
+                        } else {
+                            that.currentItem = { id: 0, matchId: "", majorId: "", subMajorId: "", datas: [that.generateNewControl()], matchResourceStatus: 1, matchResourceType: 1 };
+                            ztree.reload(that.currentItem.datas);
+                            ztree.checkFirstNode();
+                        }
+                        that.currentData = that.currentItem.datas[0];
+
+                        refresh();
+                    },
+                    loadMajors: function (matchId, majorId) {
+                        abp.services.app.match.getIfMatchInApply(matchId).done(function (data) {
+                            app.isInApply = data;
+                        });
+                        abp.services.app.major.getTreeJson(matchId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            if (majorId) {
+                                app.loadSubMajors(majorId);
+
+                            }
+                            refresh();
+                        });
+                    },
+                    generateNewControl: function () {
+                        return { type: 'layout', id: $.newid(),children:[],text:'',value:'',selectValues:'',span:'6' ,name:'容器[6]',formName:'',isCurrent:false,color:'#000',background:'',align:'left',tips:'',padding:'',width:'',height:'1'};
+                    },
+
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    },
+                    syncTree: function () {
+                        //同步树节点信息至vue;
+                        app.currentItem.datas = app.loadDataFromTree();
+                    },
+                    loadDataFromTree: function (treeData) {
+                        //递归读取树节点信息
+                        if (!treeData) { treeData = ztree.nodes()[0].children; }
+                        var data = [];
+                        $.each(treeData, function (i, v) {
+                            var obj = { id: v.id, type: v.type, text: v.text, value: v.value, style: v.style, selectValues: v.selectValues, span: v.span, color: v.color, background: v.background, align: v.align, name: v.name, tips: v.tips, width: v.width, height: v.height, padding: v.padding,formName:v.formName,required:v.required };
+                            obj.children = app.loadDataFromTree(v.children);
+                            data.push(obj);
+                        });
+                        return data;
+                    },
+                    setCurrent: function (control) {
+                        app.restoreCurrent(app.currentItem.datas);
+                        if (control) { control.isCurrent = true;}
+                        app.currentData = control;
+                    },
+                    restoreCurrent: function (controls) {
+                        //递归设置所有控件为未选中状态
+                        $.each(controls, function (i, v) {
+                            v.isCurrent = false;
+                            app.restoreCurrent(v.children);
+                        })
+                    },
+                    findControlById: function (id, controls) {
+                        if (!controls) { controls = app.currentItem.datas; }
+                        var result = null;
+                        $.each(controls, function (i, v) {
+                            if (v.id == id) {
+                                result = v;
+                                return;
+                            }
+                            var find = app.findControlById(id, v.children);
+                            if (find) { result = find;return;}
+                        });
+                        return result;
+                    },
+                    doExport: function () {
+                        var str = JSON.stringify(app.currentItem.datas);
+                        $("#contentContainer textarea").val(str);
+                        layer.open({
+                            type: 1,
+                            shade: false,
+                            btn:['关闭'],
+                            title: "导出", //不显示标题
+                            area:['800px','500px'],
+                            content: $('#contentContainer') //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+
+                        });
+                    },
+                    doImport: function () {
+                        $("#contentContainer textarea").val('');
+                        layer.open({
+                            type: 1,
+                            shade: false,
+                            btn: ['确认','关闭'],
+                            title: "导入", //不显示标题
+                            area: ['800px', '500px'],
+                            content: $('#contentContainer'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            yes: function (index) {
+                                var str = $("#contentContainer textarea").val();
+                                try {
+                                    app.currentItem.datas = JSON.parse(str);
+                                    ztree.reload(app.currentItem.datas);
+                                    app.currentData = null;
+                                    layer.msg("导入成功");
+                                    layer.close(index);
+                                } catch(err){
+                                    layer.msg("数据错误", {icon:5,anim:6});
+                                }
+                            }
+                        });
+                    },
+                    copyNode: function () {
+                        var zTree = $.fn.zTree.getZTreeObj("tree"),
+                            nodes = zTree.getSelectedNodes();
+                        if (nodes.length == 0) {
+                            layer.msg("请先选择节点进行复制", { icon: 5, anim: 6 });
+                            return;
+                        }
+                        if (nodes[0].level == 0) {
+                            layer.msg("根节点无法进行复制", { icon: 5, anim: 6 });
+                            return;
+                        }
+                        app.currentNode = nodes[0];
+                        layer.msg("复制成功");
+                    },
+                    pasteNode: function () {
+                        if (!app.currentNode){
+                            layer.msg("请先复制节点再进行粘贴", { icon: 5, anim: 6 });
+                            return;
+                        }
+                        var zTree = $.fn.zTree.getZTreeObj("tree"),
+                            nodes = zTree.getSelectedNodes(),
+                            targetNode = nodes.length > 0 ? nodes[0] : null;
+                        if (!targetNode) {
+                            layer.msg("请选择要粘贴的父节点", { icon: 5, anim: 6 });
+                            return;
+                        }
+                        var newNode = zTree.copyNode(targetNode, app.currentNode, "inner");
+                        console.log(newNode);
+                        //新节点必须赋于新的id;
+                        ztree.generateNewId(newNode);
+                        app.syncTree();
+                        refresh();
+                    }
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                //renderLayout($(".formPreview>div>.layout"));
+                $(".layui-form-switch,.layui-form-select,.layui-form-radio").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+                $(".mydate").each(function () {
+                    layui.laydate.render({
+                        elem: '#' + $(this).attr("id") //指定元素
+                    });
+                });
+
+                if (app.currentData) {
+                    layui.colorpicker.render({
+                        elem: '#color-trigger'
+                        , color: app.currentData.color
+                        , format: 'rgb'
+                        , predefine: true
+                        , alpha: true
+                        , done: function (color) {
+                            app.currentData.color = color;
+                            ztree.syncFromCurrentData();
+                        }
+                    });
+                    layui.colorpicker.render({
+                        elem: '#background-trigger'
+                        , color: app.currentData.background
+                        , format: 'rgb'
+                        , predefine: true
+                        , alpha: true
+                        , done: function (color) {
+                            app.currentData.background = color;
+                            ztree.syncFromCurrentData();
+                        }
+                    });
+                }
+
+
+                //$(".layout").each(function () {
+                //    var height = $(this).parent().height();
+                //    $(this).css("height", height + "px");
+                //});
+            })
+        }
+
+        function renderLayout($objs) {
+            $.each($objs, function (i, v) {
+                var children = $(v).find("div>div.layout");
+                if (children.size() > 0) {
+                    $(v).css("border-right", 0).css("border-bottom", 0);
+                }
+                renderLayout(children);
+            });
+        }
+
+        function submit() {
+            app.currentItem.matchResourceStatus = 1;//草稿
+            $("#Submit").click();
+        }
+        function submit2() {
+            app.currentItem.matchResourceStatus = 2;//发布
+            $("#Submit").click();
+
+        }
+
+        function showRemoveBtn(treeId, treeNode) {
+            return treeNode.level>0;
+        }
+        function addHoverDom(treeId, treeNode) {
+            var sObj = $("#" + treeNode.tId + "_span");
+            if (treeNode.editNameFlag || $("#addBtn_" + treeNode.tId).length > 0) return;
+            var addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+                + "' title='add node' onfocus='this.blur();'></span>";
+            sObj.after(addStr);
+            var btn = $("#addBtn_" + treeNode.tId);
+            if (btn) btn.bind("click", function () {
+                var zTree = $.fn.zTree.getZTreeObj("tree");
+                var newNode = zTree.addNodes(treeNode, app.generateNewControl());
+                zTree.selectNode(newNode[0]);
+                app.syncTree();
+                var control = app.findControlById(newNode[0].id);
+                app.setCurrent(control);
+                refresh();
+                return false;
+            });
+        };
+        function removeHoverDom(treeId, treeNode) {
+            $("#addBtn_" + treeNode.tId).unbind().remove();
+        };
+    </script>
+}

@@ -1,0 +1,62 @@
+﻿@using Master.Web.Components
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("数据管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <div class="layui-inline">                        
+                        <button class="layui-btn  " fornonerow="1" buttonname="@L("添加备份")" type="button"  lay-event="Add" confirmmsg="确认添加数据备份?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.dataBase.doDo" modulekey="Database" onclick="addBackup()" callback="config.refresh">@L("添加备份")</button>
+                    </div>
+                </div>
+            </form>
+
+
+            <table autoevent="1" id="Database" lay-filter="Database" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-170', url:'/api/services/app/DataBase/GetPageResult', page:true, id:'Database', skin: 'row', even: true,done:config.onTableDone}">
+                <thead>
+                    <tr>
+                        <th lay-data="{align:'center',field:'fileName',sort:true}">@L("文件名称")</th>
+                        <th lay-data="{align:'center',field:'creationTime',sort:true}">@L("备份时间")</th>
+                        <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/html" id="toolbar">
+
+    <a dataid="{{d.fileName}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="Database" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.dataBase.delete" onclick="func.callModuleButtonEvent()">@L("删除")</a>
+</script>
+@section scripts{
+    <script>
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+            
+
+            config.refresh();
+
+        };
+        config.onTableDone = function () {
+
+        };
+        config.refresh = function () {
+            
+        };
+        function addBackup() {
+            abp.message.confirm("确认添加数据备份?", function () {
+                func.runAsync(abp.services.app.dataBase.backUp().done(function () {
+                    layer.msg("提交成功");
+                    layui.table.reload('Database');
+                }));
+            })
+        }
+    </script>
+}

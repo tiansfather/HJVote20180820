@@ -1,0 +1,147 @@
+﻿@using Master.Web.Startup
+@using Master.Web
+@using Master.Configuration;
+@using Master.Web.Views.Shared.Components.SideBarNav;
+@using Master.Web.Views.Shared.Components.TopBarNav;
+@inject Master.Timing.AppTimes AppTimes
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewData["SoftTitle"]</title>
+    <meta name="keywords" content="华建集团">
+    <meta name="description" content="华建集团">
+    <meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta content="telephone=no, address=no" name="format-detection">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
+    <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
+
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/layui.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/font-awesome.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css">
+</head>
+<body id="main_pc_bj">
+
+    <div id="LAY_app">
+        <div class="layui-layout layui-layout-admin">
+            <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
+
+            <div id="app" class="layui-hide">
+                <div class="main_pc_nr">
+                    <div class="main_anniu">
+                        <ul>
+                            <a href="#_" v-for="(item,index) in reviews" @@click="gotoReview(item.id)">
+                                <li>
+                                    {{item.reviewName}}<br>
+                                    第{{item.currentRoundC}}轮&nbsp;第{{item.currentTurn}}次<br>
+                                    正在评审中...
+                                </li>
+                            </a>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="main_pc_nr_none" v-if="reviews.length==0">
+                    <div class="main_anniu_none">
+                        <ul>
+                            <li><i class="huadongjz fa-exclamation-triangle"></i></li>
+                            <li>当前没有正在进行的评审！</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- 辅助元素，一般用于移动设备下遮罩 -->
+            <div class="layadmin-body-shade" layadmin-event="shade"></div>
+        </div>
+        <footer>
+            <p>
+                华东建筑集团有限公司 版权所有<br>
+                本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器
+            </p>
+        </footer>
+    </div>
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+
+
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/assets/js/index.js" asp-append-version="true"></script>
+    <script>
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            initIndex();
+            checkToken();
+        });
+
+    </script>
+
+
+
+    <div class="layui-layer-move"></div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                reviews: []
+
+            },
+            methods: {
+                loadReviews: function () {
+                    func.runAsync(abp.services.app.review.getAvailableReview().done(function (data) {
+                        app.reviews = data;
+                        $("#app").removeClass("layui-hide");
+                    }));
+                },
+                gotoReview: function (reviewId) {
+                    func.runAsync(abp.services.app.review.getIfReviewAvailable(reviewId).done(function (data) {
+						if (data) {
+							layer.msg('跳转中,请稍候', {
+								icon: 16
+								, shade: 0.01, time: 0
+							});
+                            $.cookie("reviewId", reviewId, { expires: 365, path: '/' });
+                            location.href = '/Home/ReviewInstance';
+                        } else {
+                            layer.msg("此评审目前不可用", { icon: 5, anim: 6 });
+                        }
+                    }));
+
+
+                }
+
+            },
+            mounted: function () {
+
+                this.loadReviews();
+
+            }
+
+        });
+    </script>
+</body>
+</html>
+

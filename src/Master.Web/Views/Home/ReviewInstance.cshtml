@@ -1,0 +1,466 @@
+﻿@using Master.Web.Startup
+@using Master.Web
+@using Master.Configuration;
+@using Master.Web.Views.Shared.Components.SideBarNav;
+@using Master.Web.Views.Shared.Components.TopBarNav;
+@using Abp.Web.Security.AntiForgery
+@using Master.Reviews;
+@using Master.Projects;
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@inject Master.Timing.AppTimes AppTimes
+@inject IAbpAntiForgeryManager AbpAntiForgeryManager
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+    AbpAntiForgeryManager.SetCookie(Context);
+    var review = ViewData["reviewInstance"] as Review;
+    var currentRound = review.CurrentReviewRound;
+    var reviewMethodSetting = currentRound.ReviewMethodSetting;
+    List<ReviewProject> reviewProjects = ViewData["ReviewProjects"] as List<ReviewProject>;
+    List<ReviewProjectDto> reviewProjectDtos = ViewData["ReviewProjectDtos"] as List<ReviewProjectDto>;
+    List<Project> projects = ViewData["Projects"] as List<Project>;
+    List<ProjectReviewDetail> projectReviewDetails = ViewData["ProjectReviewDetails"] as List<ProjectReviewDetail>;
+
+    JsonSerializerSettings settings = new JsonSerializerSettings();
+    settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+}
+
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewData["SoftTitle"]</title>
+    <meta name="keywords" content="华建集团">
+    <meta name="description" content="华建集团">
+    <meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta content="telephone=no, address=no" name="format-detection">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
+    <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
+
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/layui.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/font-awesome.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css">
+    <style>
+        .none a {
+            text-decoration: none;
+            color: #bbb !important;
+        }
+        .layui-form-switch {
+            position: relative;
+            height: 36px;
+            line-height: 36px;
+            width: 56px;
+            padding: 0 5px;
+            margin-top: 0px;
+            border: 1px solid #d2d2d2;
+            border-radius: 40px;
+            cursor: pointer;
+            background-color: #fff;
+            -webkit-transition: .1s linear;
+            transition: .1s linear;
+        }
+
+        .layui-form-onswitch {
+            border-color: #D83F44;
+            background-color: #D83F44;
+        }
+
+        .layui-form-switch i {
+            position: absolute;
+            left: 5px;
+            top: 3px;
+            width: 30px;
+            height: 30px;
+            border-radius: 40px;
+            background-color: #d2d2d2;
+            -webkit-transition: .1s linear;
+            transition: .1s linear;
+        }
+
+        .layui-form-onswitch em {
+            left: 5px;
+            right: auto;
+            color: #fff !important;
+        }
+
+        .layui-form-onswitch i {
+            left: 52px;
+            background-color: #fff;
+        }
+
+        .layui-form-switch em {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            width: 25px;
+            padding: 0 !important;
+            text-align: center !important;
+            color: #999 !important;
+            font-style: normal !important;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!--[if lt IE 7]>
+    <p class="browsehappy">您使用的是<stront>过时</strong>的浏览器。请<a href="http://browsehappy.com/">升级您的浏览器</a>来提高你的经验。</p>
+    <![endif]-->
+    <div class="layui-form">
+        <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
+        <header-wr>
+            <div>
+                <h2 style="font-size:24px;text-align:center;">@(review.ReviewName)--第@(currentRound.RoundC)轮第@(currentRound.Turn)次</h2>
+                <hr />
+            </div>
+            <div class="wrap_tj">
+                <ul>
+                    <li class="fheader-wrleft"><input type="button" class="layui-btn layui-btn-big" value="提 交" onClick="confirmsave()"></li>
+                    <li class="fheader-wrleft"><input type="button" class="layui-btn layui-btn-big2" value="暂 存" onClick="savedata(false)"></li>
+                    <li class="fheader-wrleft">
+                        @if (currentRound.ReviewMethod == ReviewMethod.Vote)
+                        {
+                            <span>每人投@(reviewMethodSetting.VoteNumber)票</span>
+                        }
+                        else
+                        {
+                            <i class="huadongjz fa-thumbs-o-down"></i><span>最低分@(reviewMethodSetting.MinScore)</span> <i class="huadongjz fa-thumbs-o-up upfen"></i><span class="upfen">最高分@(reviewMethodSetting.MaxScore)</span> <i class="huadongjz fa-angle-double-right gofen"></i>
+                        }
+
+                    </li>
+                    <li class="fright"><input type="button" class="layui-btn layui-btn-big3" value="返 回" onClick="location.href='/'"></li>
+                </ul>
+            </div>
+        </header-wr>
+        <!---->
+        <div id="main_ny_pc_bj">
+            <div class="wrap_content">
+                <div class="wrap_table layui-hide" id="app">
+                    <table class="layui-table" lay-size="lg">
+                        <colgroup>
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            {
+                                <col width="110">
+                            }
+                            else
+                            {
+                                <col width="55">
+                            }
+                            <col width="85">
+                            <col>
+                            <col width="200">
+                            <col width="150">
+                            <col width="150">
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            {
+                                <col width="88">
+                            }
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <th style="cursor:pointer" onclick="app.sortby('score')"><div align="center">得分
+<i class="layui-icon layui-icon-down" v-if="sortfield=='score'"></i></div></th>
+                                }
+                                else
+                                {
+                                    <th><div align="center">投票</div></th>
+                                }
+                                <th style="cursor:pointer" onclick="app.sortby('sort')"><div align="center">序号
+                                    <i class="layui-icon layui-icon-up" v-if="sortfield=='sort'"></i></div></th>
+                                <th><div align="center">项目名称</div></th>
+                                <th><div align="center">奖项</div></th>
+                                <th><div align="center">专业</div></th>
+                                <th><div align="center">申报单位</div></th>
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <th><div align="center">回 避</div></th>
+                                }
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(project,index) in reviewProjectDtos" :projectid="project.id" :class="{'on':ifScored(project.id),'none':ifAvoid(project.id)}">
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <td name="score" align="center">{{getProjectDetail(project.id).score}}</td>
+                                }
+                                else
+                                {
+                                    <td align="center">
+                                        <input type="checkbox" name="voteflag" lay-filter="voteflag" v-model="getProjectDetail(project.id).voteFlag">
+                                    </td>
+                                }
+                                <td align="center">{{project.sort}}</td>
+                                <td><a @@click="showProject(project.id)" href="#_" style="text-decoration:underline;color:blue">{{project.projectName}}</a></td>
+                                <td align="center">{{project.prizeName}}</td>
+                                <td align="center">{{project.subMajorName}}</td>
+                                <td align="center">{{project.designOrganizationName}}</td>
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                {
+                                    <td>
+                                        <input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch" v-model="getProjectDetail(project.id).isAvoid">
+                                    </td>
+                                }
+                            </tr>
+                            @*@foreach (var reviewProject in reviewProjects.OrderBy(o => o.Sort))
+        {
+            var project = projects.Single(o => o.Id == reviewProject.Id);
+            <tr projectid="@project.Id" :class="{'on':ifScored(@project.Id),'none':ifAvoid(@project.Id)}">
+                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                {
+                    <td name="score" align="center">{{getProjectDetail(@(project.Id)).score}}</td>
+                }
+                else
+                {
+                    <td align="center">
+                        <input type="checkbox" name="voteflag" lay-filter="voteflag" v-model="getProjectDetail(@(project.Id)).voteFlag">
+                    </td>
+                }
+                <td align="center">@reviewProject.Sort</td>
+                <td><a onclick="showProject(@project.Id)" href="#_" style="text-decoration:underline;color:blue">@project.ProjectName</a></td>
+                <td align="center">@project.Prize.PrizeName</td>
+                <td align="center">@project.PrizeSubMajor?.Major.BriefName</td>
+                <td align="center">@project.DesignOrganization.BriefName</td>
+                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                {
+                    <td>
+                        <input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch" v-model="getProjectDetail(@(project.Id)).isAvoid">
+                    </td>
+                }
+            </tr>
+        }*@
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!---->
+        <footer>
+            <p>
+                华东建筑集团有限公司 版权所有<br>
+                本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器
+            </p>
+        </footer>
+    </div>
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/lib/fixedScroll/fixedScroll.js"></script>
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/assets/js/index.js" asp-append-version="true"></script>
+    <script>
+        //var projectdetails =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(projectReviewDetails,settings));
+        var method ="@(currentRound.ReviewMethod==ReviewMethod.Vote?"vote":"score")";
+        var requirevotenumber=@currentRound.ReviewMethodSetting.VoteNumber;
+        var app;
+
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            initIndex();
+            initData();
+            checkToken();
+        });
+
+        function initData() {
+            app = new Vue({
+                el: '#app',
+                data: {
+                    projectDetails: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(projectReviewDetails, settings)),
+                    reviewProjectDtos:@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(reviewProjectDtos, settings)),
+                    sortfield:'sort'
+                },
+                methods: {
+                    getProjectDetail: function (projectId) {
+                        var projectDetail = this.projectDetails.filter(function (o) { return o.projectId == projectId; })[0];
+                        if (!projectDetail) {
+                            projectDetail = { projectId: projectId, score: null, isAvoid: false, voteFlag: false };
+                            this.projectDetails.push(projectDetail);
+                        }
+                        return projectDetail;
+                    },
+                    ifScored: function (projectId) {
+                        var projectDetail = this.getProjectDetail(projectId);
+                        return projectDetail.voteFlag || (!projectDetail.isAvoid && projectDetail.score!==null);
+                    },
+                    ifAvoid: function (projectId) {
+                        var projectDetail = this.getProjectDetail(projectId);
+                        return projectDetail.isAvoid;
+                    },
+                    sortby: function (field) {
+                        this.sortfield = field;
+                        if (field == "score") {
+							this.reviewProjectDtos = this.reviewProjectDtos.sort(function (a, b) {
+								var scorea = app.getProjectDetail(a.id).score;
+								scorea = scorea ? parseFloat(scorea) : 0-a.sort;
+								var scoreb = app.getProjectDetail(b.id).score;
+								scoreb = scoreb ? parseFloat(scoreb) : 0-b.sort;
+								return scoreb-scorea;
+                            });
+                        } else if (field == "sort") {
+                            this.reviewProjectDtos = this.reviewProjectDtos.sort(function (a, b) {
+                                return a.sort - b.sort;
+                            });
+                        }
+                        refresh();
+                    },
+                    showProject: function (projectId) {
+                        if (this.getProjectDetail(projectId).isAvoid) {
+                            return false;
+                        }
+                        //将当前评审数据保存入缓存
+                        syncData();
+
+                        layer.open({
+                            type: 2,
+                            title: '@(review.ReviewName)--第@(currentRound.RoundC)轮第@(currentRound.Turn)次',
+                            shadeClose: false,
+                            closeBtn:0,
+                            shade: 0.8,
+                            area: ['100%', '100%'],
+                            content: '/Reviews/Show?projectId=' + projectId,
+                            btn: null
+                        });
+                    }
+                },
+                mounted: function () {
+                    refresh();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+            //$.each(projectdetails, function (i, v) {
+            //    var tr = $("tr[projectid=" + v.id + "]");
+            //    if (v.isAvoid) {
+            //        tr.find("[name='isavoid']").attr("checked", true);
+            //        tr.find(".layui-form-switch").addClass("layui-form-onswitch");
+            //    }
+
+            //    if (tr.find("[name='score']").size() > 0) {
+            //        tr.find("[name='score']").html(v.score);
+            //        if (v.score > 0 && !v.isAvoid) { tr.addClass("on"); }
+            //    }
+            //    if (tr.find("[name='voteflag']").size() > 0) {
+            //        if (v.voteFlag) {
+            //            tr.find("[name='voteflag']").attr("checked", v.VoteFlag);
+            //            tr.find(".layui-form-checkbox").addClass("layui-form-checked");
+            //            tr.addClass("on");
+            //        }
+
+            //    }
+            //});
+            layui.form.on('switch(avoidSwitch)', function (data) {
+                var $tr = $(data.elem).closest("tr");
+                var projectId = $tr.attr("projectid");
+                var projectDetail = app.getProjectDetail(projectId);
+                projectDetail.isAvoid = data.elem.checked;
+                if (data.elem.checked) {
+                    //回避的自动清空分数
+                    projectDetail.score = null;
+                }
+            });
+            layui.form.on('checkbox(voteflag)', function (data) {
+                var $tr = $(data.elem).closest("tr");
+                var projectId = $tr.attr("projectid");
+                var projectDetail = app.getProjectDetail(projectId);
+                projectDetail.voteFlag = data.elem.checked;
+                if (data.elem.checked) {
+                    //判断是否超出投票数量
+                    var votecount = $("tr.on").size();
+                    if (votecount >= requirevotenumber) {
+                        layer.alert("最多只能投" + requirevotenumber + "票");
+                        projectDetail.voteFlag = false;
+                        refresh();
+                    }
+                    //tr.addClass("on");
+                } else {
+                    //tr.removeClass("on");
+                }
+            });
+
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                layui.form.render();
+            })
+        }
+        @*function showProject(projectId) {
+            if (app.getProjectDetail(projectId).isAvoid) {
+                return false;
+            }
+            //将当前评审数据保存入缓存
+            syncData();
+
+            layer.open({
+                type: 2,
+                title: '@(review.ReviewName)--第@(currentRound.RoundC)轮第@(currentRound.Turn)次',
+                shadeClose: false,
+                closeBtn:2,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: '/Reviews/Show?projectId=' + projectId,
+                btn: null
+            });
+        }*@
+        function syncData() {
+            layui.sessionData('reviewdata', { key: 'projectDetails', value: app.projectDetails });
+        }
+        function savedata(ispublish) {
+
+            //var obj = { data: JSON.stringify(projectdetail), publish: ispublish ? 1 : 0 };
+            if (ispublish) {
+                //发布的需要进行数据验证
+                var votenumber = $("tr.on").size();
+                if (method == "vote") {
+                    if (votenumber != requirevotenumber) {
+                        if (votenumber + $("[name='isavoid']:checked").size() != $("[projectid]").size()) {
+                            abp.message.info("请投" + requirevotenumber + "票再提交");
+                            return false;
+                        }
+                    }
+                } else {
+                    if (votenumber + $("[name='isavoid']:checked").size() != $("[projectid]").size()) {
+                        abp.message.info("请完整打分后再提交");
+                        return false;
+                    }
+                }
+            }
+            func.runAsync(abp.services.app.review.submitExpertReview(@review.Id, app.projectDetails, ispublish).done(function () {
+                layer.msg("保存成功");
+                if (ispublish) {
+                    location.href = '/';
+                }
+            }))
+            @*TF.loading("正在提交,请稍候...");
+            TF.ajaxDo("/Expert/Review?detailid=@Model.ID", TF.ajaxDone, { data: $.param(obj) });*@
+        }
+        function confirmsave() {
+            abp.message.confirm('您完成评审了吗？提交后将无法再修改评审结果。', function () {
+                savedata(true);
+            })
+    }
+    </script>
+</body>
+</html>
+

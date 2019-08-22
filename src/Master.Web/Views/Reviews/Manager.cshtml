@@ -1,0 +1,101 @@
+﻿@using Master.Matches
+@{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+}
+
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("评选活动管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="padding:8px 5px;">@L("评选活动名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="reviewName" name="reviewName" autocomplete="off" class="layui-input">
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    </div>
+
+                </div>
+            </form>
+
+
+
+            <table autoevent="1" id="Review" lay-filter="Review" class="layui-table " lay-data="{cellMinWidth:'120',height:'full-170',toolbar:'#toolbarTpl',defaultToolbar:null, url:'/api/services/app/Review/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and ReviewRounds.Count>0'}, page:true, id:'Review', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
+                <thead>
+                    <tr>
+                        @*<th lay-data="{align:'center',type:'checkbox',fixed:'left'}"></th>*@
+                        <th lay-data="{align:'left',field:'reviewName',minWidth:250}">@L("评选活动名称")</th>
+                        <th lay-data="{align:'center',field:'reviewMajorName'}">@L("评选专业")</th>
+                        <th lay-data="{align:'center',field:'reviewType',templet:'#reviewTypeTpl'}">@L("评选类型")</th>
+                        <th lay-data="{align:'center',field:'projectCount'}">@L("参选项目")</th>
+                        <th lay-data="{align:'center',field:'expertCount'}">@L("参选专家")</th>
+                        <th lay-data="{align:'center',field:'remarks'}">@L("备注")</th>
+                        <th lay-data="{align:'center',templet:'#currentRoundTpl'}">@L("当前进展")</th>
+                        <th lay-data="{align:'center',field:'reviewStatus',templet:'#reviewStatusTpl'}">@L("状态")</th>
+                        <th lay-data="{align:'center',field:'startTime'}">@L("开始时间")</th>
+                        <th lay-data="{align:'center', toolbar: '#btnTpl',fixed:'right',minWidth:'200'}">@L("操作")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" fornonerow="1" buttonname="@L("创建全新评审活动")" type="button" params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:[&quot;保存&quot;, &quot;发布&quot;, &quot;关闭&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ReviewRoundSubmit" onclick="func.callModuleButtonEvent()">创建全新评审活动</button>
+    </div>
+</script>
+<script type="text/html" id="btnTpl">
+    <a dataid="{{d.id}}" buttonname="@L("评选活动管理")" opentop="1" modulekey="Review" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;100%&quot;, &quot;100%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/Summary" onclick="func.callModuleButtonEvent()">@L("评选情况")</a>
+    <a dataid="{{d.id}}" buttonname="@L("计算排名")" modulekey="" class="layui-btn layui-btn-xs " lay-event="Edit" confirmmsg="确认重新计算排名?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.updateReviewScore" onclick="func.callModuleButtonEvent()">@L("计算排名")</a>
+</script>
+<script type="text/html" id="currentRoundTpl">
+    第{{d.currentRound}}轮&nbsp;&nbsp;第{{d.currentTurn}}次
+</script>
+<script type="text/html" id="reviewStatusTpl">
+    {{#if(d.reviewStatus==0){}}
+    <span class="layui-badge layui-bg-gray">未发布</span>
+    {{#}else if(d.reviewStatus==1){}}
+    <span class="layui-badge layui-bg-orange">正在评审</span>
+    {{#}else if(d.reviewStatus==2){}}
+    <span class="layui-badge layui-bg-green">评审结束</span>
+    {{#}}}
+</script>
+<script type="text/html" id="reviewTypeTpl">
+    {{#if(d.reviewType==1){}}
+    初评
+    {{#}else{}}
+    终评
+    {{#}}}
+</script>
+
+@section scripts{
+    <script>
+        config.onTableDone = function () {
+            $(window).trigger("resize");
+        };
+        config.refresh = function () {
+            layui.table.reload('Review');
+        }
+        function doSearch() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id and ReviewRounds.Count>0' };
+
+            var reviewName = $("#reviewName").val();
+            if (reviewName) {
+                where.where += ' and reviewName.Contains(\"' + reviewName + '\") ';
+            }
+            console.log(where);
+            layui.table.reload('Review', {
+                where: where
+            });
+
+            return false;
+            }
+    </script>
+}
+

@@ -1,0 +1,39 @@
+﻿@using Master.Notices
+@using Master.Projects
+@using Abp.Domain.Entities
+@model Notice
+@{
+    
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "NoticeView";
+    var files = Model.GetData<List<ProjectFile>>("Datas");
+}
+
+<h1 style="text-align:center">@Model.Title</h1>
+<hr />
+@Html.Raw(Model.Content)
+
+<hr />
+<table class="layui-table">
+    <colgroup>
+        <col width="300">
+        <col>
+        <col width="80">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>文件名称</th>
+            <th>文件类别</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var obj in files)
+        {
+            <tr>
+                <td><a href="@obj.FilePath" target="_blank" style="color:blue;text-decoration:underline">@obj.FileName</a></td>
+                <td>@obj.FileType</td>
+            </tr>
+        }
+
+    </tbody>
+</table>

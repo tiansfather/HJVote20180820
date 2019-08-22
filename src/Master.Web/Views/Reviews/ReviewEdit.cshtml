@@ -1,0 +1,502 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@model Review
+@{
+	Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+	ViewData["Title"] = "ReviewEdit";
+
+	var matchInstance = ViewData["MatchInstance"] as MatchInstance;
+
+
+	JsonSerializerSettings settings = new JsonSerializerSettings();
+	settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+	settings.Formatting = Formatting.Indented;
+
+}
+@section styles{
+	<link href="~/lib/powerfloat/css/powerFloat.css" rel="stylesheet" />
+}
+<div>
+	<form class="layui-form layui-form-pane">
+		<div class="layui-form-item" style="margin-bottom:2px">
+			<label class="layui-form-label" style="padding:8px 5px">评选活动名称</label>
+			<div class="layui-input-block">
+				<input type="text" class="layui-input" value="@Model.ReviewName" name="reviewname" />
+			</div>
+		</div>
+		<div class="layui-form-item" style="margin-bottom:2px;height:38px;">
+			<div class="layui-inline">
+				<label class="layui-form-label">评选专业</label>
+				<div class="layui-input-inline">
+					<input type="text" readonly class="layui-input" value="@Model.ReviewMajorName">
+				</div>
+			</div>
+			<div class="layui-inline">
+				<label class="layui-form-label">评选类型</label>
+				<div class="layui-input-inline">
+					<input type="text" readonly class="layui-input" value="@(Model.ReviewType==ReviewType.Initial?"初评":"终评")">
+				</div>
+			</div>
+			<button type="button" class="layui-btn layui-btn-sm" onclick="changeReviewMajor()">调整</button>
+
+		</div>
+		<div class="layui-form-item" style="margin-bottom:2px">
+			<label class="layui-form-label">备注</label>
+			<div class="layui-input-block">
+				<input type="text" class="layui-input" value="@Model.Remarks">
+			</div>
+		</div>
+		@*<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+				</div>
+			</div>*@
+	</form>
+
+	<div class="layui-tab" lay-filter="mytab" style="margin:0px">
+		<ul class="layui-tab-title">
+			<li class="layui-this">参选项目</li>
+			<li>参选专家</li>
+		</ul>
+		<div class="layui-tab-content">
+			<div class="layui-tab-item layui-show">
+				<table id="projectlist" lay-filter="projectlist"></table>
+			</div>
+			<div class="layui-tab-item">
+
+				<table id="expertlist" lay-filter="expertlist"></table>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section scripts{
+	<script src="/lib/powerfloat/js/jquery-powerFloat.js"></script>
+	<script type="text/html" id="majorTpl">
+		{{#  layui.each(d.majorExperts, function(index, item){ }}
+		{{#  if(item.rank === 1){ }}
+		<span class="layui-badge layui-bg-gray" title="{{item.majorName}}(高级)">{{item.majorName}}</span>
+		{{# }else{}}
+		<span class="layui-badge" title="{{item.majorName}}(资深)">{{item.majorName}}</span>
+		{{#  } }}
+
+		{{#  }); }}
+	</script>
+	<script type="text/html" id="specialityTpl">
+		{{#  layui.each(d.specialities, function(index, item){ }}
+		<span class="layui-badge " title="{{item}}">{{item}}</span>
+		{{#  }); }}
+	</script>
+	<script type="text/html" id="expertToolBarTpl">
+		<a class="layui-btn layui-btn-xs " onclick="selExperts()">选入专家</a>
+		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
+	</script>
+	<script type="text/html" id="projectToolBarTpl">
+		<a class="layui-btn layui-btn-xs " onclick="selProjects()">选入项目</a>
+		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
+	</script>
+	<script type="text/html" id="sortTpl">
+		<input type="text" class="layui-input" style="height:25px;text-align:center;padding:0;" value="{{d.sort==0?'':d.sort}}" onblur="reorderprojectitem({{d.id}},this.value)" />
+	</script>
+	<script type="text/html" id="projectTpl">
+		<a href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
+	</script>
+	<script type="text/html" id="btnTpl">
+		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">移除</a>
+	</script>
+	<script type="text/html" id="excludeTpl">
+		<a class="layui-btn layui-btn-xs " lay-event="setexclude">设定</a>
+		<a class="layui-btn layui-btn-xs showexclude" lay-event="showexclude" count="{{d.excludeExpertIDs?d.excludeExpertIDs.split(',').length:0}}" ajaxurl="/Show/ExcludeExperts?ids={{d.excludeExpertIDs?d.excludeExpertIDs:""}}&projectid={{d.id}}">查看[{{d.excludeExpertIDs?d.excludeExpertIDs.split(',').length:0}}]</a>
+	</script>
+	<script type="text/html" id="baseScoreTpl">
+		<input type="text" class="layui-input basescore" projectid="{{d.id}}" style="height:25px;text-align:center;padding:0;" value="{{d.baseScore?d.baseScore:""}}" onblur="setprojectitemscore({{d.id }},this.value)" />
+	</script>
+	<script>
+        var expertdata = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Experts,settings));
+        var projectdata = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Projects, settings));
+        function changeReviewMajor() {
+            layui.layer.open({
+                type: 2,
+                title: "评选专业调整",
+                shadeClose: false,
+                shade: 0.8,
+                area: ['600px', '400px'],
+                content: "/Reviews/ReviewPrizeChoose",
+                btn: ['提交', '关闭'],
+                yes: function (index, layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                    iframeWin.submit();
+                }
+
+            })
+
+        }
+        //选择专业及评审类型回调
+        function setReviewPrize(obj) {
+            abp.message.confirm("确认进行评选专业调整?现有项目及专家将被重新填充!", function () {
+                obj.reviewId=@Model.Id;
+                func.runAsync(abp.services.app.review.changeReview(obj).done(function () {
+                    layer.msg("提交成功");
+                    layer.closeAll("iframe");
+                    parent.layui.table.reload('Review');
+                    location.reload();
+                }));
+
+            })
+
+        }
+        function loadExpertTable() {
+            if (!window.experttable) {
+                window.experttable = table.render({
+                    elem: '#expertlist'
+                    , data: expertdata
+                    , toolbar: '#expertToolBarTpl'
+					, defaultToolbar: null,
+					limit:1000
+                    ,height:'full-240'
+                    , cols: [[
+                        { field: 'name', title: '专家姓名', width: 150 }
+                        , { field: 'major', title: '专业等级', minWidth: 300, templet: '#specialityTpl' }
+                        , { field: 'organizationDisplayName', title: '所属单位', width: 200 }
+                        , { field: 'remarks', title: '备注' }
+                        , { title: '操作', width: 80, toolbar: '#btnTpl' }
+                    ]]
+                });
+            } else {
+                experttable.reload({ data: expertdata });
+
+            }
+
+
+        }
+        function loadProjectTable() {
+            if (!window.projecttable) {
+                window.projecttable = table.render({
+                    elem: '#projectlist'
+                    , toolbar: '#projectToolBarTpl'
+                    , defaultToolbar: null
+                    , limit: 1000
+                    , height: 'full-240'
+                    , data: projectdata
+                    , cols: [[
+                        { field: 'sort', title: '序号', width: 60, templet: '#sortTpl' }
+                        //, { title: '排序操作', width: 100 ,templet:'#sortTpl'}
+                        , { title: '回避专家', width: 150, templet: '#excludeTpl' }
+                        , { field: 'projectName', title: '项目名称', templet: '#projectTpl' }
+                        , { field: 'prizeName', title: '奖项名称', width: 180 }
+                        , { field: 'subMajorName', title: '奖项小类', width: 180 }
+                        , { field: 'designOrganizationName', title: '申报单位' }
+                        , { field: 'baseScore', title: '基础分', width: 120, templet: '#baseScoreTpl' }
+                        , { title: '操作', width: 80, toolbar: '#btnTpl', fixed: 'right' }
+                    ]]
+                    , done: function (res, curr, count) {
+                        $(".showexclude[count!=0]").powerFloat({
+                            targetMode: "ajax",
+                            target: function () {
+                                return $(this).attr("ajaxurl");
+                            },
+                            hoverHold: true,
+                            position: "6-8"
+                        });
+                        $("td[data-field='Sort']").addClass("edit");
+                    }
+                });
+            } else {
+                projecttable.reload({ data: projectdata });
+            }
+
+        }
+        function selExperts() {
+            var idarr = expertdata.map(function (o) { return o.id; });
+            $.cookie("excludeExperts", idarr.join(','), { expires: 365, path: '/' });
+            //弹出框
+            layer.open({
+                type: 2,
+                title: '选择专家',
+                closeBtn: 1,
+                area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Select/SelExpert?reviewId=@Model.Id&key=User"
+            });
+        }
+        function selProjects() {
+            var idarr = projectdata.map(function (o) { return o.id; });
+            $.cookie("excludeProjects", idarr.join(','), { expires: 365, path: '/' });
+            //弹出框
+            layer.open({
+                type: 2,
+                title: '选择项目',
+                closeBtn: 1,
+                area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Select/SelProject?reviewId=@Model.Id&key=Project"
+            });
+        }
+        function selExcludeExperts(projectid, excludeids) {
+            var idarr = expertdata.map(function (o) { return o.id; });
+            $.cookie("excludeExperts", excludeids, { expires: 365, path: '/' });
+            $.cookie("allExpertIds", idarr.join(','), { expires: 365, path: '/' });
+            window.currentProjectID = projectid;
+            //弹出框
+            layer.open({
+                type: 2,
+                title: '设定回避专家',
+                closeBtn: 1,
+                area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Select/SelExcludeExpert?reviewId=@Model.Id&key=ExcludeExpert"
+            });
+        }
+        config.ready = function () {
+            window.table = layui.table;
+            loadProjectTable();
+            //reorderProjectData();
+            //loadProjectTable();
+            //一些事件监听
+            layui.element.on('tab(mytab)', function (data) {
+                if (data.index == 1) {
+                    loadExpertTable();
+
+                } else {
+
+                    loadProjectTable();
+                }
+            });
+            //监听头部工具条
+            table.on('toolbar(expertlist)', function (obj) {
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                if (layEvent === "clear") {
+                    //清空专家
+                    abp.message.confirm("确认清空所有专家?", function () {
+                        expertdata = [];
+                        loadExpertTable();
+                        //刷新项目的回避专家
+                        refreshProjectExcludeExperts();
+                    })
+                }
+            })
+            table.on('toolbar(projectlist)', function (obj) {
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                if (layEvent === "clear") {
+                    //清空项目
+                    abp.message.confirm("确认清空所有项目?", function () {
+                        projectdata = [];
+                        loadProjectTable();
+                    })
+                }
+            })
+            //监听工具条
+            table.on('tool(expertlist)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent === 'del') { //删除
+                    layer.confirm('确认移除此专家?', function (index) {
+                        layer.close(index);
+                        obj.del();
+                        tr.remove();
+                        removeArrayItemById(expertdata, data.id);
+                        //刷新项目的回避专家
+                        refreshProjectExcludeExperts();
+                    });
+                }
+            });
+            //监听工具条
+            table.on('tool(projectlist)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent == 'setexclude') {
+                    console.log(obj.data);
+                    var excludeids = data.excludeExpertIDs ? data.excludeExpertIDs : "";
+                    selExcludeExperts(data.id, excludeids);
+                }
+                else if (layEvent === 'del') { //删除
+                    layer.confirm('确认移除此项目?', function (index) {
+                        layer.close(index);
+                        obj.del();
+                        tr.remove();
+                        removeArrayItemById(projectdata, data.id);
+                        reorderProjectData();
+                        loadProjectTable();
+                    });
+                }
+            });
+            //监听单元格编辑
+            table.on('edit(projectlist)', function (obj) {
+                console.log(obj);
+                var value = obj.value //得到修改后的值
+                    , data = obj.data //得到所在行所有键值
+                    , field = obj.field; //得到字段
+                if (isNaN(value) || value <= 0 || value % 1 != 0) {
+                    layer.msg("请正确输入序号");
+                    obj.update({
+                        sort: projectdata[findArrayItemById(projectdata, data.id)].sort
+                    });
+                    return false;
+                }
+                reorderprojectitem(data.id, value);
+                //layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
+            });
+            //一些回调
+            func.bringBackFuncs["User"] = function (data) {
+                var tabledata = data;
+                expertdata = expertdata.concat(tabledata);
+                loadExpertTable();
+                return true;
+            };
+            func.bringBackFuncs["Project"] = function (data) {
+                var tabledata = data;
+                projectdata = projectdata.concat(tabledata);
+                reorderProjectData();
+                loadProjectTable();
+                return true;
+            };
+        }
+        function removeArrayItemById(array, id) {
+            var index = findArrayItemById(array, id);
+            array.splice(index, 1);
+        }
+        function findArrayItemById(array, id) {
+            var index = -1;
+            $.each(array, function (i, v) {
+                if (v.id == id) {
+                    index = i;
+                    return false;
+                }
+            })
+            return index;
+        }
+        function reorderProjectData() {
+            var sort = 0;
+            for (var i = 0; i < projectdata.length; i++) {
+                //if (!projectdata[i].sort) {
+                //    projectdata[i].sort = ++sort;
+                //} else {
+                //    sort = projectdata[i].sort;
+                //}
+                //if (!projectdata[i].Sort) {
+                //    var maxsort = Math.max.apply(null,projectdata.map(function (o) { return o.Sort; }));
+                //    if (!maxsort || isNaN(maxsort)) {
+                //        maxsort = 0;
+                //    }
+                //    projectdata[i].Sort = maxsort+ 1;
+                //}
+            }
+
+        }
+        function reorderprojectitem(id, val) {
+            if (isNaN(val) || val <= 0 || val % 1 != 0) {
+                layer.msg("请正确输入序号", {icon:5,anim:6});
+
+                return false;
+            }
+            for (var i = 0; i < projectdata.length; i++) {
+                if (projectdata[i].id == id) {
+                    projectdata[i].sort = val;
+                    break;
+                }
+            }
+            //projectdata.sort(function (a, b) {
+            //    return a.sort - b.sort;
+            //});
+            //reorderProjectData();
+            //projecttable.reload({ data: projectdata });
+        }
+        //设置基础分
+        function setprojectitemscore(id, val) {
+            for (var i = 0; i < projectdata.length; i++) {
+                if (projectdata[i].id == id) {
+                    projectdata[i].baseScore = val;
+                    break;
+                }
+            }
+        }
+        //更新项目的回避专家
+        function updateProjectExcludeExperts(excludeIdsArr) {
+            var project = projectdata[findArrayItemById(projectdata, window.currentProjectID)];
+            project.excludeExpertIDs = excludeIdsArr.join(',');
+            projecttable.reload({ data: projectdata });
+            layer.msg("设置成功");
+        }
+        //刷新项目的回避专家，当移除专家或清空专家时使用
+        function refreshProjectExcludeExperts() {
+            var expertIds = expertdata.map(function (o) { return o.id; });
+            for (var i = 0; i < projectdata.length; i++) {
+                var excludeExpertIds = (projectdata[i].excludeExpertIDs||"").split(',');
+                var arr = [];
+                for (var j = 0; j < expertIds.length; j++) {
+                    if (excludeExpertIds.indexOf(expertIds[j].toString()) >= 0) {
+                        arr.push(expertIds[j]);
+                    }
+                }
+                projectdata[i].excludeExpertIDs = arr.join(',');
+            }
+            projecttable.reload({ data: projectdata });
+        }
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭'],
+                success: function (layero, index) {
+                    //全屏弹窗
+                    console.log(layero);
+                    $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
+                        top.layer.close(index);
+                    });
+
+                }
+            })
+        }
+
+        function submit() {
+            //if (expertdata.length == 0) {
+            //    layer.msg("参选专家不能为空", { icon: 5, anim: 6 });
+            //    return false;
+            //}
+            //if (projectdata.length == 0) {
+            //    layer.msg("参选项目不能为空", { icon: 5, anim: 6 });
+            //    return false;
+            //}
+            //需要限制，不允许有专家回避所有项目
+            for (var i = 0; i < expertdata.length; i++) {
+                var expertId = expertdata[i].id;
+                var allAvoid = true;
+                //console.log("expertid:" + expertId);
+                for (var j = 0; j < projectdata.length; j++) {
+                    var excludeExpertIds = projectdata[j].excludeExpertIDs;
+                    //console.log("exclude:" + excludeExpertIds);
+                    if (!excludeExpertIds || excludeExpertIds.split(',').indexOf(expertId.toString()) < 0) {
+                        allAvoid = false;
+                        break;
+                    }
+                }
+                if (allAvoid) {
+                    abp.message.error("专家" + expertdata[i].name + "回避了所有项目!请直接将他从参选专家中移除");
+                    return false;
+                }
+			}
+			projectdata.sort(function (a, b) {
+                return a.sort - b.sort;
+			});
+			var reviewname = $("input[name='reviewname']").val();
+			if (!reviewname) {
+				abp.message.error("请输入评选活动名称");
+			}
+			func.runAsync(abp.services.app.review.updateReview({ reviewId:@Model.Id, reviewName: reviewname, experts: expertdata, projects: projectdata }).done(function () {
+                parent.layer.msg("提交成功");
+                parent.layer.closeAll("iframe");
+                parent.layui.table.reload('Review');
+            }));
+        }
+	</script>
+}

@@ -1,0 +1,354 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+@section styles{
+<style>
+
+</style>
+
+}
+<div class="layui-hide" id="app">
+    <form class="layui-form layui-form-pane " >
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">赛事</label>
+                <div class="layui-input-block">
+                    <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-filter="MatchId" lay-verify="required" v-model="currentItem.matchId">
+                        <option value="">--请选择赛事--</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">@L("专业大类")</label>
+                <div class="layui-input-inline">
+                    <select name="MajorId" lay-filter="MajorId" v-model="currentItem.majorId" lay-verify="required">
+                        <option value="">--选择专业大类--</option>
+                        <option v-for="(item,index) in mainMajors" :value="item.id">{{item.briefName}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">@L("专业小类")</label>
+                <div class="layui-input-inline">
+                    <select name="SubMajorId" v-model="currentItem.subMajorId" lay-filter="SubMajorId">
+                        <option value="">--选择专业小类--</option>
+                        <option v-for="(item,index) in subMajors" :value="item.id">{{item.briefName}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row layui-col-space5">
+            <div class="layui-col-md3">
+                <blockquote class="layui-elem-quote" style="padding:12px"><button type="button" class="layui-btn layui-btn-sm" @@click="addItem()">@L("添加项")</button></blockquote>
+                <div>
+                    <table class="layui-table" style="margin:0" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th>@L("序号")</th>
+                                <th>@L("项名")</th>
+                                <th>@L("跨度")</th>
+                                <th>@L("操作")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item,index) in currentItem.datas" @@click="setCurrent(item)" :class="{'layui-bg-gray':currentData==item}" style="cursor:pointer">
+                                <td>{{index+1}}</td>
+                                <td>{{item.itemName}}</td>
+                                <td>{{item.layoutSpan}}</td>
+                                <td>
+                                    <a @@click.stop="upItem(index)" style="cursor:pointer"><i class="layui-icon layui-icon-up"></i></a>
+                                    <a @@click.stop="downItem(index)" style="cursor:pointer"><i class="layui-icon layui-icon-down"></i></a>
+                                    <a @@click.stop="removeItem(index)" style="cursor:pointer" title="@L("删除")"><i class="layui-icon layui-icon-delete"></i></a>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="layui-col-md9">
+                <div v-if="currentData">
+                    <blockquote class="layui-elem-quote">项信息:{{currentData.itemName}}</blockquote>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">项名称</label>
+                            <div class="layui-input-inline">
+                                <input type="text" v-model="currentData.itemName" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">项跨度</label>
+                            <div class="layui-input-inline">
+                                <input type="text" v-model="currentData.layoutSpan" autocomplete="off" class="layui-input">
+
+                            </div>
+                            <div class="layui-form-mid layui-word-aux">整行为12</div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-xs" type="button" @@click="addControl">@L("添加控件")</button>
+                    </div>
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th>控件类型</th>
+                                <th>左提示文本</th>
+                                <th>右提示文本</th>
+                                <th>宽度</th>
+                                <th>必填</th>
+                                <th>可选值</th>
+                                <th>默认值</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item,index) in currentData.formDesignControls" :data="item">
+                                <td>
+                                    <select v-model="item.formDesignControlType" lay-filter="FormDesignControlType">
+                                        <option value="1">文本</option>
+                                        <option value="2">下拉</option>
+                                        <option value="3">单选</option>
+                                        <option value="4">多选</option>
+                                        <option value="5">文本域</option>
+                                        <option value="6">日期</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" v-model="item.leftTip" class="layui-input" /></td>
+                                <td><input type="text" v-model="item.rightTip" class="layui-input" /></td>
+                                <td><input type="text" v-model="item.controlWidth" class="layui-input" /></td>
+                                <td><input type="checkbox" value="true" lay-skin="switch" lay-text="是|否" :checked="item.required" lay-filter="Required"></td>
+                                <td><input type="text" v-model="item.selectValues" class="layui-input" onkeyup="refresh()" /></td>
+                                <td><input type="text" v-model="item.value" class="layui-input" onkeyup="refresh()" /></td>
+                                <td><button type="button" class="layui-btn layui-btn-danger layui-btn-xs" @@click="removeControl(index)">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="Submit" id="Submit">@L("提交")</button>
+            </div>
+        </div>
+    </form>
+    <blockquote class="layui-elem-quote" style="margin-top:10px;">表单预览</blockquote>
+    <div id="formPreview" class="layui-form">
+        <div class="layui-row ">
+            <div v-for="(item,index) in currentItem.datas" :class="'layui-col-md'+item.layoutSpan" style="border:1px dashed #808080">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">{{item.itemName}}</label>
+                    <div class="layui-inline" v-for="(control,controlIndex) in item.formDesignControls">
+                        <div v-if="control.leftTip" class="layui-form-mid layui-word-aux" style="margin-left:10px;">{{control.leftTip}}</div>
+                        <div class="layui-input-inline" :style="{width:control.controlWidth+'px'}">
+                            <template v-if="control.formDesignControlType==1">
+                                <input type="text" v-model="control.value" class="layui-input" />
+                            </template>
+                            <template v-if="control.formDesignControlType==2">
+                                <select v-model="control.value">
+                                    <option v-for="(option,optionIndex) in getOption(control.selectValues)" :value="option">{{option}}</option>
+                                </select>
+                            </template>
+                            <template v-if="control.formDesignControlType==3">
+                                <input v-for="(option,optionIndex) in getOption(control.selectValues)" type="radio" :title="option" :checked="control.value==option" :name="control.id" />
+                            </template>
+                            <template v-if="control.formDesignControlType==4">
+                                <input v-for="(option,optionIndex) in getOption(control.selectValues)" type="checkbox" :title="option" :checked="control.value.indexOf(option)>=0" :name="control.id" lay-skin="primary" />
+                            </template>
+                            <template v-if="control.formDesignControlType==5">
+                                <textarea class="layui-textarea" v-model="control.value"></textarea>
+                            </template>
+                            <template v-if="control.formDesignControlType==6">
+                                <input type="text" v-model="control.value" :name="control.id" class="mydate layui-input" />
+                            </template>
+                        </div>
+                        <div v-if="control.rightTip" class="layui-form-mid layui-word-aux">{{control.rightTip}}</div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.currentItem.matchId = matchId;
+                app.loadMajors(matchId);
+            });
+            layui.form.on('select(MajorId)', function (data) {
+                var majorId = data.value;
+                app.currentItem.majorId = majorId;
+                app.loadSubMajors(majorId);
+            });
+            layui.form.on('select(SubMajorId)', function (data) {
+                var subMajorId = data.value;
+                app.currentItem.subMajorId = subMajorId;
+            });
+            layui.form.on('select(FormDesignControlType)', function (data) {
+                var index = $(data.elem).closest("tr").index();
+                var controlType = data.value;
+                app.currentData.formDesignControls[index].formDesignControlType = controlType;
+                refresh();
+            });
+            layui.form.on('switch(Required)', function (data) {
+                var index = $(data.elem).closest("tr").index();
+                app.currentData.formDesignControls[index].required = data.elem.checked;
+            });
+            layui.form.on('submit', function () {
+                if (app.currentItem.datas.length == 0) {
+                    layer.msg('请至少录入一条记录', { icon: 5, anim: 6 });
+                    return false;
+
+                }
+                func.runAsync(abp.services.app.matchResource.submitMatchResourceFormDesign(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("FormDesign");
+                    parent.config.refresh();
+
+                }))
+
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentData: null,
+                    currentItem: {id:0, matchId: "", majorId: "", subMajorId: "", datas: [], matchResourceStatus:1,matchResourceType:1},
+                    allMajors:[],
+                    mainMajors: [],
+                    subMajors: []
+                },
+                methods: {
+                    loadItem: function (id) {
+                        if (id) {
+                            abp.services.app.matchResource.getMatchResource(id).done(function (data) {
+                                app.currentItem = data;
+                                app.currentData = app.currentItem.datas[0];
+                                app.loadMajors(data.matchId, data.majorId);
+                            })
+                        }
+
+                    },
+                    loadMajors: function (matchId,majorId) {
+                        abp.services.app.major.getTreeJson(matchId).done(function (data) {
+                            console.log(data);
+                            app.allMajors = data.filter(function (o) { return o.isActive; });
+                            app.mainMajors = app.allMajors.filter(function (o) { return o.parentId == null; });
+                            if (majorId) {
+                                app.loadSubMajors(majorId);
+
+                            }
+                            refresh();
+                        });
+                    },
+                    loadSubMajors: function (majorId) {
+                        app.subMajors = app.allMajors.filter(function (o) { return o.parentId == majorId; });
+                        refresh();
+                    },
+                    setCurrent: function (item) {
+                        this.currentData = item;
+                        refresh();
+                    },
+                    upItem: function (index) {
+                        var datas = this.currentItem.datas;
+                        if (index > 0) {
+                            var preItem = datas[index - 1];
+                            app.$set(datas, index - 1, datas[index]);
+                            app.$set(datas, index, preItem);
+                        }
+                    },
+                    downItem: function (index) {
+                        var datas = this.currentItem.datas;
+                        if (index < datas.length - 1) {
+                            var nextItem = datas[index + 1];
+                            app.$set(datas, index + 1, datas[index]);
+                            app.$set(datas, index, nextItem);
+                        }
+
+                    },
+                    removeItem: function (index) {
+                        var datas = this.currentItem.datas;
+                        abp.message.confirm("@(L("确认删除项"))?", function () {
+                            datas.splice(index, 1);
+                            app.currentData = datas[0];
+                        });
+
+                    },
+                    addItem: function () {
+                        //添加项
+                        layer.prompt({ title: '@L("请输入项名称")', formType: 0 }, function (text, index) {
+                            layer.close(index);
+                            var data = {
+                                itemName: text, layoutSpan: 6, formDesignControls: []
+                            };
+                            app.currentItem.datas.push(data);
+                            app.setCurrent(data);
+                            app.addControl();
+                        });
+                    },
+                    addControl: function () {
+                        var control = { id: new Date().getTime(), formDesignControlType: 1, controlWidth: 120, leftTip: '', rightTip: '', required: false, value: '' };
+                        app.currentData.formDesignControls.push(control);
+                        refresh();
+
+                    },
+                    removeControl: function (index) {
+                        var controls = this.currentData.formDesignControls;
+                        abp.message.confirm("@(L("确认删除控件"))?", function () {
+                            controls.splice(index, 1);
+                        });
+                    },
+                    getOption: function (selectValue) {
+                        var result = [];
+                        if (selectValue) {
+                            result= selectValue.split(',');
+                        }
+                        return result;
+                    }
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select,.layui-form-radio").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+                layui.laydate.render({
+                    elem: '.mydate' //指定元素
+                });
+            })
+        }
+        function submit() {
+            app.currentItem.matchResourceStatus = 1;//草稿
+            $("#Submit").click();
+        }
+        function submit2() {
+            app.currentItem.matchResourceStatus = 2;//发布
+            $("#Submit").click();
+
+        }
+    </script>
+}

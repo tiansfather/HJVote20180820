@@ -1,0 +1,257 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@model List<Master.Prizes.Prize>
+@{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+}
+@section styles{
+    <style>
+        #prizeContainer {
+            overflow: auto;
+        }
+		.layui-table tr.selected {
+			background: #37b9ec !important
+		}
+            #prizeContainer .item.current{
+                background:#0094ff;
+                color:white;
+            }
+            #prizeContainer .item {
+                width: 200px;
+                height: 40px;
+                line-height: 40px;
+                text-align: center;
+                border: 1px solid #000;
+                float: left;
+                margin: 10px 20px 10px 0;
+                cursor: pointer;
+            }
+    </style>
+}
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("初评情况管理")</div>
+        <div class="layui-card-body">
+            <div id="prizeContainer">
+                @foreach (var item in Model)
+                {
+                    var subMajors = item.PrizeSubMajors.Where(o=>o.Checked).Select(o => new { o.MajorId, o.Major.BriefName,o.Major.Sort }).OrderBy(o=>o.MajorId);
+                    <div class="item" onclick="setPrizeId(@item.Id)" prizeId="@item.Id" prizeType="@Convert.ToInt32(item.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
+                        @item.PrizeName
+                    </div>
+                }
+            </div>
+            <hr />
+            <form class="layui-form layui-form-pane layui-hide" onsubmit="return doSearch();" id="app">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label" v-if="prizeType==2">@L("专业")</label>
+                        <div class="layui-input-inline" v-if="prizeType==2">
+                            <select lay-filter="subMajorId" name="subMajorId" id="subMajorId" v-model="subMajorId">
+                                <option v-for="(item,index) in majors" :value="item.MajorId">{{item.BriefName}}</option>
+                            </select>
+                        </div>
+                        <label class="layui-form-label">@L("项目名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
+                        </div>
+                        <label class="layui-form-label">申报单位</label>
+                        <div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+                             name="OrganizationId" value="" class="layui-input-inline" style="position:relative">
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    </div>
+                </div>
+            </form>
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " >
+                
+            </table>
+        </div>
+
+    </div>
+</div>
+<script type="text/html" id="projectNameTpl">
+    <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')" >{{d.projectName}}</a>
+</script>
+<script type="text/html" id="isInFinalReviewTpl">
+    {{#if(d.isInFinalReview){}}
+    <span class="layui-badge layui-bg-green">Y</span>
+    {{#}}}
+</script>
+<script type="text/html" id="isOriginalTpl2">
+	{{#if(d.isOriginal){}}
+	<span class="layui-badge layui-bg-green">Y</span>
+	{{#}}}
+</script>
+<script type="text/html" id="toolbar">
+
+    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType=1" onclick="func.callModuleButtonEvent()" >@L("评选详情")</a>
+</script>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button type="button" class="layui-btn layui-btn-sm" moduleKey="Project" confirmmsg="确认使选中项目进入终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringInFinalReview" onclick="func.callModuleButtonEvent()">进入终评</button>
+
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" moduleKey="Project" confirmmsg="确认将选中项目移出终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringOutFinalReview" onclick="func.callModuleButtonEvent()">取消终评资格</button>
+    </div>
+</script>
+@section scripts{
+    <script>
+        var currentPrizeId;
+        var app
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+			//监听行单击事件
+			layui.table.on('row', function (obj) {
+				$(obj.tr).siblings("tr").removeClass("selected");
+				$(obj.tr).addClass("selected");
+				console.log(obj.tr) //得到当前行元素对象
+				console.log(obj.data) //得到当前行数据
+				//obj.del(); //删除当前行
+				//obj.update(fields) //修改当前行数据
+			});
+			layui.form.on("select(subMajorId)", function (data) {
+				console.log(data);
+                app.subMajorId = data.value;
+
+            })
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    majors:[],
+                    prizeType: null,
+                    subMajorId:null
+
+				},
+				computed: {
+					subMajorName: function () {
+						if (!app.subMajorId) {
+							return "";
+						} else {
+							return app.majors.filter(function (o) { return o.MajorId == app.subMajorId })[0].BriefName;
+						}
+					}
+				},
+                mounted: function () {
+                    $("#app").removeClass("layui-hide");
+
+                }
+            });
+
+            //默认加载第一个奖项
+            $(".item").eq(0).click();
+            config.refresh();
+            $('div[cytype="dropDownTool"]').dropDownTool();
+
+        };
+        config.onTableDone = function () {
+            $(window).trigger("resize");
+        };
+        config.refresh = function () {
+
+        };
+        function doSearch() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and PrizeId=' + currentPrizeId, orderField: 'rankInitial asc' };
+            var organizationId = $("input[name='OrganizationId']").val();
+            if (organizationId) {
+                where.where += " and designOrganizationId=" + organizationId;
+
+			}
+			var subMajorName = "";
+			if (app.subMajorId && app.prizeType == 2) {
+				subMajorName = '-'+app.subMajorName;
+                where.where += " and PrizeSubMajor.MajorId=" + app.subMajorId;
+            }
+            var projectName = $("#projectName").val();
+            if (projectName) {
+                where.where += " and ProjectName.Contains(\"" + projectName + "\")" ;
+            }
+			var columns = getColumns();
+			var sheetName ='@Html.Raw(matchInstance.Match.Name)'+ $("div.item.current").html().trim() + subMajorName + "初评情况" + new Date().Format("yyyyMMddhhmmss");
+            layui.table.render({
+                elem: '#Project',
+                where: where,
+                cellMinWidth: '120',
+                toolbar: '#toolbarTpl',
+                url: '/api/services/app/Project/GetReviewResult',
+				limit: 1000,
+				height:'full-0',
+                page: false,
+				id: 'Project',
+				title: sheetName,
+                skin: 'row',
+                even: true,
+                done: config.onTableDone,
+                initSort: { field: 'ScoreInitial', type: 'desc' },
+                cols: [columns]
+
+            });
+
+            return false;
+        }
+        function getColumns() {
+            var columns = [
+                { type: 'checkbox', fixed: 'left' },
+                { align: 'center', type: 'numbers', title: '序号' },
+				{ align: 'left', field: 'projectName', templet: '#projectNameTpl', minWidth: '180', title: '项目名称' },
+				{ align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创' },
+                { align: 'center', field: 'prizeName', minWidth: '150', title: '奖项大类' },
+                { align: 'center', field: 'subMajorName', title: '奖项子类' },
+                { align: 'center', field: 'designOrganizationName', title: '申报单位' },
+                { align: 'center', field: 'scoreInitial', title: '总分' },   
+            ];
+            //如果是综合类，则需要加入专业列
+            if (app.prizeType === 1) {
+                for (var i = 0; i < app.majors.length; i++) {
+                    columns.push({ align: 'center', field: 'majorScore' + i+"Initial", title: app.majors[i].BriefName });
+                }
+            }
+            columns=columns.concat([{ align: 'center', field: 'rankInitial', title: '排名' },
+            { align: 'center', field: 'expertCountAllInitial', title: '分发专家' },
+            { align: 'center', field: 'expertCountRankedInitial', title: '打分专家' },
+            { align: 'center', field: 'isInFinalReview', templet: '#isInFinalReviewTpl', title: '进入终评' },
+            { align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
+            return columns;
+        }
+        function setPrizeId(prizeId) {
+            currentPrizeId = prizeId;
+            var $item = $(".item[prizeId='" + prizeId + "']");
+            app.prizeType = parseInt($item.attr("prizeType"));
+            app.majors = JSON.parse($item.attr("majors"));
+            if (app.majors.length > 0) {
+				app.subMajorId = app.majors[0].MajorId;
+            } else {
+                app.subMajorId = null;
+            }
+            $("input[name='OrganizationId']").val('').next("input").val('');
+            $("#projectName").val('');
+            refresh();
+            $(".item").removeClass("current");
+            $item.addClass("current");
+            doSearch();
+        }
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+
+        }
+
+        function refresh(){
+            Vue.nextTick(function () { 
+                layui.form.render();
+            });
+
+        }
+    </script>
+}

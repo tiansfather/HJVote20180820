@@ -1,0 +1,109 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model List<MatchResourceRateTable>
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    var totalScore = Model[0].TotalScore;
+}
+
+@section styles{
+    <link rel="stylesheet" href="/assets/huajian/css/layui.css">
+}
+
+<blockquote class="layui-elem-quote" style="font-weight:bold;font-size:18px;">总分：<span id="score"></span></blockquote>
+<div class="layui-form">
+
+    <table class="layui-table" lay-size="lg">
+        <colgroup>
+            <col width="55">
+            <col width="120">
+            <col>
+            <col width="80">
+            <col width="88">
+        </colgroup>
+        <thead>
+            <tr>
+                <th><div align="center">序号</div></th>
+                <th><div align="center">打分项</div></th>
+                <th><div align="center">详细描述</div></th>
+                <th><div align="center">权重</div></th>
+                <th><div align="center">@(totalScore)分</div></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rateItem in Model)
+            {
+
+                <tr class="item">
+                    <td align="center">@rateItem.Sort</td>
+                    <td align="center">@rateItem.Name</td>
+                    <td align="left">@rateItem.Description</td>
+                    <td align="center">@(rateItem.Percent) %</td>
+                    <td>
+                        <input type="text" class="layui-input" style="width:60px" lay-verify="required|number|max" max="@(totalScore*rateItem.Percent/100)" onkeyup="calcData()">
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button type="button" lay-submit style="display:none" id="btnSubmit"></button>
+</div>
+
+@section scripts{ 
+<script>
+    var max =@(Model[0].TotalScore);
+    var projectDetails = JSON.parse(JSON.stringify( parent.reviewApp.projectDetails));
+        var projectId = $.getUrlParam("projectId");
+        var currentProject = projectDetails.filter(function (o) { return o.projectId ==projectId})[0];
+        config.ready = function () {
+            layui.form.on("submit", function () {
+                //同步数据至父窗口
+                parent.reviewApp.updateProjectDetails(projectDetails);
+                parent.layer.closeAll('iframe');
+            });
+            layui.form.verify({
+                max: function (value, item) {
+                    var maxValue = parseFloat($(item).attr("max"));
+                    if (!isNaN(value) && parseFloat(value) > maxValue) {
+                        return "超过最大分值" + Math.round(maxValue*100)/100;
+
+                    }
+                }
+
+            });
+            initData();
+
+        }
+        //初始化原有的评分数据
+        function initData() {
+            var currentRateTable = currentProject.rateTableDetails;
+            $.each(currentRateTable, function (i, v) {
+                $("tr.item").eq(v.sort - 1).find("input").val(v.score);
+            });
+            $("#score").html(currentProject.score);
+        }
+        //计算分值和
+        function calcData() {
+            var total = 0;
+            var rateTable = [];
+            $("tr.item").each(function () {
+                var val = $(this).find("input").val();
+                if (val && !isNaN(val)) {
+                    var score = parseFloat(val);
+                    rateTable.push({ sort: $(this).index() + 1, score: score });
+                    total += score;
+                }
+                
+            });
+            total = Math.round(total * 100) / 100;
+            currentProject.rateTableDetails = rateTable;
+            currentProject.score = total;
+            $("#score").html(total);
+        }
+
+        function submit() {
+            $("#btnSubmit").click();
+
+        }
+</script>
+}

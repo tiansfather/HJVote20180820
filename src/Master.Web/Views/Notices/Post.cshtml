@@ -1,0 +1,159 @@
+﻿@using Master.Web.Components
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+}
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item">
+            <label class="layui-form-label">标题</label>
+            <div class="layui-input-block">
+                <input type="text" v-model="currentItem.title" class="layui-input" lay-verify="required"/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <textarea id="content" style="display: none;" v-model="currentItem.content"></textarea>
+        </div>
+        <div>
+            附件清单
+            <button class="layui-btn layui-btn-sm" style="float:right" type="button" id="uploadBtn">@L("上传附件")</button>
+        </div>
+        <hr />
+        <table class="layui-table">
+            <colgroup>
+                <col width="300">
+                <col >
+                <col width="80">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>文件名称</th>
+                    <th>文件类别</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item,index) in currentItem.datas" :data="item">
+                    <td style="color:blue;text-decoration:underline">{{item.fileName}}</td>
+                    <td><input type="text" v-model="item.fileType" class="layui-input"  /></td>
+                    <td><button type="button" class="layui-btn layui-btn-danger layui-btn-sm" @@click="removeFile(index)">删除</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="Submit" id="Submit">@L("提交")</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            
+            layui.form.on('submit', function () {
+                //同步编辑器数据
+                app.currentItem.content = layui.layedit.getContent(editorIndex);
+                func.runAsync(abp.services.app.notice.submitNotice(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("Notice");
+                    parent.config.refresh();
+
+                }))
+
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentItem: {id:0, title:'',content:'', datas: []}
+                },
+                methods: {
+                    loadItem: function (id) {
+                        var that = this;
+                        if (id) {
+                            abp.services.app.notice.getNotice(id).done(function (data) {
+                                that.currentItem = data;
+                                that.loadEditor();
+                            })
+                        } else {
+                            that.loadEditor();
+                        }
+                        refresh();
+                    },
+                    loadEditor: function () {
+                        layui.use('layedit', function () {
+                            var layedit = layui.layedit;
+                            layedit.set({
+                                uploadImage: {
+                                    url: '/File/LayeditUpload' //接口url
+                                }
+                            });
+                            window.editorIndex=layedit.build('content'); //建立编辑器
+                        });
+
+                    },
+                    removeFile: function (index) {
+                        abp.message.confirm('确认删除此项?', function () {
+                            app.currentItem.datas.splice(index, 1);
+                        });
+                    },
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+            });
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+                //上传配置
+                layui.upload.render({
+                    elem: '#uploadBtn',
+                    field: 'file',
+                    accept: 'file',
+                    multiple: true,
+                    number: 10,
+                    size:20480,
+                    url: '/file/upload'
+                    , before: function (obj) {
+                        loadLayerIndex = top.layer.msg('@L("正在上传")...', {
+                            icon: 16
+                            , shade: 0.01, time: 0
+                        });
+                    }
+                    , done: function (res) {
+                        top.layer.close(loadLayerIndex);
+                        //如果上传失败
+                        if (!res.result.success) {
+                            layer.msg(res.result.msg, { icon: 5, anim: 6 });
+                        }
+                        //上传成功
+                        else {
+                            app.currentItem.datas.push({ fileName: res.result.fileName, filePath: res.result.filePath, fileType: '' });
+
+                        }
+                    }
+                });
+
+            })
+        }
+        function submit() {
+            app.currentItem.noticeStatus = 1;//草稿
+            $("#Submit").click();
+        }
+        function submit2() {
+            app.currentItem.noticeStatus = 2;//发布
+            $("#Submit").click();
+
+        }
+    </script>
+}

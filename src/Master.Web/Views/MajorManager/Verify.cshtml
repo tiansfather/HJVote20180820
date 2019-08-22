@@ -1,0 +1,43 @@
+﻿@using Master.Prizes
+@using Master.Matches
+@using Abp.Domain.Entities;
+@using Master.Organizations;
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+}
+<vc:project-trace-log project-id="ViewBag.ProjectId"></vc:project-trace-log>
+
+<div class="layui-form layui-form-pane">
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">审批意见</label>
+        <div class="layui-input-block">
+            <textarea placeholder="请输入审批意见" class="layui-textarea" name="verifymsg"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <button class="layui-btn" type="button" onclick="doSubmit(true)">审批通过</button>
+        <button class="layui-btn layui-btn-danger" type="button" onclick="doSubmit(false)">退回</button>
+    </div>
+</div>
+<hr />
+<vc:project-view project-id="ViewBag.ProjectId"></vc:project-view>
+
+@section scripts{
+    <script>
+        function doSubmit(isVerify) {
+            var msgStr = isVerify ? "确认审批通过?" : "确认退回?";
+            abp.message.confirm(msgStr, function () {
+                var verifymsg = $("textarea[name='verifymsg']").val();
+                //第二个参数，表示下一步骤项目状态
+                func.runAsync(abp.services.app.project.verify(@ViewBag.ProjectId, 3, verifymsg, isVerify).done(function () {
+                    top.layer.msg("@L("提交成功")");
+                    top.layer.closeAll("iframe");
+                    top.$(".layui-show iframe").get(0).contentWindow.func.reload("Project");
+
+                }))
+
+            });
+
+        }
+    </script>
+}

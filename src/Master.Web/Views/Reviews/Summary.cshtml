@@ -1,0 +1,129 @@
+﻿@using Master.Reviews
+@using Master.Matches
+@model Review
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Summary";
+}
+
+@section styles{
+    <style>
+        .reviewbox {
+            width: 500px;
+            height: 40px;
+            border: 1px solid #808080;
+            line-height: 40px;
+            padding: 0 25px;
+            cursor: pointer;
+        }
+
+            .reviewbox.next {
+                margin-left: 40px;
+            }
+
+        .BeforePublish {
+            background: #ccc;
+        }
+
+        .Reviewing {
+            background: rgba(245, 207, 244, 0.75);
+        }
+
+        .Reviewed {
+            /*background:#4cff00;*/
+        }
+
+        .inset {
+            float: left;
+            width: 20px;
+            height: 40px;
+            border-left: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            transform: translate(20px,-20px);
+            -webkit-transform: translate(20px,-20px);
+            -moz-transform: translate(20px,-20px);
+        }
+    </style>
+}
+    <blockquote class="layui-elem-quote">@Model.ReviewName</blockquote>
+    <div style="padding:20px;">
+        @foreach (var reviewdetail in Model.ReviewRounds)
+        {
+            <div style="overflow:auto;padding-top: 20px">
+                @if (reviewdetail.Turn > 1)
+                {
+                    @*<div class="inset"></div>*@
+                }
+                <div class="reviewbox @(reviewdetail.ReviewStatus) @(reviewdetail.Turn>1?"next":"")" onclick="gotoReviewDetail(@reviewdetail.Id,@((int)reviewdetail.ReviewStatus))">
+                    <span>第@(reviewdetail.RoundC)轮 第@(reviewdetail.Turn)次评审</span>
+                    <span style="margin-left:70px;">@(reviewdetail.SourceProjectIDs.Split(',').Length) 进 @(reviewdetail.TargetNumber)</span>
+                    <span style="float:right">
+                        @switch (reviewdetail.ReviewStatus)
+                        {
+                            case ReviewStatus.BeforePublish:
+                                <span>未发布</span>
+                                break;
+                            case ReviewStatus.Reviewing:
+                                <span style="color:red">评审中</span>
+                                break;
+                            case ReviewStatus.Reviewed:
+                                <span style="color:green">已评审</span>
+                                break;
+                        }
+                    </span>
+
+                </div>
+            </div>
+        }
+    </div>
+@section scripts{ 
+    <script>
+        config.refresh = function () {
+            top.$(".layui-show iframe").get(0).contentWindow.config.refresh();
+            location.reload();
+        }
+        function gotoReviewDetail(detailId, reviewStatus) {
+            var url = "";
+            var btn = null;
+            var title = "";
+            switch (reviewStatus) {
+                case 0:
+                    url = '/Reviews/ReviewRoundSubmit?data=' + detailId;
+                    btn = ['保存', '发布', '关闭'];
+                    title = "修改评审活动";
+                    break;
+                case 1:
+                    url = '/Reviews/ReviewRoundViewing?data=' + detailId;
+                    btn = null;
+                    title = "评审活动查看";
+                    break;
+                case 2:
+                    url = '/Reviews/ReviewRoundViewFinish?data=' + detailId;
+                    btn = null;
+                    title = "评审活动查看";
+                    break;
+            }
+            layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['90%', '90%'],
+                content: url,
+                btn: btn,
+                yes: function (index, layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
+                    iframeWin.submit();
+                },
+                btn2: function (index, layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit2) { iframeWin.submit2(); return false; }
+                },
+                btn3: function (index, layero) {
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    if (iframeWin.submit3) { iframeWin.submit3(); return false; }
+                }
+            });
+        }
+    </script>
+}

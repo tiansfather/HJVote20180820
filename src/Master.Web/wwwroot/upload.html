@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name=”renderer” content="webkit|ie-comp|ie-stand">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>运单上传</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            background: #b4e1f4;
+            position: relative;
+            font-family: '微软雅黑';
+        }
+        .upload-cont {
+            height: 270px;
+            width: 500px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            background: #f5f1e8;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            -moz-box-shadow: 1px 1px 10px #888888;
+            -webkit-box-shadow: 1px 1px 10px #888888;
+            box-shadow: 1px 1px 10px #888888;
+        }
+        .upload-title {
+            height: 60px;
+            line-height: 60px;
+            color: #fff;
+            font-size: 18px;
+            padding-left: 20px;
+            background: -moz-linear-gradient(top, #ee8f57 0%, #ea7047 100%);
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ee8f57), color-stop(100%,#ea7047));
+            background: -webkit-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: -o-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: -ms-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: linear-gradient(to bottom, #ee8f57 0%,#ea7047 100%);
+            -webkit-border-top-left-radius: 5px;
+            -moz-border-radius-topleft: 5px;
+            border-top-left-radius: 5px;
+            -webkit-border-top-right-radius: 5px;
+            -moz-border-radius-topright: 5px;
+            border-top-right-radius: 5px;
+        }
+        .upload-form {
+            padding: 15px 20px;
+        }
+        .upload-hint {
+            color: #48b8e0;
+        }
+        .file-cont {
+            width: 325px;
+            height: 38px;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            border: 1px solid #d3d3d3;
+            vertical-align: middle;
+            margin: 20px 0;
+            padding: 0 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .select-btn {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 20px 0 20px 5px;
+        }
+        .select-btn input[type=file] {
+            width: 100px;
+            height: 40px;
+            position: relative;
+            z-index: 9;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .select-btn label {
+            position: absolute;
+            display: inline-block;
+            color: #fff;
+            width: 100px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            top: 0;
+            left: 0;
+            background: #ea7047;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+        }
+        .cut-line {
+            border-top: 1px solid #d3d3d3;
+        }
+        .progress-bar {
+            height: 22px;
+            width: 345px;
+            margin-top: 18px;
+            display: inline-block;
+            position: relative;
+            border: 1px solid #d3d3d3;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            -moz-box-shadow:1px 1px 8px #888888 inset;
+            -webkit-box-shadow:1px 1px 8px #888888 inset;
+            box-shadow:1px 1px 8px #888888 inset;
+        }
+        .progress-bar-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 22px;
+            text-align: center;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            background: -moz-linear-gradient(top, #ee8f57 0%, #ea7047 100%);
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ee8f57), color-stop(100%,#ea7047));
+            background: -webkit-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: -o-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: -ms-linear-gradient(top, #ee8f57 0%,#ea7047 100%);
+            background: linear-gradient(to bottom, #ee8f57 0%,#ea7047 100%);
+        }
+        .upload-btn {
+            width: 100px;
+            height: 40px;
+            margin-top: 10px;
+            background: #48b8e0;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            float: right;
+        }
+        .mask-bg {
+            position: absolute;
+            top: 0;
+            background: #000;
+            opacity: 0.3;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .hint-cont {
+            z-index: 1100;
+            background: #fff;
+            width: 300px;
+            height: 120px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .hint-title {
+            display: inline-block;
+            height: 40px;
+            line-height: 40px;
+        }
+        .hint-close {
+            float: right;
+            margin-right: 10px;
+            font-size: 25px;
+            cursor: pointer;
+        }
+        .hint-content {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="upload-cont">
+    <div class="upload-title">上传文件</div>
+    <form id= "uploadForm" class="upload-form">
+        <div class="upload-hint">提示：请上传excel文件</div>
+        <div>
+            <input type="text" class="file-cont" disabled>
+            <div class="select-btn">
+                <input id="fileUpload" type="file" name="file"/>
+                <label>选择文件</label>
+            </div>
+        </div>
+        <hr class="cut-line">
+        <div id="progressBar" class="progress-bar">
+            <div class="progress-bar-inner"></div>
+        </div>
+        <input type="button" value="上传" class="upload-btn" onclick="doUpload()" />
+    </form>
+    <!------------------------------------>
+    <br>
+</div>
+    <div id="tip"></div>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script>
+    var resultData;
+    function doUpload(){
+        var formData = new FormData($( "#uploadForm" )[0]);
+
+        var xhr = new XMLHttpRequest();
+        // 上传前初始化
+        xhr.addEventListener('beforeSend', function () {
+            $('.progress-bar-inner').css('width', '0%').text('');
+        });
+
+        //上传中设置上传的百分比
+        xhr.upload.addEventListener("progress", function (evt) {
+            $("#tip").append("<div>"+evt.loaded+"</div>")
+            if (evt.lengthComputable) {
+                var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+                $('.progress-bar-inner').css('width', percentComplete+"%").text(percentComplete+"%");
+            }else {
+                $('#progressBar').text('无法计算');
+            }
+        }, false);
+
+        //请求完成后执行的操作
+        xhr.addEventListener("load", function(evt){
+            var message = evt.target.responseText, obj = eval("("+message+")");
+            if(obj.status == 1){
+                showHintDialog(evt);
+            }else{
+                showHintDialog(obj.message);
+            }
+
+        }, false);
+//请求error
+        xhr.addEventListener("error", uploadFailed, false);
+//请求中断
+        xhr.addEventListener("abort", uploadCanceled, false);
+//发送请求
+        xhr.open("POST", "/file/upload");
+        xhr.send(formData);
+        function uploadFailed(evt) {
+            showHintDialog("上传出错");
+        }
+
+        function uploadCanceled(evt) {
+            showHintDialog("上传已由用户或浏览器取消删除连接");
+        }
+    }
+    function showHintDialog (str) {
+        var urlHtml;
+        if (typeof str == 'object') {
+            if(!str.success) {
+                if (str.errorMessage.startsWith('http')) {
+                    urlHtml = '<a href=" ' + str.errorMessage + '"onclick="closeHint()" target="_blank" style="color:red">有错误运单数据，请点击下载</a>';
+                } else {
+                    urlHtml = '<p style="color: red">' + str.errorMessage + '</p>';
+                }
+            }else{
+                urlHtml = '<p style="color: black">文件上传成功 </p>';
+            }
+        }
+        var dialogHtml = '<div id="alertStrCont"><div class="mask-bg" onclick="closeHint()"></div><div class="hint-cont"><span class="hint-title">提示</span><span class="hint-close" onclick="closeHint()">×</span><div class="hint-content">'+urlHtml+'</div></div></div>';
+        $('body').append(dialogHtml);
+    }
+    function closeHint() {
+        $('#alertStrCont').remove();
+    }
+    $('#fileUpload').on('change', function () {
+        if (this.files.length === 0) { return; }
+        var oFile = this.files[0];
+        $('.file-cont').val(oFile.name);
+    })
+</script>
+</body>
+</html>

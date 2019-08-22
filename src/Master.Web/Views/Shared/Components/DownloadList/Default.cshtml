@@ -1,0 +1,12 @@
+﻿@using Master.Matches
+@model List<MatchResourceDownloadList>
+@{
+    ViewData["Title"] = "Default";
+}
+
+@foreach(var file in Model)
+{
+    <a onclick="showPDF('@file.FileName','@file.FilePath'); event.stopPropagation();" style="margin-left:20px;cursor:pointer;color:blue">【@file.Description】</a>
+
+}
+

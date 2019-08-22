@@ -1,0 +1,275 @@
+﻿@using Master.Matches
+@using Master.Web.Components
+@model Master.Matches.Match
+@{
+    ViewData["Title"] = "Index";
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i>专业分类管理</div>
+        <div class="layui-card-body">
+            <div class="layui-row layui-col-space10">
+                <div class="layui-col-xs3">
+                    <div class="LAY-app-message-btns layui-form layui-row layui-col-space10" style="margin-bottom: 10px;">
+                        <div class="layui-col-xs6">
+                            <select asp-items="@(new SelectList(matches,"Id","Name",Model?.Id))" lay-filter="matchSelect"></select>
+                        </div>
+                        <div class="layui-col-xs6">
+                            <button class="layui-btn  " onclick="app.doAdd()">@L("新增专业")</button>
+                        </div>
+                        
+                    </div>
+                    <ul id="tree" class="ztree"
+                        style="padding: 2px; border: 1px solid #ddd; overflow: auto;min-height:500px"></ul>
+                </div>
+                <div class="layui-col-xs9 ">
+                    <div id="app" class="layui-hide">
+                        <blockquote class="layui-elem-quote">{{title}}</blockquote>
+                        <form class=" layui-form-pane">
+                            <input type="hidden" name="MatchId" value="@Model?.Id" />
+                            <input type="hidden" name="Id" v-model="currentItem.id" />
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">数据编码</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="BriefCode" v-model="currentItem.briefCode" lay-verify="required" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">父数据项</label>
+                                    <div cyType="dropDownTool" cyProps="url:'/api/services/app/Major/GetTreeJson?matchId=@Model?.Id&maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+                                         name="ParentId" value="" class="layui-input-inline" style="position:relative">
+                                    </div>
+                                    <div class="layui-form-mid layui-word-aux">留空表示根级</div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">专业名称</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="DisplayName" v-model="currentItem.displayName" lay-verify="required" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">排序</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="Sort" v-model="currentItem.sort" lay-verify="number" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">专业简称</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="BriefName" v-model="currentItem.briefName" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline" pane>
+                                    <label class="layui-form-label">状态</label>
+                                    <div class="layui-input-block">
+                                        <input type="checkbox" name="IsActive" value="true" lay-skin="switch" lay-text="有效|无效" :checked="currentItem.isActive" :disabled="currentItem.isActive && isInApply && !isAdd">
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">拓展属性1</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="ExtendData1" v-model="currentItem.extendData1" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">拓展属性2</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="ExtendData2" v-model="currentItem.extendData2" autocomplete="off" class="layui-input">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="layui-form-item layui-form-text">
+                                <label class="layui-form-label">备注</label>
+                                <div class="layui-input-block">
+                                    <textarea placeholder="" class="layui-textarea" name="Remarks" v-model="currentItem.remarks"></textarea>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <button class="layui-btn" @@click="doSave" type="button">保存</button>
+                                @*<button v-if="!isAdd" class="layui-btn layui-btn-danger" @@click="doDelete" type="button">删除</button>*@
+                            </div>
+                            <vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="Major",ButtonKey="Submit",Callback="submitCallback"})"></vc:form-submit>
+                            @*<div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+            </div>
+        </div>*@
+                        </form>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        var searchKeys = {};
+        var ztree = function () {
+            var zTreeObj;
+            var setting = {
+                view: { selectedMulti: false },
+                data: {
+                    key: {
+                        name: 'briefName',
+                        title: 'briefName'
+                    },
+                    simpleData: {
+                        enable: true,
+                        idKey: 'id',
+                        pIdKey: 'parentId',
+                        rootPId: 'null'
+                    }
+                },
+                callback: {
+                    onClick: function (event, treeId, treeNode) {
+                        console.log(treeNode);
+                        app.currentItem = treeNode;
+                        refresh();
+                        reloadDropDown();
+                    }
+                }
+            };
+            var load = function () {
+                abp.services.app.major.getTreeJson(@Model?.Id).done(function (json) {
+                    zTreeObj = $.fn.zTree.init($("#tree"), setting);
+                    //var newNode = { briefName: "根节点", id: null, parentId: "" };
+                    //json.push(newNode);
+                    zTreeObj.addNodes(null, json);
+                    //mainList({ orgId: "" });
+                    zTreeObj.expandAll(true);
+                });
+                //$.getJSON(url, function (json) {
+                //    zTreeObj = $.fn.zTree.init($("#tree"), setting);
+                //    var newNode = { Name: "根节点", Id: null, ParentId: "" };
+                //    json.push(newNode);
+                //    zTreeObj.addNodes(null, json);
+                //    //mainList({ orgId: "" });
+                //    zTreeObj.expandAll(true);
+                //});
+            };
+            load();
+            return {
+                reload: load
+            };
+        }();
+        config.ready = function () {
+            //$("#tree").height($("div.layui-table-view").height());
+            
+            app = new Vue({
+                el: '#app',
+                data: {
+                    currentItem: {},
+                    isInApply:false
+                },
+                computed: {
+                    isAdd: function () {
+                        return this.currentItem.id == 0;
+                    },
+                    title: function () {
+                        if (this.isAdd) { return "添加专业"; }
+                        else { return "修改专业 " + this.currentItem.displayName; }
+
+                    }
+
+                },
+                methods: {
+                    doSave: function () {
+                        submit();
+                    },
+                    doAdd: function () {
+                        this.currentItem = { id: 0, parentId: '',isActive:true };
+                        refresh();
+                    },
+                    doDelete: function () {
+                        var that = this;
+                        abp.message.confirm('确认删除专业[' + this.currentItem.briefName + "]?子专业也将被删除", function () {
+                            func.runAsync(abp.services.app.major.deleteEntity([that.currentItem.id])
+                                .done(function (data) {
+                                    layer.msg("提交成功");
+                                    config.refresh();
+                                }));
+
+                        })
+
+                    }
+
+                },
+                mounted: function () {
+                    if (!"@Model?.Id") {
+                        return;
+
+                    }
+                    $("#app").removeClass("layui-hide");
+                    this.doAdd();
+                    var that = this;
+                    abp.services.app.match.getIfMatchInApply(@Model.Id).done(function (data) {
+                        that.isInApply = data;
+                    });
+                    $('div[cytype="dropDownTool"]').dropDownTool();
+                }
+
+            });
+            layui.form.on('switch', function (data) {
+                var name = $(data.elem).attr("name");
+                app.currentItem.isActive = data.elem.checked;                
+                //console.log(data.elem); //得到checkbox原始DOM对象
+                //console.log(data.elem.checked); //开关是否开启，true或者false
+                //console.log(data.value); //开关value值，也可以通过data.elem.value得到
+                //console.log(data.othis); //得到美化后的DOM对象
+            });
+            layui.form.on('select(matchSelect)', function (data) {
+                location.href = '?matchId=' + data.value;
+                console.log(data.elem); //得到select原始DOM对象
+                console.log(data.value); //得到被选中的值
+                console.log(data.othis); //得到美化后的DOM对象
+            });      
+        };
+        config.refresh = function () {
+            ztree.reload();
+            app.doAdd();
+            reloadDropDown();
+        };
+        config.reloadTable = function () {
+
+
+        }
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                $("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
+        }
+        function reloadDropDown() {
+            $("div[name='ParentId']").attr("value", app.currentItem.parentId).dropDownTool();
+        }
+        function submitCallback(data) {
+            console.log(data);
+            layer.msg("提交成功");
+            config.refresh();
+            app.doAdd();
+        }
+    </script>
+}
+
+
+

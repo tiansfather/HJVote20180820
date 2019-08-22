@@ -1,0 +1,63 @@
+﻿@using Master.Web.Components
+@using Master.Web.Views
+@inherits MasterRazorPage<TModel>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Master.Web.Core
+@model FormSubmitViewParam
+@{
+    
+}
+
+<div class="layui-form-item" style="display:none">
+    <div class="layui-input-block">
+        <button class="layui-btn" type="button" lay-submit="" lay-filter="@Model.ModuleKey" id="@(Model.ModuleKey)_Submit">@L("提交")</button>
+    </div>
+</div>
+<script>
+    layui.use(['form'],function(){
+        var form = layui.form;
+        var defaultCallback = function (data) {
+            console.log(data);
+            parent.layer.msg("@L("提交成功")");
+            parent.layer.closeAll("iframe");
+            parent.func.reload("@Model.ModuleKey");
+            parent.config.refresh();
+        }
+        
+        form.on('submit(@Model.ModuleKey)', function (data) {
+            var callback = eval("@Model.Callback" || "defaultCallback");
+            console.log(data.field);
+            //对于多选框需要另外处理
+            var checkboxNames = [];
+            $(":checkbox").each(function () {
+                var checkboxName = $(this).attr("name");
+                if (checkboxNames.indexOf(checkboxName) < 0) {
+                    var val = [];
+                    $(":checked[name='" + checkboxName + "']").each(function () {
+                        val.push($(this).val());
+
+                    })
+                    checkboxNames.push(checkboxName);
+                    data.field[checkboxName] = val.join(',');
+                }
+
+            })
+            console.log(data.field);
+            var funcProxy = eval("abp.services.app." + func.getModuleServiceName("@(Model.ModuleKey)")+".formSubmit");
+            func.runAsync(funcProxy({datas: data.field,action:'@Model.ButtonKey',moduleKey:'@Model.ModuleKey' })
+                .done(function (data) {
+                    //parent.abp.message.success("@L("提交成功")");
+                    callback(data);
+                }));
+            return false;
+
+        })
+    })
+
+
+    function submit() {
+        //只能用隐藏的submit btn才行，用form.submit()时data.field里没有数据
+        $("#@(Model.ModuleKey)_Submit").click();
+
+    }
+</script>

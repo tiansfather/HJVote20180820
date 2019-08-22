@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>华建集团专家评审打分系统</title>
+<meta name="keywords" content="华建集团">
+<meta name="description" content="华建集团">
+<meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<meta content="telephone=no, address=no" name="format-detection">
+<meta content="yes" name="apple-mobile-web-app-capable" />
+<meta content="black" name="apple-mobile-web-app-status-bar-style" />
+<link rel="icon" href="images/small_logo.ico" type="image/ico" />
+<!---->
+<link rel="stylesheet" href="css/layui.css">
+<!---->
+<link rel="stylesheet" href="css/font-awesome.css">
+<!---->
+<link rel="stylesheet" href="css/main_huajian.css">
+
+</head>
+<body>
+<!--[if lt IE 7]>
+<p class="browsehappy">您使用的是<stront>过时</strong>的浏览器。请<a href="http://browsehappy.com/">升级您的浏览器</a>来提高你的经验。</p>
+<![endif]-->
+<div class="layui-form">
+<header>
+<div class="wrap_header">
+<div class="logo"><img src="images/logo.png"></div>
+<div class="ind-biaoti"><p>专家评审打分系统<!--预留小字输入<span></span>--></p></div>
+<div class="ind-wel"><i class="huadongjz fa-user user-top"></i><span><b>王五</b>，您好！</span>　<font color="#ccc">|</font>　<a href="#"><i class="huadongjz fa-pencil"></i>修改密码</a>　<font color="#ccc">|</font>　<a href="#"><i class="huadongjz fa-angle-double-right"></i>退出</a></div>
+<div class="ind-time">2017年11月10日　21:41:55</div>
+</div>
+</header>
+<header-wr>
+<div class="wrap_tj">
+<ul>
+<li class="fheader-wrleft"><input type="button" class="layui-btn layui-btn-big" value="提 交"  onClick="confirmsave()"></li>
+<li class="fheader-wrleft"><input type="button" class="layui-btn layui-btn-big2" value="暂 存"  onClick="savedata()"></li>
+<li class="fheader-wrleft"><i class="huadongjz fa-thumbs-o-down"></i><span>最低分5</span>　<i class="huadongjz fa-thumbs-o-up upfen"></i><span class="upfen">最高分10</span>　<i class="huadongjz fa-angle-double-right gofen"></i><span class="gofen">步进0.5</span></li>
+<li class="fright"><input type="button" class="layui-btn layui-btn-big3" value="返 回" onClick="history.back(-1);"></li>
+</ul>
+</div>
+</header-wr>
+<!---->
+<div id="main_ny_pc_bj">
+<div class="wrap_content">
+<div class="wrap_table">
+<table class="layui-table" lay-size="lg">
+<colgroup>
+<col width="55">
+<col width="55">
+<col width="230">
+<col>
+<col width="150">
+<col width="100">
+<col width="100">
+<col width="88">
+<col width="88">
+</colgroup>
+<thead>
+<tr>
+<th><div align="center">打分</div></th>
+<th><div align="center">序号</div></th>
+<th>项目名称</th>
+<th>项目内容</th>
+<th>建设单位</th>
+<th><div align="center">建筑类别</div></th>
+<th><div align="center">设计类别</div></th>
+<th><div align="center">设计时间</div></th>
+<th><div align="center">回 避</div></th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">1</td>
+<td>普陀山观音法界中轴景观设计</td>
+<td><a href="">观音圣坛景观方案创作之星<i class="huadongjz fa-link redlink"></i></a></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr class="none">
+<td align="center" class="none">
+<input type="checkbox" name="go" disabled="">
+<!--
+<dl>
+<dd><input type="text" class="pc_input2 none" name="score" value="" readonly=""></dd>
+<dd><button class="pc_button1 none" onClick="setvalue(this,1)"><i class="huadongjz fa-caret-up none"></i></button></dd>
+<dd><button class="pc_button2 none" onClick="setvalue(this,-1)"><i class="huadongjz fa-caret-down none"></i></button></dd>
+</dl>-->
+</td>
+<td align="center">2</td>
+<td>被选中回避的样式</td>
+<td>被选中回避的样式，按钮状态没有改动，设计者自行动态控制</td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch" checked="" title="开关"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">3</td>
+<td>武夷山景观设计</td>
+<td><a href="">观音圣坛景观方案创作之星<i class="huadongjz fa-link redlink"></i></a></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">4</td>
+<td>武夷山景观设计</td>
+<td><a href="">观音圣坛景观方案创作之星<i class="huadongjz fa-link redlink"></i></a></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr class="on">
+<td align="center">
+<input type="checkbox" name="go" checked="">
+<!--
+<dl>
+<dd><input type="text" class="pc_input2 on" name="score" value="5.5" readonly=""></dd>
+<dd><button class="pc_button1" onClick="setvalue(this,1)"><i class="huadongjz fa-caret-up"></i></button></dd>
+<dd><button class="pc_button2" onClick="setvalue(this,-1)"><i class="huadongjz fa-caret-down"></i></button></dd>
+</dl>
+-->
+</td>
+<td align="center">5</td>
+<td>选中并打分的状态</td>
+<td><a href="">选中并打分的状态<i class="huadongjz fa-link redlink"></i></a></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">6</td>
+<td>武夷山景观设计</td>
+<td></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">7</td>
+<td>武夷山景观设计</td>
+<td>观音圣坛景观方案创作之星</td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">8</td>
+<td>武夷山景观设计</td>
+<td>观音圣坛景观方案创作之星</td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">9</td>
+<td>武夷山景观设计</td>
+<td></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+<tr>
+<td align="center">
+<input type="checkbox" name="go">
+</td>
+<td align="center">10</td>
+<td>武夷山景观设计</td>
+<td></td>
+<td>普陀山佛教协会</td>
+<td align="center">室内景观</td>
+<td align="center">报批方案</td>
+<td align="center">2017</td>
+<td><input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch"></td>
+</tr>
+
+
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!---->
+<footer>
+<p>华东建筑集团有限公司 版权所有<br>
+本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器</p>
+</footer>
+</div>
+<script src="js/layui.all.js"></script>
+
+</body>
+</html>

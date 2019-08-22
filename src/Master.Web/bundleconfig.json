@@ -1,0 +1,38 @@
+[
+  {
+    "outputFileName": "wwwroot/view-resources/Views/_Bundles/base.min.css",
+    "inputFiles": [
+      "wwwroot/lib/animate.css/animate.css",
+      "wwwroot/assets/layuiadmin/layui/icon/icon.css",
+      "wwwroot/lib/zTree/css/metroStyle/metroStyle.css",
+      "wwwroot/assets/layuiadmin/lib/extend/formselects/formSelects-v4.css",
+      "wwwroot/lib/dropdowntree/css/cyType.css",
+      "wwwroot/lib/dropdowntree/css/cyStyle.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/view-resources/Views/_Bundles/base.min.js",
+    "inputFiles": [
+      "wwwroot/lib/jquery/jquery.js",
+      "wwwroot/lib/jquery.cookie/jquery.cookie.js",
+      "wwwroot/lib/vue/vue.min.js",
+      "wwwroot/lib/blockUI/jquery.blockUI.min.js",
+      "wwwroot/lib/spin.js/spin.js",
+      "wwwroot/lib/spin.js/jquery.spin.js",
+      "wwwroot/lib/pinyinjs/dict/pinyin_dict_notone.js",
+      "wwwroot/lib/pinyinjs/pinyinUtil.js",
+      "wwwroot/lib/zTree/js/jquery.ztree.all.js",
+      "wwwroot/lib/dropdowntree/js/dropDownTool.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/view-resources/Views/_Bundles/abp.min.js",
+    "inputFiles": [
+      "wwwroot/lib/abp-web-resources/Abp/Framework/scripts/abp.js",
+      "wwwroot/lib/abp-web-resources/Abp/Framework/scripts/libs/abp.jquery.js",
+      "wwwroot/lib/abp-web-resources/Abp/Framework/scripts/libs/abp.blockui.js",
+      "wwwroot/lib/abp-web-resources/Abp/Framework/scripts/libs/abp.spin.js",
+      "wwwroot/assets/js/abp.layer.js"
+    ]
+  }
+]

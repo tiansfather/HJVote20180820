@@ -1,0 +1,127 @@
+﻿@using Master.Prizes
+@using Master.Matches
+@using Abp.Domain.Entities;
+@using Master.Organizations;
+@{ 
+    
+}
+<style>
+    .reviewmethodsetting {
+        line-height: 30px;
+    }
+
+        .reviewmethodsetting input {
+            text-align: right;
+            border:none;
+        }
+</style>
+<form class="layui-form layui-form-pane layui-hide" id="reviewSettingApp">
+    <div class="layui-form-item" style="margin-bottom:2px">
+        <label class="layui-form-label" style="padding:8px 5px">评选活动名称</label>
+        <div class="layui-input-block">           
+            <input type="text" class="layui-input" readonly :value="currentItem.reviewName" />
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-bottom:2px">
+        <label class="layui-form-label" style="padding:8px 5px">评审轮次</label>
+        <div class="layui-input-block">
+            <input type="text" :value="currentRoundTurn" readonly class="layui-input" />
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-bottom:2px">
+        <label class="layui-form-label" style="padding:8px 5px">目标数量</label>
+        <div class="layui-input-block">
+            <input type="text" v-model="currentItem.targetNumber" class="layui-input" readonly />
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-bottom:2px" pane>
+        <label class="layui-form-label" style="padding:8px 5px">评审方法</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" readonly :value="reviewMethodName"/>            
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-bottom:2px" pane>
+        <label class="layui-form-label" style="padding:8px 5px">参数设定</label>
+        <div class="layui-input-block reviewmethodsetting" style="padding-left:5px;">
+            <label id="methodsetting1" v-if="(currentItem.reviewMethod==1||currentItem.reviewMethod==2) && currentItem.reviewMethodSetting.rateType==0">
+                分制：{{currentItem.reviewMethodSetting.maxScore}}
+                最低：{{currentItem.reviewMethodSetting.minScore}}
+                @*步进：{{currentItem.reviewMethodSetting.scoreStep}}*@
+
+            </label>
+            <label v-if="(currentItem.reviewMethod==1||currentItem.reviewMethod==2) && currentItem.reviewMethodSetting.cutOff">去掉最高分最低分</label>
+            <label id="methodsetting2" v-if="currentItem.reviewMethod==2">
+                上轮权重：{{currentItem.reviewMethodSetting.weightLast}}%
+                本轮权重：{{currentItem.reviewMethodSetting.weightNow}}%
+            </label>
+            <label id="methodsetting3" v-if="currentItem.reviewMethod==3">
+                每位评委投满{{currentItem.reviewMethodSetting.voteNumber}}票
+            </label>
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-bottom:2px" pane v-if="currentItem.reviewMethod!=3">
+        <label class="layui-form-label" style="padding:8px 5px">打分方式</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" readonly :value="rateTypeName"/>
+        </div>
+    </div>
+</form>
+
+
+<script>
+    var reviewSettingApp = new Vue({
+        el: '#reviewSettingApp',
+        data: {
+            currentItem: {reviewMethodSetting: {}}
+        },
+        methods: {
+            loadItem: function (id) {
+                var that = this;
+                if (id) {
+                    //加载评审信息
+                    abp.services.app.review.getReviewRound(id).done(function (data) {
+                        console.log(data);
+                        that.currentItem = data;
+                        $("#reviewSettingApp").removeClass("layui-hide");
+                    });
+                }
+            }
+        },
+        computed: {
+            currentRoundTurn: function () {
+                return "第" + this.currentItem.round + "轮第" + this.currentItem.turn + "次";
+            },
+            reviewMethodName: function () {
+                var result = "";
+                switch (this.currentItem.reviewMethod) {
+                    case 1:
+                        result = "本轮平均分";
+                        break;
+                    case 2:
+                        result = "与上轮加权平均分";
+                        break;
+                    case 3:
+                        result = "投票";
+                        break;
+                }
+                return result;
+            },
+            rateTypeName: function () {
+                var result = "";
+                switch (this.currentItem.reviewMethodSetting.rateType) {
+                    case 0:
+                        result = "直接打分";
+                        break;
+                    case 1:
+                        result = "评分表打分";
+                        break;
+                }
+                return result;
+
+            }
+        },
+        mounted: function () {
+            this.loadItem(@ViewBag.ReviewRoundId);
+        }
+    });
+</script>

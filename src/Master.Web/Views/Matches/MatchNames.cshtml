@@ -1,0 +1,52 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+}
+<blockquote class="layui-elem-quote" style="padding:5px;margin-bottom:0">
+    <button type="button" class="layui-btn " onclick="add()">@L("添加赛事")</button>
+</blockquote>
+<table autoevent="1" id="Match" lay-filter="Match" class="layui-table " lay-data="{cellMinWidth:'80', url:'/api/services/app/Match/GetAll', page:false, id:'Match',  even: false}">
+    <thead>
+        <tr>
+            <th lay-data="{field:'name',edit:'text'}">@L("赛事名称")</th>
+        </tr>
+    </thead>
+</table>
+
+@section scripts{ 
+    <script>
+        config.ready = function () {
+            //监听单元格编辑
+            layui.table.on('edit(Match)', function (obj) {
+                var value = obj.value //得到修改后的值
+                    , data = obj.data //得到所在行所有键值
+                    , field = obj.field; //得到字段
+                //layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
+                if (!value.trim()) {
+                    layer.msg("赛事名称不能为空", { icon: 5, anim: 6 });
+                    layui.table.reload('Match');
+                    return false;
+                }
+                func.runAsync(abp.services.app.match.update(data.id, value, {
+                    error: function () {
+                        layui.table.reload('Match');
+                    }
+                }).done(function () {
+                    layer.msg('更新成功');
+                }));
+            });
+        }
+        function add() {
+            layer.prompt({ title: '@L("请输入赛事名称")', formType: 0 }, function (text, index) {
+                layer.close(index);
+                if (!text.trim()) {
+                    layer.msg("赛事名称不能为空", { icon: 5, anim: 6 });
+                    return false;
+                }
+                func.runAsync(abp.services.app.match.add(text).done(function () {
+                    layui.table.reload('Match');
+                }));
+                    });
+        }
+    </script>
+}

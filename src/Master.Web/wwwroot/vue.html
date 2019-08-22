@@ -1,0 +1,46 @@
+<html>
+
+<head>
+    <script src="lib/vue/vue.min.js"></script>
+    <meta charset="utf-8"/>
+    <link href="assets/layuiadmin/layui/css/layui.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">
+        <layout :list="controls"></layout>
+    </div>
+    <script>
+        Vue.component('layout',{
+            template:'<div ><template v-for="(item,index) in list"><div v-if="item.type==\'layout\'" :class="\'layui-col-md\'+item.span" :style="item.style"><layout :list="item.controls"></layout></div><label v-if="item.type==\'label\'" :style="item.style">{{item.text}}</label><input v-if="item.type==\'input\'" :value="item.value" :style="item.style"/><select v-if="item.type==\'select\'" :value="item.value" :style="item.style"><option v-for="(option,optionIndex) in getOption(item.selectValues)" :value="option">{{option}}</option></select><label v-if="item.type==\'radio\'" v-for="(option,optionIndex) in getOption(item.selectValues)" :style="item.style"><input  type="radio" :title="option" :name="item.name" :checked="item.value==option" />{{option}}</label><label v-if="item.type==\'checkbox\'" v-for="(option,optionIndex) in getOption(item.selectValues)" :style="item.style"><input  type="checkbox" :title="option" :name="item.name" :checked="item.value.indexOf(option)>=0" />{{option}}</label></template></div>',
+                //+'<div v-if="item.type==\'layout\'" :class="\'layui-col-md\'+item.span"></div>'+
+                
+            props:{
+                list:Array
+            },
+            data:function(){
+                return {
+                    obj:[1,2]
+                }
+            },
+            methods:{
+                getOption: function (selectValue) {
+                        var result = [];
+                        if (selectValue) {
+                            result= selectValue.split(',');
+                        }
+                        return result;
+                    }
+            }
+        });
+        var app=new Vue({
+            el:'#app',
+            data:{
+                controls:[{type:'layout',span:1,style:'color:red',controls:[{type:'label',text:'建筑单位'}]},{type:'layout',span:11,controls:[{type:'layout',span:11,controls:[{type:'label',text:'地上:'},{type:'input',style:'width:200px',value:'test'},{type:'label',text:'平方米',style:'color:gray'}]},{type:'layout',span:11,controls:[{type:'label',text:'地上:'},{type:'input',style:'width:200px',value:'test'},{type:'label',text:'平方米',style:'color:gray'},{type:'checkbox',selectValues:'1,2,3',value:'1',name:'guid'}]}]}]
+            }
+            
+        })
+    </script>
+</body>
+
+</html>

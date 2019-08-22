@@ -1,0 +1,292 @@
+﻿@using Master.Reviews
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+
+    var review = ViewData["Review"] as Review;
+    var currentRound = review.CurrentReviewRound;
+    var reviewMethodSetting = currentRound.ReviewMethodSetting;
+}
+@section styles{ 
+    <style>
+        body{
+            padding-top:1px !important;
+        }
+		.layui-table thead tr th, .layui-table tbody tr td {
+			font-size: 16px;
+		}
+        .layui-tab-title {
+            position: fixed;
+            left: 10px;
+            width: 100%;
+            z-index: 999;
+            background: #fff;
+        }
+        .layui-tab-content{
+            padding-top:30px;
+        }
+        .reviewForm {
+            position: fixed;
+            z-index: 1000;
+            top: 75px;
+            left: 600px;
+        }
+        .layui-tab-title li{
+            font-size:16px;
+        }
+        .layui-colla-title{
+            font-size:16px;
+        }
+        body {
+            font-size: 16px !important;
+        }
+        .layui-form-switch {
+            position: relative;
+            height: 36px;
+            line-height: 36px;
+            width: 56px;
+            padding: 0 5px;
+            margin-top: 0px;
+            border: 1px solid #d2d2d2;
+            border-radius: 40px;
+            cursor: pointer;
+            background-color: #fff;
+            -webkit-transition: .1s linear;
+            transition: .1s linear;
+        }
+        .layui-form-onswitch {
+            border-color: #D83F44;
+            background-color: #D83F44;
+        }
+            .layui-form-switch i {
+                position: absolute;
+                left: 5px;
+                top: 3px;
+                width: 30px;
+                height: 30px;
+                border-radius: 40px;
+                background-color: #d2d2d2;
+                -webkit-transition: .1s linear;
+                transition: .1s linear;
+            }
+        .layui-form-onswitch em {
+            left: 5px;
+            right: auto;
+            color: #fff !important;
+        }
+        .layui-form-onswitch i {
+            left: 52px;
+            background-color: #fff;
+        }
+        .layui-form-switch em {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            width: 25px;
+            padding: 0 !important;
+            text-align: center !important;
+            color: #999 !important;
+            font-style: normal !important;
+            font-size: 12px;
+        }
+    </style>
+}
+    <div id="reviewApp" class="layui-hide">
+        <div style="position:fixed;width:100%;z-index:999" >
+			<blockquote class="layui-elem-quote" style="text-align:center">
+				<label style="line-height:45px;font-size:20px;font-weight:bold;float:left">序号:@ViewBag.Sort</label>
+				<button class="layui-btn layui-btn-primary " style="float:left;margin-left:20px" type="button" v-if="rateType!='ratetable'" fornonerow="1" buttonname="@L("评分标准")" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[&quot;关闭&quot;]}" buttonactiontype="Form" buttonactionurl="/Reviews/RateTable2?reviewId=@review.Id" onclick="func.callModuleButtonEvent()">评分标准</button>
+				<button class="layui-btn layui-btn-normal layui-btn-lg" :class="{'layui-btn-disabled':isFirst}" type="button" :disabled="isFirst" @@click="switchProject(-1)">上一个项目</button>
+				<button class="layui-btn layui-btn-lg" type="button" @@click="saveData">保存</button>
+				<button class="layui-btn layui-btn-normal layui-btn-lg" :class="{'layui-btn-disabled':isLast}" type="button" :disabled="isLast" @@click="switchProject(1)">下一个项目</button>
+				<button class="layui-btn layui-btn-primary layui-btn-lg" type="button" style="float:right" @@click="close">返回</button>
+			</blockquote>
+        </div>
+        <div class="layui-form reviewForm">
+            @if (ViewBag.ReviewMethod != ReviewMethod.Vote)
+            {
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">回避</label>
+                        <div class="layui-input-inline" style="width:60px">
+                            <input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch" v-model="currentProject.isAvoid">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">否决</label>
+                        <div class="layui-input-inline" style="width:60px">
+                            <input type="checkbox" lay-skin="switch" lay-filter="denySwitch" :checked="currentProject.score===0">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">得分:</label>
+                        <div class="layui-input-inline" style="width:60px">
+                            <input type="text" class="layui-input" style="width:50px;border:1px solid #000" v-model="currentProject.score" :disabled="currentProject.score===0 || currentProject.isAvoid || rateType=='ratetable'">
+                        </div>
+                        <div v-if="rateType=='score'" class="layui-form-mid layui-word-aux">满分@(reviewMethodSetting.MaxScore),最低@(reviewMethodSetting.MinScore)</div>
+                        <button class="layui-btn layui-btn-warm" :class="{'layui-btn-disabled':currentProject.score===0 || currentProject.isAvoid}" style="font-size:16px" type="button" v-if="rateType=='ratetable'" :disabled="currentProject.score===0 || currentProject.isAvoid " fornonerow="1" buttonname="@L("评分表")" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[&quot;确定&quot;,&quot;关闭&quot;]}" buttonactiontype="Form" buttonactionurl="/Reviews/RateTable?reviewId=@review.Id&projectId=@ViewBag.ProjectId" onclick="func.callModuleButtonEvent()">打分</button>
+                    </div>
+                </div>
+
+            }
+            else
+            {
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">投票</label>
+                        <div class="layui-input-inline" style="width:60px">
+                            <input type="checkbox" name="voteFlag" lay-filter="voteFlag" title="投票" v-model="currentProject.voteFlag">
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+<div style="margin-top:73px;">
+    <vc:project-view project-id="ViewBag.ProjectId"></vc:project-view>
+</div>
+
+
+@section scripts{
+    <script src="~/lib/fixedScroll/fixedScroll.js"></script>
+    <script>
+        var reviewApp,
+            currentProjectId =@(ViewBag.ProjectId),
+            method = "@(currentRound.ReviewMethod==ReviewMethod.Vote?"vote":"score")",
+            requirevotenumber =@reviewMethodSetting.VoteNumber,
+            minScore =@(reviewMethodSetting.MinScore),
+            maxScore =@(reviewMethodSetting.MaxScore),
+            rateType ="@(reviewMethodSetting.RateType==RateType.Score?"score":"ratetable")";
+        config.ready = function () {
+            layui.form.on("switch(avoidSwitch)", function (data) {
+                reviewApp.currentProject.isAvoid = data.elem.checked;
+                if (data.elem.checked) {
+                    //如果是回避，则清空分数
+                    reviewApp.currentProject.score = null;
+                }
+                refreshForm();
+            });
+            layui.element.on('tab', function (data) {
+                console.log(this); //当前Tab标题所在的原始DOM元素
+                console.log(data.index); //得到当前Tab的所在下标
+                console.log(data.elem); //得到当前的Tab大容器
+                $(window).scrollTop(0);
+            });
+            layui.form.on("switch(denySwitch)", function (data) {
+                if (data.elem.checked) {
+                    reviewApp.currentProject.isAvoid = false;
+                    reviewApp.currentProject.score = 0;
+                } else {
+                    reviewApp.currentProject.score = null;
+                }
+                refreshForm();
+            })
+            layui.form.on("checkbox(voteFlag)", function (data) {
+                reviewApp.currentProject.voteFlag = data.elem.checked;
+            })
+            reviewApp = new Vue({
+                el: '#reviewApp',
+                data: {
+                    currentProject: {},
+                    projectDetails: [],
+                    rateType: rateType
+                },
+                methods: {
+                    switchProject: function (indexChange) {
+                        var newIndex = this.projectDetails.indexOf(this.currentProject) + indexChange;
+                        if (newIndex < 0 || newIndex >= this.projectDetails.length) {
+                            return false;
+                        } else {
+                            var gotoProjectId = this.projectDetails[newIndex].projectId;
+                            if (this.saveTempData(this.projectDetails)) {
+                                location.href = '/Reviews/Show?projectId=' + gotoProjectId;
+                            };
+                            
+                        }
+                    },
+                    updateProjectDetails: function (projectDetails) {
+                        //更新打分数据，用于从评分表中调用
+                        this.projectDetails = projectDetails;
+                        this.currentProject = this.projectDetails.filter(function (o) { return o.projectId == currentProjectId })[0];
+                        this.saveTempData(projectDetails);
+                        refresh();
+                    },
+                    saveTempData: function (projectDetails) {
+                        if (!this.checkData()) {
+                            return false;
+                        }          
+                        //临时保存数据
+                        parent.layui.sessionData('reviewdata', { key: 'projectDetails', value: projectDetails });
+                        return true;
+                    },
+                    checkData: function () {
+
+                        //数据验证
+                        if (method != "vote") {
+                            //非投票的验证
+                            if (!this.currentProject.isAvoid) {
+                                //如果有分数
+                                if (this.currentProject.score) {
+                                    if (isNaN(this.currentProject.score)) {
+                                        layer.msg("请正确输入分数", { icon: 5, anim: 6 });
+                                        return false;
+                                    } else if ((this.currentProject.score > maxScore || this.currentProject.score < minScore) && rateType === "score") {
+                                        layer.msg("分数必须在" + minScore + "与" + maxScore + "之间", { icon: 5, anim: 6 });
+                                        return false;
+                                    }
+                                } else if (this.currentProject.score === null) {
+                                    //layer.msg("请先进行打分", { icon: 5, anim: 6 });
+                                    //return false;
+                                }
+                            }
+                        } else {
+                            //投票的验证
+                            if (this.projectDetails.filter(function (o) { return o.voteFlag }).length > requirevotenumber) {
+                                layer.msg("总共只能投" + requirevotenumber + "票", { icon: 5, anim: 6 });
+                                return false;
+                            }
+                        }
+                        return true;
+                    },
+                    saveData: function () {
+                        if (!this.checkData()) {
+                            return;
+                        }              
+                        //更新父窗口的数据
+                        parent.app.projectDetails = this.projectDetails;
+                        parent.syncData();
+                        parent.layer.closeAll('iframe');
+                        parent.refresh();
+                        //modi20181107保存后直接提交暂存
+                        parent.savedata(false);
+                        //layer.msg("保存成功");
+					},
+					close: function () {
+						abp.message.confirm("确认返回?未保存的打分将丢失", function () {
+							parent.layer.closeAll('iframe');
+						})
+					}
+                },
+                computed: {
+                    isFirst: function () {
+                        return this.projectDetails.indexOf(this.currentProject)== 0;
+                    },
+                    isLast: function () {
+                        return this.projectDetails.indexOf(this.currentProject) == this.projectDetails.length - 1;
+                    }
+                },
+                mounted: function () {
+                    this.projectDetails = parent.layui.sessionData('reviewdata').projectDetails;
+                    this.currentProject = this.projectDetails.filter(function (o) { return o.projectId == currentProjectId })[0];
+                    $("#reviewApp").removeClass("layui-hide");
+                    refreshForm();
+                }
+            });
+        }
+
+        function refreshForm() {
+            Vue.nextTick(function () {
+                layui.form.render();
+            })
+        }
+    </script>
+}

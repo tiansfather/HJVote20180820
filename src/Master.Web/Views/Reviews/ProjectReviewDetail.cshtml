@@ -1,0 +1,111 @@
+﻿@using Master.Reviews
+@using Master.Authentication
+@model List<ProjectReviewDetail>
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    var experts = ViewData["Experts"] as List<User>;
+    var reviewDetail = ViewData["reviewDetail"] as ReviewRound;
+    var basescoreStr = ViewData["basescore"].ToString();
+
+    var result = Model.Select(o =>
+    {
+        var expert = experts.FirstOrDefault(u => u.Id == o.ExpertId);
+        return new {ExpertId=expert.Id, expert.Name,OrganizationName= expert.Organization?.BriefName, o.IsAvoid, o.Score, o.VoteFlag };
+    }).OrderBy(o => o.Name).ToList();
+}
+
+<div style="padding:0 20px;">
+    <table lay-filter="projectdetails" class="center">
+        <thead>
+            <tr>
+                <th lay-data="{field:'realname', width:120}">专家姓名</th>
+                <th lay-data="{field:'company', width:150}">所属单位</th>
+                @if (reviewDetail.ReviewMethod == ReviewMethod.Vote)
+                {
+                    <th lay-data="{field:'vote', width:100}">投票</th>
+                }
+                else
+                {
+                    <th lay-data="{field:'score', width:100}">打分</th>
+                }
+                @if (reviewDetail.ReviewMethodSetting.RateType == RateType.RateTable)
+                {
+                    <th lay-data="{field:'rateType', width:100}">评分表</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (!string.IsNullOrEmpty(basescoreStr) && basescoreStr!="0")
+            {
+            <tr>
+                <td>基础分</td>
+                <td></td>
+                <td> @basescoreStr</td>
+                @if (reviewDetail.ReviewMethodSetting.RateType == RateType.RateTable)
+                {
+                    <td></td>
+                }
+            </tr>
+            }
+            @foreach (var detail in result)
+            {
+            <tr>
+                <td>@detail.Name</td>
+                <td>@detail.OrganizationName</td>
+                <td>
+                    @if (detail.IsAvoid)
+                    {
+                        <span style="color:red">回避</span>
+                    }
+                    else
+                    {
+                        if (reviewDetail.ReviewMethod == ReviewMethod.Vote)
+                        {
+                            if (detail.VoteFlag)
+                            {
+                                <span class="layui-badge layui-bg-green">Y</span>
+                            }
+                        }
+                        else
+                        {
+                            @detail.Score
+                        }
+                    }
+
+                </td>
+                @if (reviewDetail.ReviewMethodSetting.RateType == RateType.RateTable )
+                {
+                <td>
+                    @if (!detail.IsAvoid && detail.Score>0)
+                    {
+
+                        <button type="button" class="layui-btn layui-btn-xs" onclick="showRateTable(@detail.ExpertId,@reviewDetail.Id)">查看评分表</button>
+                    }
+
+                </td>
+                }
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts{ 
+    <script>
+        config.ready = function () {
+            layui.table.init('projectdetails', { //转化静态表格
+                height: 'full-50'
+            }); 
+        }
+        function showRateTable(expertId, reviewRoundId) {
+            top.layer.open({
+                        type: 2,
+                        title: '查看评分表',
+                        closeBtn: 1,
+                        area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Reviews/RateTableView?reviewRoundId=" + reviewRoundId + "&projectId=" + $.getUrlParam("projectId") + "&expertId=" + expertId
+                    });
+        }
+    </script>
+}
