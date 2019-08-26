@@ -453,7 +453,7 @@
                     loadItem: function (id) {
                         var that = this;
                         if (!id) {
-                            that.project = { id: 0,projectSN:'@Html.Raw(ViewData["prizeRemarks"])', prizeId:@Model.Id, matchInstanceId:@Model.MatchInstanceId, prizeSubMajorId: '@prizeSubMajorId', DesignOrganizationId: null, isOriginal: false, projectMajorInfos: [],thirdLevelMajors:[] };
+                            that.project = { id: 0,projectSN:'@Html.Raw(ViewData["prizeRemarks"]?.ToString()+ViewData["matchRemarks"]?.ToString())', prizeId:@Model.Id, matchInstanceId:@Model.MatchInstanceId, prizeSubMajorId: '@prizeSubMajorId', DesignOrganizationId: null, isOriginal: false, projectMajorInfos: [],thirdLevelMajors:[] };
                             //获取表单设计
                             abp.services.app.matchResource.getFormDesignDetail(@Model.MatchInstanceId,@Model.MajorId).done(function (data) {
                                 that.project.projectMajorInfos.length = 0;
