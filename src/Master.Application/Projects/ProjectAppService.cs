@@ -77,7 +77,9 @@ namespace Master.Projects
         }
         private string GetCoorperation(Project project)
         {
-            var coorperations = project.ProjectMajorInfos.Select(o => o.GetData<string>("Coorperation")).ToList();
+            var coorperations = new List<string>();
+            coorperations.Add(project.Coorparation);
+            coorperations.AddRange(project.ProjectMajorInfos.Select(o => o.GetData<string>("Coorperation")).ToList());
             coorperations.RemoveAll(o => string.IsNullOrEmpty(o));
             return string.Join(',', coorperations);
         }
@@ -102,7 +104,7 @@ namespace Master.Projects
                 {
                     allControls.AddRange(GetChildren(item));
                 }
-                var control = allControls.Where(o => o.Id== "1536590402055720").SingleOrDefault();
+                var control = allControls.Where(o => o.Id== "1536590402055720" || o.FormName== "建筑类别下拉").FirstOrDefault();
                 return control != null ? control.Value : "";
             }
         }
