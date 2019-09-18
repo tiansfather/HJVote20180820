@@ -19,6 +19,7 @@ using Master.Reviews;
 using Master.Majors;
 using Master.Matches;
 using Master.Prizes;
+using System.Linq.Dynamic.Core;
 
 namespace Master.Projects
 {
@@ -610,6 +611,64 @@ namespace Master.Projects
             }
             
             return project;
+        }
+        #endregion
+
+        #region 项目导出
+        public virtual async Task<string> DoExport(RequestPageDto requestPageDto)
+        {
+            var pageResult = await GetPageResultQueryable(requestPageDto);
+            var projects = (await pageResult.Queryable
+                .Include(o => o.DesignOrganization)
+                .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
+                .Include(o => o.Prize).ThenInclude(o => o.Major)
+                .ToListAsync());
+
+            var dt = BuildExportDataTable();
+            foreach(var project in projects)
+            {
+                var row=dt.NewRow();
+                row["项目名称"] = project.ProjectName;
+                row["是否原创"] = project.IsOriginalStr;
+                row["设计单位"] = project.DesignOrganization?.DisplayName;
+                row["联系人"] = project.DesignOrganizationContact;
+                row["电话"] = project.DesignOrganizationPhone;
+                row["手机"] = project.DesignOrganizationMobile;
+                row["EMAIL"] = project.DesignOrganizationEmail;
+                row["申报奖项大类"] = project.Prize?.PrizeName;
+                row["奖项子类"] = project.PrizeSubMajor?.Major.DisplayName;
+                row["建设单位"] = project.BuildingCompany;
+                row["建设国家"] = project.BuildingCountry;
+                row["建设省份"] = project.BuildingProvince;
+                row["建设城市"] = project.BuildingCity;
+                dt.Rows.Add(row);
+            }
+            EnsureTempDirectoryCreated();
+            var filePath = "/temp/"+ Guid.NewGuid() + ".xlsx";
+            var fileName = HostingEnvironment.WebRootPath + filePath.Replace("/", "\\");
+            Common.ExcelHelper.DataTableToExcel(dt, fileName, "Sheet1", true);
+
+            return filePath;
+        }
+        private DataTable BuildExportDataTable()
+        {
+            string[] columnNeededs = { "项目名称", "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家", "建设省份", "建设城市" };
+
+            var dt = new DataTable();
+            foreach(var columnName in columnNeededs)
+            {
+                DataColumn column = new DataColumn(columnName);
+                dt.Columns.Add(column);
+            }
+            return dt;
+        }
+        private void EnsureTempDirectoryCreated()
+        {
+            var tempDirectory = HostingEnvironment.WebRootPath + "\\temp";
+            if (!System.IO.Directory.Exists(tempDirectory))
+            {
+                System.IO.Directory.CreateDirectory(tempDirectory);
+            }
         }
         #endregion
 

@@ -79,11 +79,17 @@
 
     <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType=2" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
 </script>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出项目申报数据</button>
+    </div>
+</script>
 <script type="text/html" id="isOriginalTpl2">
 	{{#if(d.isOriginal){}}
 	<span class="layui-badge layui-bg-green">Y</span>
 	{{#}}}
 </script>
+<iframe style="display:none" id="_hidden" name="_hidden"></iframe>
 @section scripts{
     <script>
         var currentPrizeId;
@@ -141,7 +147,17 @@
         config.refresh = function () {
 
         };
-        function doSearch() {
+        function doExport() {
+            abp.message.confirm("确认导出?", function () {
+                var where = getWhere();
+                where.limit = 1000;
+                func.runAsync(abp.services.app.project.doExport(where).done(function (data) {
+                    _hidden.location.href = data;
+                    console.log(data);
+                }));
+            })
+        }
+        function getWhere() {
             var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and isInFinalReview=true  and PrizeId=' + currentPrizeId, orderField: 'rankFinal asc' };
             var organizationId = $("input[name='OrganizationId']").val();
             if (organizationId) {
@@ -155,12 +171,20 @@
 			}
             var projectName = $("#projectName").val();
             if (projectName) {
-                where.where += " and ProjectName.Contains(\"" + projectName + "\")" ;
+                where.where += " and ProjectName.Contains(\"" + projectName + "\")";
+            }
+            return where;
+        }
+        function doSearch() {
+            var where = getWhere();
+			var subMajorName = "";
+			if (app.subMajorId && app.prizeType == 2) {
+				subMajorName = '-' + app.subMajorName;
 			}
 			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + $("div.item.current").html().trim() + subMajorName + "终评情况" + new Date().Format("yyyyMMddhhmmss");
             var columns = getColumns();
 			layui.table.render({
-				toolbar: '<div></div>',
+                toolbar: '#toolbarTpl',
                 elem: '#Project',
                 where: where,
                 cellMinWidth: '120',

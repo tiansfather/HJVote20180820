@@ -93,8 +93,11 @@
         <button type="button" class="layui-btn layui-btn-sm" moduleKey="Project" confirmmsg="确认使选中项目进入终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringInFinalReview" onclick="func.callModuleButtonEvent()">进入终评</button>
 
         <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" moduleKey="Project" confirmmsg="确认将选中项目移出终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringOutFinalReview" onclick="func.callModuleButtonEvent()">取消终评资格</button>
+
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出项目申报数据</button>
     </div>
 </script>
+<iframe style="display:none" id="_hidden" name="_hidden"></iframe>
 @section scripts{
     <script>
         var currentPrizeId;
@@ -152,7 +155,7 @@
         config.refresh = function () {
 
         };
-        function doSearch() {
+        function getWhere() {
             var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and PrizeId=' + currentPrizeId, orderField: 'rankInitial asc' };
             var organizationId = $("input[name='OrganizationId']").val();
             if (organizationId) {
@@ -168,6 +171,24 @@
             if (projectName) {
                 where.where += " and ProjectName.Contains(\"" + projectName + "\")" ;
             }
+            return where;
+        }
+        function doExport() {
+            abp.message.confirm("确认导出?", function () {
+                var where = getWhere();
+                where.limit = 1000;
+                func.runAsync(abp.services.app.project.doExport(where).done(function (data) {
+                    _hidden.location.href = data;
+                    console.log(data);
+                }));
+            })
+        }
+        function doSearch() {
+            var subMajorName = "";
+            if (app.subMajorId && app.prizeType == 2) {
+                subMajorName = '-' + app.subMajorName;
+            }
+            var where = getWhere();
 			var columns = getColumns();
 			var sheetName ='@Html.Raw(matchInstance.Match.Name)'+ $("div.item.current").html().trim() + subMajorName + "初评情况" + new Date().Format("yyyyMMddhhmmss");
             layui.table.render({
