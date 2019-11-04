@@ -174,7 +174,11 @@ namespace Master.Projects
         /// <summary>
         ///  导入 
         /// </summary>
-        Import=2
+        Import=2,
+        /// <summary>
+        /// 跨赛事
+        /// </summary>
+        CrossMatch=3,
     }
     public enum ProjectStatus
     {

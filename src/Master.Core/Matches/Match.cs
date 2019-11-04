@@ -1,6 +1,7 @@
 ﻿using Master.Entity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace Master.Matches
@@ -27,6 +28,14 @@ namespace Master.Matches
         public virtual int Year { get; set; }
         public virtual Match Match { get; set; }
         public virtual MatchInstanceStatus MatchInstanceStatus { get; set; } = MatchInstanceStatus.Draft;
+        [NotMapped]
+        public virtual string Name
+        {
+            get
+            {
+                return Match.Name + "(" + Identifier + ")";
+            }
+        }
     }
     public enum MatchInstanceStatus
     {

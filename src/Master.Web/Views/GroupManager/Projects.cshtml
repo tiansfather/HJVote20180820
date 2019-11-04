@@ -43,6 +43,7 @@
                     <div class="layui-input-block">
                         <input type="checkbox" name="projectsource" lay-skin="primary" value="1" title="申报">
                         <input type="checkbox" name="projectsource" lay-skin="primary" value="2" title="导入">
+                        <input type="checkbox" name="projectsource" lay-skin="primary" value="3" title="跨赛事项目">
                     </div>
                     <button style="position:absolute;top:0px;left:820px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
                 </div>
@@ -79,8 +80,9 @@
     {{#}}}
 </script>
 <script type="text/html" id="toolbarTpl">
-    <div class="layui-btn-container" >
+    <div class="layui-btn-container">
         <button class="layui-btn layui-btn-sm" id="uploadBtn">导入项目数据</button>
+        <button class="layui-btn layui-btn-sm layui-btn-normal" onclick="selProjects()">选取跨赛事项目</button>
         <button class="layui-btn layui-btn-sm layui-btn-danger" onclick="delProjects()">删除</button>
     </div>
 </script>
@@ -90,8 +92,10 @@
 <script type="text/html" id="projectSourceTpl">
     {{#if(d.projectSource==1){}}
     <span class="layui-badge layui-bg-green">@L("申报")</span>
-    {{#}else{}}
+    {{#}else if(d.projectSource==2){}}
     <span class="layui-badge layui-bg-blue">@L("导入")</span>
+    {{#}else{}}
+    <span class="layui-badge layui-bg-orange">@L("跨赛事项目")</span>
     {{#}}}
 </script>
 
@@ -316,6 +320,18 @@
 
             });
             
+        }
+        //跨赛事选取项目
+        function selProjects() {            
+            //弹出框
+            layer.open({
+                type: 2,
+                title: '选择跨赛事项目',
+                closeBtn: 1,
+                area: ['80%', '80%'],
+                shadeClose: false,
+                content: "/Select/SelCrossProject"
+            });
         }
     </script>
 }

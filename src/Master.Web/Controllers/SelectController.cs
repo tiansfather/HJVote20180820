@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Master.Controllers;
 using Master.Majors;
+using Master.Matches;
 using Master.Web.Models.Select;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ namespace Master.Web.Controllers
     {
         public SpecialityManager SpecialityManager { get; set; }
         public MajorManager MajorManager { get; set; }
+        public MatchInstanceManager MatchInstanceManager { get; set; }
         public IActionResult SelUser(SelectFormViewModel model)
         {
             return View(model);
@@ -78,6 +80,18 @@ namespace Master.Web.Controllers
             ViewBag.SubMajors = subMajors;
             ViewBag.Exclude = Request.Cookies["excludeProjects"];
             return View(review);
+        }
+        /// <summary>
+        /// 获取跨
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> SelCrossProject()
+        {
+            var matchInstances = await MatchInstanceManager.GetAll()
+                .Include(o=>o.Match)
+                .ToListAsync();
+            ViewData["matchInstances"] = matchInstances;
+            return View();
         }
     }
 }

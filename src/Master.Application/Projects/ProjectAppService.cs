@@ -348,6 +348,75 @@ namespace Master.Projects
 
             return result;
         }
+
+        /// <summary>
+        /// 跨赛事选取项目接口
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <param name="majorId"></param>
+        /// <param name="subMajorId"></param>
+        /// <param name="projectName"></param>
+        /// <param name="organizationId"></param>
+        /// <returns></returns>
+        [DontWrapResult]
+        public virtual async Task<object> GetCrossProjects(int? matchInstanceId, int? majorId, int? subMajorId, string projectName, int? organizationId)
+        {
+            List<ReviewProjectDto> reviewProjectDtos = new List<ReviewProjectDto>();
+            //没有指定赛事的查询不返回数据
+            if (matchInstanceId != null)
+            {
+                var projectQuery = Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).Where(o => o.MatchInstanceId == matchInstanceId.Value);
+                if (majorId != null)
+                {
+                    projectQuery = projectQuery.Where(o => o.Prize.MajorId == majorId.Value);
+                }
+                if (!string.IsNullOrEmpty(projectName))
+                {
+                    projectQuery = projectQuery.Where(o => o.ProjectName.Contains(projectName));
+                }
+                if (organizationId.HasValue)
+                {
+                    projectQuery = projectQuery.Where(o => o.DesignOrganizationId == organizationId);
+                }
+                //是否有专业小类
+                if (subMajorId == null)
+                {
+                    //针对专业大类的项目
+                    //projectQuery = projectQuery.Where(o => o.ProjectMajorInfos.Count == 1);
+                }
+                else
+                {
+                    //有具体专业小类的项目
+                    projectQuery = projectQuery.Where(o => o.ProjectMajorInfos.Count(p => p.MajorId == subMajorId) > 0);
+                }
+                //数据处理
+
+                foreach (var project in await projectQuery.ToListAsync())
+                {
+                    var reviewProjectDto = new ReviewProjectDto()
+                    {
+                        Id = project.Id,
+
+                    };
+                    reviewProjectDto.ProjectName = project.ProjectName;
+                    reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
+                    reviewProjectDto.PrizeName = project.Prize.PrizeName;
+                    reviewProjectDto.SubMajorName = project.PrizeSubMajor?.Major.BriefName;
+
+                    reviewProjectDtos.Add(reviewProjectDto);
+                }
+            }
+            
+
+            var result = new ResultPageDto()
+            {
+                code = 0,
+                count = reviewProjectDtos.Count(),
+                data = reviewProjectDtos.OrderBy(o => o.ProjectName)
+            };
+
+            return result;
+        }
         /// <summary>
         /// 评选活动的所有项目
         /// </summary>
