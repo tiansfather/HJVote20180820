@@ -297,6 +297,13 @@ namespace Master.Web.Controllers
             ViewData["matchInstance"] = matchInstance;
             return View(prizes);
         }
+        public async Task<IActionResult> ChampionReview()
+        {
+            var matchInstance = await GetCurrentMatchInstance();
+            
+            ViewData["matchInstance"] = matchInstance;
+            return View();
+        }
         /// <summary>
         /// 评选详情
         /// </summary>

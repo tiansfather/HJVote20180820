@@ -414,7 +414,8 @@
             }
         },
         mounted: function () {
-            var id = $.getUrlParam("projectId");
+            //var id = $.getUrlParam("projectId");
+            var id =@ViewData["ProjectId"];
             this.loadItem(id);
 
         }

@@ -4,18 +4,31 @@
 @using Newtonsoft.Json.Serialization
 @model Review
 @{
-	Layout = "~/Views/Shared/_LayoutDialog.cshtml";
-	ViewData["Title"] = "ReviewEdit";
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "ReviewEdit";
 
-	var matchInstance = ViewData["MatchInstance"] as MatchInstance;
+    var matchInstance = ViewData["MatchInstance"] as MatchInstance;
 
 
-	JsonSerializerSettings settings = new JsonSerializerSettings();
-	settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-	settings.Formatting = Formatting.Indented;
+    JsonSerializerSettings settings = new JsonSerializerSettings();
+    settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+    settings.Formatting = Formatting.Indented;
 
-}
-@section styles{
+    var reviewTypeName = "";
+    switch (Model.ReviewType)
+    {
+        case ReviewType.Initial:
+            reviewTypeName = "初评";
+            break;
+        case ReviewType.Finish:
+            reviewTypeName = "终评";
+            break;
+        case ReviewType.Champion:
+            reviewTypeName = "决赛";
+            break;
+    }
+            }
+            @section styles{
 	<link href="~/lib/powerfloat/css/powerFloat.css" rel="stylesheet" />
 }
 <div>
@@ -26,22 +39,27 @@
 				<input type="text" class="layui-input" value="@Model.ReviewName" name="reviewname" />
 			</div>
 		</div>
-		<div class="layui-form-item" style="margin-bottom:2px;height:38px;">
-			<div class="layui-inline">
-				<label class="layui-form-label">评选专业</label>
-				<div class="layui-input-inline">
-					<input type="text" readonly class="layui-input" value="@Model.ReviewMajorName">
-				</div>
-			</div>
-			<div class="layui-inline">
-				<label class="layui-form-label">评选类型</label>
-				<div class="layui-input-inline">
-					<input type="text" readonly class="layui-input" value="@(Model.ReviewType==ReviewType.Initial?"初评":"终评")">
-				</div>
-			</div>
-			<button type="button" class="layui-btn layui-btn-sm" onclick="changeReviewMajor()">调整</button>
+        <div class="layui-form-item" style="margin-bottom:2px;height:38px;">
 
-		</div>
+            <div class="layui-inline">
+                <label class="layui-form-label">评选类型</label>
+                <div class="layui-input-inline">
+                    <input type="text" readonly class="layui-input" value="@reviewTypeName">
+                </div>
+            </div>
+            @if (Model.ReviewType != ReviewType.Champion)
+            {
+                <div class="layui-inline">
+                    <label class="layui-form-label">评选专业</label>
+                    <div class="layui-input-inline">
+                        <input type="text" readonly class="layui-input" value="@Model.ReviewMajorName">
+                    </div>
+                </div>
+                <button type="button" class="layui-btn layui-btn-sm" onclick="changeReviewMajor()">调整</button>
+            }
+
+
+        </div>
 		<div class="layui-form-item" style="margin-bottom:2px">
 			<label class="layui-form-label">备注</label>
 			<div class="layui-input-block">
@@ -75,8 +93,10 @@
 @section scripts{
 	<script src="/lib/powerfloat/js/jquery-powerFloat.js"></script>
 	<script type="text/html" id="majorTpl">
-		{{#  layui.each(d.majorExperts, function(index, item){ }}
-		{{#  if(item.rank === 1){ }}
+
+        {{#  layui.each(d.majorExperts, function(index, item){ }}
+		{{
+#  if(item.rank === 1){ }}
 		<span class="layui-badge layui-bg-gray" title="{{item.majorName}}(高级)">{{item.majorName}}</span>
 		{{# }else{}}
 		<span class="layui-badge" title="{{item.majorName}}(资深)">{{item.majorName}}</span>

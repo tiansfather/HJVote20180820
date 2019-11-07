@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Master.Projects;
+using Abp.Domain.Entities;
+
 namespace Master.Web.Views.Shared.Components.ProjectTraceLog
 {
     public class ProjectTraceLogViewComponent : MasterViewComponent
@@ -19,7 +21,12 @@ namespace Master.Web.Views.Shared.Components.ProjectTraceLog
         public virtual async Task<IViewComponentResult> InvokeAsync(int projectId)
         {
             var project = await ProjectManager.Repository.GetAllIncluding(o => o.ProjectTraceLogs).Where(o => o.Id == projectId).SingleAsync();
-            foreach(var traceLog in project.ProjectTraceLogs)
+            if (project.ProjectSource == ProjectSource.CrossMatch)
+            {
+                projectId = project.CrossProjectId.Value;
+                project = await ProjectManager.Repository.GetAllIncluding(o => o.ProjectTraceLogs).Where(o => o.Id == projectId).SingleOrDefaultAsync();
+            }
+            foreach (var traceLog in project.ProjectTraceLogs)
             {
                 await ProjectTraceLogRepository.EnsurePropertyLoadedAsync(traceLog, o => o.CreatorUser);
             }

@@ -79,6 +79,11 @@
     <span class="layui-badge layui-bg-green">Y</span>
     {{#}}}
 </script>
+<script type="text/html" id="isInChampionReviewTpl">
+    {{#if(d.isInChampionReview){}}
+    <span class="layui-badge layui-bg-green">Y</span>
+    {{#}}}
+</script>
 <script type="text/html" id="isOriginalTpl2">
 	{{#if(d.isOriginal){}}
 	<span class="layui-badge layui-bg-green">Y</span>
@@ -91,8 +96,10 @@
 <script type="text/html" id="toolbarTpl">
     <div class="layui-btn-container">
         <button type="button" class="layui-btn layui-btn-sm" moduleKey="Project" confirmmsg="确认使选中项目进入终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringInFinalReview" onclick="func.callModuleButtonEvent()">进入终评</button>
-
         <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" moduleKey="Project" confirmmsg="确认将选中项目移出终评?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringOutFinalReview" onclick="func.callModuleButtonEvent()">取消终评资格</button>
+
+        <button type="button" class="layui-btn layui-btn-sm" moduleKey="Project" confirmmsg="确认使选中项目进入决赛?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringInChampionReview" onclick="func.callModuleButtonEvent()">进入决赛</button>
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" moduleKey="Project" confirmmsg="确认将选中项目移出决赛?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringOutChampionReview" onclick="func.callModuleButtonEvent()">取消决赛资格</button>
 
         <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出项目申报数据</button>
     </div>
@@ -232,7 +239,8 @@
             columns=columns.concat([{ align: 'center', field: 'rankInitial', title: '排名' },
             { align: 'center', field: 'expertCountAllInitial', title: '分发专家' },
             { align: 'center', field: 'expertCountRankedInitial', title: '打分专家' },
-            { align: 'center', field: 'isInFinalReview', templet: '#isInFinalReviewTpl', title: '进入终评' },
+                { align: 'center', field: 'isInFinalReview', templet: '#isInFinalReviewTpl', title: '进入终评' },
+                { align: 'center', field: 'isInChampionReview', templet: '#isInChampionReviewTpl', title: '进入决赛' },
             { align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
             return columns;
         }

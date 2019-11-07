@@ -73,6 +73,10 @@ namespace Master.Projects
         /// </summary>
         public bool IsInFinalReview { get; set; } = false;
         /// <summary>
+        /// 决赛标志
+        /// </summary>
+        public bool IsInChampionReview { get; set; } = false;
+        /// <summary>
         /// 初评分数
         /// </summary>
         public decimal? ScoreInitial { get; set; }
@@ -81,6 +85,10 @@ namespace Master.Projects
         /// </summary>
         public decimal? ScoreFinal { get; set; }
         /// <summary>
+        /// 决赛分数
+        /// </summary>
+        public decimal? ScoreChampion { get; set; }
+        /// <summary>
         /// 奖项内初评排名
         /// </summary>
         public int? RankInitial { get; set; }
@@ -88,9 +96,21 @@ namespace Master.Projects
         /// 奖项内终评排名
         /// </summary>
         public int? RankFinal { get; set; }
+        /// <summary>
+        /// 决赛排名
+        /// </summary>
+        public int? RankChampion { get; set; }
 
         public virtual ICollection<ProjectMajorInfo> ProjectMajorInfos { get; set; }
         public virtual ICollection<ProjectTraceLog> ProjectTraceLogs { get; set; }
+        #region 跨赛事相关
+        /// <summary>
+        /// 跨赛事关联项目
+        /// </summary>
+        public int? CrossProjectId { get; set; }
+        public virtual Project CrossProject { get; set; }
+        #endregion
+
 
         [NotMapped]
         public string IsOriginalStr
@@ -217,6 +237,10 @@ namespace Master.Projects
         /// <summary>
         /// 结束
         /// </summary>
-        Complete=7
+        Complete=7,
+        /// <summary>
+        /// 决赛中
+        /// </summary>
+        ChampionReviewing=8
     }
 }

@@ -100,8 +100,17 @@ namespace Master.Reviews
         /// <returns></returns>
         private async Task InitReview(Review review)
         {
-            var matchInstance = await MatchInstanceRepository.GetAllIncluding(o=>o.Match).Where(o=>o.Id== review.MatchInstanceId).FirstOrDefaultAsync();
-            var mainMajor = await MajorRepository.GetAsync(review.MajorId);
+            var matchInstance = await MatchInstanceRepository.GetAllIncluding(o => o.Match).Where(o => o.Id == review.MatchInstanceId).FirstOrDefaultAsync();
+            //决赛评审初始化
+            if (review.ReviewType==ReviewType.Champion)
+            {
+                review.ReviewName = matchInstance.Match.Name + "-决赛";
+                review.ReviewExperts = new List<ReviewExpert>();
+                review.ReviewProjects = new List<ReviewProject>();
+                return;
+            }
+            
+            var mainMajor = await MajorRepository.GetAsync(review.MajorId.Value);
             //评选的专业名称
             review.ReviewMajorName = mainMajor.BriefName;
             if (review.SubMajorId != null)
@@ -269,7 +278,12 @@ namespace Master.Reviews
                     //加上补充评审分数
                     return (o.Score+ subScore) * rate * Convert.ToDecimal(Math.Pow(10, o.Round - 1));
                 }) / Convert.ToDecimal(Math.Pow(10, maxround - 1));
-                if (project.Prize.PrizeType != Prizes.PrizeType.Multiple || 
+                if (review.ReviewType == ReviewType.Champion)
+                {
+                    //决赛项目直接设置分数
+                    project.ScoreChampion = score;
+                }
+                else if (project.Prize.PrizeType != Prizes.PrizeType.Multiple || 
                     (review.ReviewType==ReviewType.Finish && project.Prize.PrizeType==Prizes.PrizeType.Multiple))
                 {                    
                     //非综合类项目或者终评的综合类奖项直接设置分数
@@ -321,7 +335,19 @@ namespace Master.Reviews
             }
             await CurrentUnitOfWork.SaveChangesAsync();
             //对项目排名重新计算
-            await ReRankProjects(prizes,review.ReviewType);
+            if (review.ReviewType == ReviewType.Champion)
+            {
+                var i = 1;
+                foreach (var project in projects.OrderByDescending(o => o.ScoreChampion))
+                {
+                    project.RankChampion = i++;
+                }
+
+            }
+            else
+            {
+                await ReRankProjects(prizes,review.ReviewType);
+            }
         }
         /// <summary>
         /// 计算数组加权分数，如[3,3,3]=0.333

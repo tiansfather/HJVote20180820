@@ -23,7 +23,6 @@ namespace Master.Users
     [DisableAuditing]
     public class UserAppService:MasterAppServiceBase<User,long>
     {
-        public MajorManager MajorManager { get; set; }
         private readonly IRepository<UserRole, int> _userRoleRepository;
         private readonly IRepository<Role, int> _roleRepository;
         private readonly IRepository<MajorExpert, int> _majorExpertRepository;

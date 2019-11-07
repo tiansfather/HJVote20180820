@@ -107,5 +107,25 @@ namespace Master.Prizes
             }
 
         }
+
+        public virtual async Task<object> GetMatchInstancePrizes(int matchInstanceId)
+        {
+            var manager = Manager as PrizeManager;
+            var prizes = await manager.GetAll().Include("PrizeSubMajors.Major").Where(o => o.MatchInstanceId == matchInstanceId).ToListAsync();
+            return prizes.Select(o =>
+            {
+                return new
+                {
+                    o.Id,
+                    o.PrizeName,
+                    o.PrizeType,
+                    PrizeSubMajors = o.PrizeSubMajors.ToList().Select(p => new
+                    {
+                        p.Id,
+                        p.Major.BriefName
+                    })
+                };
+            });
+        }
     }
 }

@@ -1,6 +1,5 @@
 ﻿@using Master.Web.Components
 @using Master.Matches
-@model List<Master.Prizes.Prize>
 @{
     ViewData["Title"] = "Index";
     var matchInstance = ViewData["matchInstance"] as MatchInstance;
@@ -32,27 +31,13 @@
 }
 <div class="layui-fluid" id="LAY-app-message">
     <div class="layui-card">
-        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("终评情况查看")</div>
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("决赛情况查看")</div>
         <div class="layui-card-body">
-            <div id="prizeContainer">
-                @foreach (var item in Model)
-                {
-                    var subMajors = item.PrizeSubMajors.Where(o=>o.Checked).Select(o => new { o.MajorId, o.Major.BriefName });
-                    <div class="item" onclick="setPrizeId(@item.Id)" prizeId="@item.Id" prizeType="@Convert.ToInt32(item.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
-                        @item.PrizeName
-                    </div>
-                }
-            </div>
-            <hr />
+            
             <form class="layui-form layui-form-pane layui-hide" onsubmit="return doSearch();" id="app">
                 <div class="layui-form-item">
                     <div class="layui-inline">
-                        <label class="layui-form-label" v-if="prizeType==2">@L("专业")</label>
-                        <div class="layui-input-inline" v-if="prizeType==2">
-                            <select lay-filter="subMajorId" name="subMajorId" id="subMajorId" v-model="subMajorId">
-                                <option v-for="(item,index) in majors" :value="item.MajorId">{{item.BriefName}}</option>
-                            </select>
-                        </div>
+                        
                         <label class="layui-form-label">@L("项目名称")</label>
                         <div class="layui-input-inline">
                             <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
@@ -65,7 +50,7 @@
                     </div>
                 </div>
             </form>
-            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " @*lay-data="{cellMinWidth:'80',toolbar:'<div></div>',  url:'/api/services/app/Project/GetReviewResult',limit:1000,where:{where:'1>2',orderField:'rankFinal asc'}, page:false, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'ScoreFinal',type:'desc'}}"*@>
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " @*lay-data="{cellMinWidth:'80',toolbar:'<div></div>',  url:'/api/services/app/Project/GetReviewResult',limit:1000,where:{where:'1>2',orderField:'rankChampion asc'}, page:false, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'ScoreChampion',type:'desc'}}"*@>
                 
             </table>
         </div>
@@ -75,19 +60,13 @@
 <script type="text/html" id="projectNameTpl">
     <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
 </script>
-<script type="text/html" id="isInChampionReviewTpl">
-    {{#if(d.isInChampionReview){}}
-    <span class="layui-badge layui-bg-green">Y</span>
-    {{#}}}
-</script>
 <script type="text/html" id="toolbar">
 
-    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType=2" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
+    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType=3" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
 </script>
 <script type="text/html" id="toolbarTpl">
     <div class="layui-btn-container">
-        <button type="button" class="layui-btn layui-btn-sm" moduleKey="Project" confirmmsg="确认使选中项目进入决赛?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringInChampionReview" onclick="func.callModuleButtonEvent()">进入决赛</button>
-        <button type="button" class="layui-btn layui-btn-sm layui-btn-danger" moduleKey="Project" confirmmsg="确认将选中项目移出决赛?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.bringOutChampionReview" onclick="func.callModuleButtonEvent()">取消决赛资格</button>
+        
 
         <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出项目申报数据</button>
     </div>
@@ -115,38 +94,10 @@
 				//obj.del(); //删除当前行
 				//obj.update(fields) //修改当前行数据
 			});
-            layui.form.on("select(subMajorId)", function (data) {
-                app.subMajorId = data.value;
+            
 
-            })
-            app = new Vue({
-                el: '#app',
-                data: {
-                    item: {},
-                    majors:[],
-                    prizeType: null,
-                    subMajorId:null
-
-				},
-				computed: {
-					subMajorName: function () {
-						if (!app.subMajorId) {
-							return "";
-						} else {
-							return app.majors.filter(function (o) { return o.MajorId == app.subMajorId })[0].BriefName;
-						}
-					}
-				},
-                mounted: function () {
-                    $("#app").removeClass("layui-hide");
-
-                }
-            });
-
-            //默认加载第一个奖项
-            $(".item").eq(0).click();
             config.refresh();
-
+            doSearch();
             $('div[cytype="dropDownTool"]').dropDownTool();
         };
         config.onTableDone = function () {
@@ -166,17 +117,12 @@
             })
         }
         function getWhere() {
-            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and isInFinalReview=true  and PrizeId=' + currentPrizeId, orderField: 'rankFinal asc' };
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and isInChampionReview=true  ', orderField: 'rankChampion asc' };
             var organizationId = $("input[name='OrganizationId']").val();
             if (organizationId) {
                 where.where += " and designOrganizationId=" + organizationId;
 
             }
-			var subMajorName = "";
-			if (app.subMajorId && app.prizeType == 2) {
-				subMajorName = '-' + app.subMajorName;
-				where.where += " and PrizeSubMajor.MajorId=" + app.subMajorId;
-			}
             var projectName = $("#projectName").val();
             if (projectName) {
                 where.where += " and ProjectName.Contains(\"" + projectName + "\")";
@@ -185,11 +131,8 @@
         }
         function doSearch() {
             var where = getWhere();
-			var subMajorName = "";
-			if (app.subMajorId && app.prizeType == 2) {
-				subMajorName = '-' + app.subMajorName;
-			}
-			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + $("div.item.current").html().trim() + subMajorName + "终评情况" + new Date().Format("yyyyMMddhhmmss");
+			
+			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + "决赛情况" + new Date().Format("yyyyMMddhhmmss");
             var columns = getColumns();
 			layui.table.render({
                 toolbar: '#toolbarTpl',
@@ -205,7 +148,7 @@
                 skin: 'row',
                 even: true,
                 done: config.onTableDone,
-                initSort: { field: 'ScoreFinal', type: 'desc' },
+                initSort: { field: 'ScoreChampion', type: 'desc' },
                 cols: [columns]
 
             });
@@ -222,7 +165,7 @@
                 { align: 'center', field: 'prizeName', minWidth: '150', title: '奖项大类' },
                 { align: 'center', field: 'subMajorName', title: '奖项子类' },
                 { align: 'center', field: 'designOrganizationName', title: '申报单位' },
-                { align: 'center', field: 'scoreFinal', title: '总分' }
+                { align: 'center', field: 'scoreChampion', title: '总分' }
             ];
             //modi20181104 终评综合类不加入专业列
             //如果是综合类，则需要加入专业列
@@ -231,29 +174,11 @@
             //        columns.push({ align: 'center', field: 'majorScore' + i + "Final", title: app.majors[i].BriefName });
             //    }
             //}
-            columns = columns.concat([{ align: 'center', field: 'rankFinal', title: '排名' },
-            { align: 'center', field: 'expertCountAllFinal', title: '分发专家' },
-                { align: 'center', field: 'expertCountRankedFinal', title: '打分专家' },
-                { align: 'center', field: 'isInChampionReview', templet: '#isInChampionReviewTpl', title: '进入决赛' },
+            columns = columns.concat([{ align: 'center', field: 'rankChampion', title: '排名' },
+            { align: 'center', field: 'expertCountAllChampion', title: '分发专家' },
+                { align: 'center', field: 'expertCountRankedChampion', title: '打分专家' },
             { align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
             return columns;
-        }
-        function setPrizeId(prizeId) {
-            currentPrizeId = prizeId;
-            var $item = $(".item[prizeId='" + prizeId + "']");
-            app.prizeType = parseInt($item.attr("prizeType"));
-            app.majors = JSON.parse($item.attr("majors"));
-            if (app.majors.length > 0) {
-                app.subMajorId = app.majors[0].MajorId;
-            } else {
-                app.subMajorId = null;
-            }
-            $("input[name='OrganizationId']").val('').next("input").val('');
-            $("#projectName").val('');
-            refresh();
-            $(".item").removeClass("current");
-            $item.addClass("current");
-            doSearch();
         }
         //打开申报窗口
         function showReport(projectId,prizeName) {

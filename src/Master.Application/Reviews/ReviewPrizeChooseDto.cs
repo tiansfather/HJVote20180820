@@ -13,7 +13,7 @@ namespace Master.Reviews
     {
         public int ReviewId { get; set; }
         public int MatchInstanceId { get; set; }
-        public int MajorId { get; set; }
+        public int? MajorId { get; set; }
         public int? SubMajorId { get; set; }
         public ReviewType ReviewType { get; set; }
     }

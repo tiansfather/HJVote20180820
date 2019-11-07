@@ -1,4 +1,5 @@
-﻿using Abp.Domain.Repositories;
+﻿using Abp.Domain.Entities;
+using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Master.Majors;
 using Master.Matches;
@@ -24,6 +25,10 @@ namespace Master.Web.Views.Shared.Components.ProjectView
         public virtual async Task<IViewComponentResult> InvokeAsync( int projectId)
         {
             var project = await ProjectManager.GetByIdAsync(projectId);
+            if (project.ProjectSource == ProjectSource.CrossMatch)
+            {
+                project = project.CrossProject;
+            }
             var prize = await PrizeManager.GetByIdAsync(project.PrizeId);
             ProjectManager.Repository.EnsurePropertyLoaded(project, o => o.PrizeSubMajor);
 
@@ -38,6 +43,7 @@ namespace Master.Web.Views.Shared.Components.ProjectView
                 ThirdLevelMajors = childMajors.OrderBy(o => o.Sort).Select(o => o.BriefName).ToList();
             }
             ViewData["ThirdLevelMajors"] = ThirdLevelMajors;
+            ViewData["ProjectId"] = project.Id;
             return View(prize);
         }
     }

@@ -4,14 +4,16 @@ using Master.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Master.Migrations
 {
     [DbContext(typeof(MasterDbContext))]
-    partial class MasterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20191106120852_CrossProject")]
+    partial class CrossProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -902,7 +904,7 @@ namespace Master.Migrations
 
                     b.Property<string>("ExtensionData");
 
-                    b.Property<int?>("MajorId");
+                    b.Property<int>("MajorId");
 
                     b.Property<int>("MatchInstanceId");
 
@@ -1246,7 +1248,8 @@ namespace Master.Migrations
                 {
                     b.HasOne("Master.Majors.Major", "Major")
                         .WithMany()
-                        .HasForeignKey("MajorId");
+                        .HasForeignKey("MajorId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Master.Matches.MatchInstance", "MatchInstance")
                         .WithMany()

@@ -208,6 +208,12 @@
         "url": "/Reviews/FinalReview"
       },
       {
+        "name": "groupmanager.championreview",
+        "displayName": "决赛情况查看",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/Reviews/ChampionReview"
+      },
+      {
         "name": "groupmanager.notice",
         "displayName": "系统公告",
         "icon": "layui-icon layui-icon-speaker",

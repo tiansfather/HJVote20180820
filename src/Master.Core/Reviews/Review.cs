@@ -21,7 +21,7 @@ namespace Master.Reviews
         public virtual string ExtensionData { get; set; }
         public int MatchInstanceId { get; set; }
         public virtual MatchInstance MatchInstance { get; set; }
-        public int MajorId { get; set; }
+        public int? MajorId { get; set; }
         public virtual Major Major{get;set;}
         public int? SubMajorId { get; set; }
         public virtual ICollection<ReviewRound> ReviewRounds { get; set; }
@@ -51,7 +51,7 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewExpert>>("Experts").Count;
+                return this.GetData<List<ReviewExpert>>("Experts")?.Count??0;
             }
         }
         /// <summary>
@@ -62,7 +62,7 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewProject>>("Projects").Count;
+                return this.GetData<List<ReviewProject>>("Projects")?.Count??0;
             }
         }
         /// <summary>
@@ -73,7 +73,7 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewProject>>("Projects");
+                return this.GetData<List<ReviewProject>>("Projects")??new List<ReviewProject>();
             }
             set
             {
@@ -157,7 +157,11 @@ namespace Master.Reviews
         /// <summary>
         /// 终评
         /// </summary>
-        Finish=2
+        Finish=2,
+        /// <summary>
+        /// 决赛
+        /// </summary>
+        Champion=3
     }
     /// <summary>
     /// 评审状态

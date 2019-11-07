@@ -13,7 +13,7 @@ using Master.Dto;
 using Master.Majors;
 using Master.Projects;
 using Microsoft.EntityFrameworkCore;
-
+using Abp.Runtime.Caching;
 namespace Master.Reviews
 {
     public class ReviewAppService : MasterAppServiceBase<Review, int>
@@ -561,6 +561,7 @@ namespace Master.Reviews
             {
                 project.IsInFinalReview = true;
                 project.ProjectStatus = ProjectStatus.FinalReviewing;
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
             }
         }
 
@@ -589,11 +590,73 @@ namespace Master.Reviews
                 project.IsInFinalReview = false;
                 //获取项目之前的项目状态
                 var traceLogs = await ProjectTraceLogRepository.GetAll().Where(o => o.ProjectId == project.Id).ToListAsync();
+                if (traceLogs.Count > 2)
+                {
+                    //最后一项记录保存的是项目的当前状态,故再往上取一个记录
+                    var lastTraceLog = traceLogs[traceLogs.Count - 2];
+                    project.ProjectStatus = lastTraceLog.TargetStatus;
+                    //更改项目状态
+                    await ProjectManager.TraceLog(project.Id, "移出终评", project.ProjectStatus);
+                }
+                
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
+            }
+        }
+        #endregion
+
+        #region 移入移出决赛
+        /// <summary>
+        /// 进入终评
+        /// </summary>
+        /// <param name="moduleKey"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public virtual async Task BringInChampionReview(int[] projectIds)
+        {
+            if (await ProjectRepository.CountAsync(o => projectIds.Contains(o.Id) && o.IsInChampionReview) > 0)
+            {
+                throw new UserFriendlyException("项目已经被选入决赛");
+            }
+            var projects = await ProjectRepository.GetAll().Where(o => projectIds.Contains(o.Id)).ToListAsync();
+            foreach (var project in projects)
+            {
+                project.IsInChampionReview = true;
+                project.ProjectStatus = ProjectStatus.ChampionReviewing;
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
+            }
+        }
+
+        public virtual async Task BringOutChampionReview(int[] projectIds)
+        {
+            if (await ProjectRepository.CountAsync(o => projectIds.Contains(o.Id) && !o.IsInChampionReview) > 0)
+            {
+                throw new UserFriendlyException("项目已经被移出决赛");
+            }
+            //所有决赛中的项目
+            var reviews = await ReviewRepository.GetAll().Where(o => o.ReviewType == ReviewType.Champion)
+                .ToListAsync();
+            var championReviewProjects = reviews.SelectMany(o => o.ReviewProjects).Select(o => o.Id).Distinct();
+            if (projectIds.Count(o => championReviewProjects.Contains(o)) > 0)
+            {
+                throw new UserFriendlyException("无法将决赛中的项目移出决赛");
+            }
+            //已经是终评中的项目无法取消终评
+            //if(await ProjectRepository.CountAsync(o=>projectIds.Contains(o.Id) && o.ProjectStatus == ProjectStatus.FinalReviewing) > 0)
+            //{
+            //    throw new UserFriendlyException("无法将终评中的项目移出终评");
+            //}
+            var projects = await ProjectRepository.GetAll().Where(o => projectIds.Contains(o.Id)).ToListAsync();
+            foreach (var project in projects)
+            {
+                project.IsInChampionReview = false;
+                //获取项目之前的项目状态
+                var traceLogs = await ProjectTraceLogRepository.GetAll().Where(o => o.ProjectId == project.Id).ToListAsync();
                 //最后一项记录保存的是项目的当前状态,故再往上取一个记录
                 var lastTraceLog = traceLogs[traceLogs.Count - 2];
                 project.ProjectStatus = lastTraceLog.TargetStatus;
                 //更改项目状态
-                await ProjectManager.TraceLog(project.Id, "移出终评", project.ProjectStatus);
+                await ProjectManager.TraceLog(project.Id, "移出决赛", project.ProjectStatus);
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
             }
         }
         #endregion

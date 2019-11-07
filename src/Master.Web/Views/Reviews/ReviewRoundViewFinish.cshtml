@@ -45,13 +45,14 @@
             本轮评选结果：
             @if (!review.ReviewRounds.ToList().Exists(o => o.ReviewStatus != ReviewStatus.Reviewed))
             {
-                <button id="addinReviewBtn" type="button" class="layui-btn layui-btn-sm" style="display:none" onclick="reviewAddIn()">补充评审</button>
-
                 @*第一轮次出现创建一轮评审*@
                 if (Model.Turn == 1 && Model.Round == review.ReviewRounds.Max(o => o.Round))
                 {
                     <button type="button" class="layui-btn layui-btn-sm" onclick="reviewNext()">创建下一轮评审</button>
                 }
+                <button id="addinReviewBtn" type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="reviewAddIn()">补充评审</button>
+
+
             }
 
             <button type="button" class="layui-btn layui-btn-blue layui-btn-sm" onclick="exportReview()">导出至Excel</button>
@@ -112,10 +113,16 @@
 
         //补充评审
         function reviewAddIn() {
-            var ids = [];
-            $("a.confirm").each(function () {
-                ids.push($(this).attr("projectid"));
-            });
+            //var ids = [];
+            //$("a.confirm").each(function () {
+            //    ids.push($(this).attr("projectid"));
+            //});
+            var checkStatus = layui.table.checkStatus('projectlist');
+            if (checkStatus.data.length == 0) {
+                abp.message.error("请先选择项目");
+                return false;
+            }
+            var ids = checkStatus.data.map(function (o) { return o.id; });
             var url = "/Reviews/ReviewRoundNext?projectids=" + ids.join(',') + "&reviewID=@review.Id&ReviewType=AddIn";
             openUrl(url);
         }

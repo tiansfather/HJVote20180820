@@ -98,7 +98,34 @@
     <span class="layui-badge layui-bg-orange">@L("跨赛事项目")</span>
     {{#}}}
 </script>
-
+@section mainbody{ 
+<div id="app" style="display:none;height:150px;padding:20px;">
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">奖项大类</label>
+            <div class="layui-input-inline">
+                <select v-model="currentPrize" lay-ignore style="padding:7px;">
+                    <option v-for="(item,index) in prizes" :value="item">{{item.prizeName}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" v-if="currentPrize.prizeType==2||currentPrize.prizeType==3">
+            <label class="layui-form-label">奖项子类</label>
+            <div class="layui-input-inline">
+                <select  v-model="currentPrizeSubMajor" lay-ignore style="padding:7px;">
+                    <option v-for="(item,index) in prizeSubMajors" :value="item">{{item.briefName}}</option>
+                </select>
+            </div>
+        </div>
+    </form>
+    
+    
+    <div style="margin-top:10px;text-align:center;">
+        <button type="button" class="layui-btn " @@click="submit">确定</button>
+    </div>
+    
+</div>
+}
 @section scripts{
     <script>
         config.ready = function () {
@@ -140,6 +167,45 @@
 
             $('div[cytype="dropDownTool"]').dropDownTool();
         }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                projects:[],
+                prizes: [],
+                currentPrize: {},
+                prizeSubMajorId: null,
+                currentPrizeSubMajor: {}
+            },
+            computed: {
+                prizeSubMajors: function () {
+                    if (this.currentPrize.prizeType == 2 || this.currentPrize.prizeType==3) {
+                        return this.currentPrize.prizeSubMajors;
+                    } else {
+                        return null;
+                    }
+                }
+            },
+            methods: {
+                submit: function () {
+                    if (!this.currentPrize) {
+                        abp.message.error("请先选择奖项");
+                    }
+                    var projectIds = this.projects.map(function (o) { return o.id; });
+                    func.runAsync(abp.services.app.project.crossProject(projectIds, this.currentPrize.id, this.currentPrizeSubMajor.id).done(function () {
+                        layer.closeAll();
+                        doSearch();
+                    }))
+                }
+            },
+            mounted: function () {
+                var that = this;
+                abp.services.app.prize.getMatchInstancePrizes(@matchInstance.Id).done(function (res) {
+                    that.prizes = res;
+                })
+            }
+        })
+
         config.onTableDone = function () {
             $(window).trigger("resize");
             //上传配置
@@ -251,8 +317,8 @@
         //打开申报窗口
         function showReport(projectId,prizeId,subMajorId,projectName,projectSource) {
             var title = projectName;
-            if (projectSource == 1) {
-                //申报项目只能查看
+            if (projectSource == 1 || projectSource==3) {
+                //申报项目和跨赛事项目只能查看
                 top.layer.open({
                     type: 2,
                     title: title,
@@ -330,9 +396,20 @@
                 closeBtn: 1,
                 area: ['80%', '80%'],
                 shadeClose: false,
-                content: "/Select/SelCrossProject"
+                content: "/Select/SelCrossProject?key=Project"
             });
         }
+        //选择项目回调
+        func.bringBackFuncs["Project"] = function (data) {
+            app.projects = data;
+            layer.open({
+                type: 1,
+                shade: false,
+                title: "请选择项目对应的奖项", //不显示标题
+                content: $('#app'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+            });
+            return true;
+        };
     </script>
 }
 
