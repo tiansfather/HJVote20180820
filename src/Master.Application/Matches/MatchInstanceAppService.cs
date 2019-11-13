@@ -126,5 +126,33 @@ namespace Master.Matches
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
             await manager.ReSyncMatchInstanceResource(matchInstance);
         }
+
+        #region 赛事导出
+        /// <summary>
+        /// 初始化导出
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task<object> InitExport(int matchInstanceId)
+        {
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            var matchFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}");
+            try
+            {
+                //先删除原有文件夹
+                System.IO.Directory.Delete(matchFolder,true);
+            }catch(Exception ex)
+            {
+
+            }            
+            System.IO.Directory.CreateDirectory(matchFolder);//建立赛事文件夹
+            //将样式文件复制
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/layui.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/default.css"));
+            //获取赛事下的所有项目Id
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId).Select(o => o.Id).ToListAsync();
+            return projectIds;
+        }
+        #endregion
     }
 }

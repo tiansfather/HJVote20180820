@@ -115,3 +115,4 @@ Backup*/
 UpgradeLog*.XML
 src/.vs/config/applicationhost.config
 /src/Master.Web/wwwroot/temp
+/src/Master.Web/wwwroot/MatchInstance

@@ -4,6 +4,7 @@ using Master.Authentication;
 using Master.Matches;
 using Master.Organizations;
 using Master.Prizes;
+using Master.Reviews;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -159,6 +160,23 @@ namespace Master.Projects
 
                 return result;
             }
+        }
+        public decimal? GetScoreForReviewType(ReviewType reviewType)
+        {
+            decimal? score = null;
+            switch (reviewType)
+            {
+                case ReviewType.Initial:
+                    score = ScoreInitial;
+                    break;
+                case ReviewType.Finish:
+                    score = ScoreFinal;
+                    break;
+                case ReviewType.Champion:
+                    score = ScoreChampion;
+                    break;
+            }
+            return score;
         }
     }
     /// <summary>

@@ -69,7 +69,7 @@
                 <div class="layui-colla-item">
                     <h2 class="layui-colla-title"><span>项目基本信息</span></h2>
                     <div class="layui-colla-content layui-show">
-                        <div class="formPreview" id="mainForm">
+                        <div class="formPreview" id="mainForm" formType="main">
                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
                                     <label>项目名称<font color="red">*</font>:</label>
@@ -268,7 +268,7 @@
                                 @*<vc:download-list match-resource="mainMajorDownLoadList" location="1"></vc:download-list>*@
                             </h2>
                             <div class="layui-colla-content layui-show">
-                                <div class="formPreview">
+                                <div class="formPreview" formType="other">
                                     <layout :list="getSubMajorInfo('').layouts"></layout>
                                 </div>
                             </div>
@@ -309,7 +309,7 @@
                                     @*<vc:download-list match-resource="subMajorDownLoadList" location="1"></vc:download-list>*@
                                 </h2>
                                 <div class="layui-colla-content layui-show">
-                                    <div class="formPreview">
+                                    <div class="formPreview" formType="@prizeSubMajor.MajorId">
                                         <layout :list="getSubMajorInfo('@prizeSubMajor.MajorId').layouts"></layout>
                                     </div>
                                 </div>
@@ -421,11 +421,14 @@
         }
     });
         function refresh() {
-            Vue.nextTick(function () {
-                
-
+            Vue.nextTick(function () {               
                 //所有输入框禁用
-                $(".formPreview input").prop("disabled", true).css("background","none");
+                $(".formPreview input").prop("disabled", true).css("background", "none");
+                //导出
+                var mode = $.getUrlParam("mode");
+                if (mode == 'export') {
+                    doExport();
+                }
             });
         }
     

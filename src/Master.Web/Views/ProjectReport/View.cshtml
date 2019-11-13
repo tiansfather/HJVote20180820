@@ -9,3 +9,30 @@
 
 <vc:project-view project-id="ViewBag.ProjectId"></vc:project-view>
 
+@section scripts{
+    <script>
+        function initHtml($obj) {
+            if (!$obj) {
+                $obj = $("body");
+            }
+            $obj.find("input,select").each(function () {
+                $(this).attr("value", $(this).val());
+            })
+            $obj.find("input:radio,input:checkbox").each(function () {
+                $(this).attr("checked", $(this).prop("checked"));
+            })
+        }
+        function doExport() {
+            var obj = [];
+            $(".formPreview").each(function () {
+                initHtml($(this));
+                var html = $(this).html();
+                html = '<meta charset="UTF-8"/><link href = "../../../default.css" rel = "stylesheet" /><link href="../../../layui.css" rel="stylesheet" /><style>.formPreview input{border:none}</style><div class="formPreview">' + html + '</div>';
+                obj.push({ content: html, formType: $(this).attr("formType") })
+            });
+            abp.services.app.project.exportAll(@ViewBag.ProjectId, obj).done(function () {
+                parent.onExportProject(@ViewBag.ProjectId);
+            });
+        }
+    </script>
+}

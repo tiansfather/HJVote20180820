@@ -889,6 +889,7 @@ namespace Master.Projects
                 newProject.ProjectStatus = project.ProjectStatus;
                 newProject.Coorparation = project.Coorparation;
                 newProject.CreatorUserId = project.CreatorUserId;
+                newProject.ProjectStatus = ProjectStatus.UnderReview;
                 //构建项目的专业信息
                 newProject.ProjectMajorInfos = new List<ProjectMajorInfo>();
                 newProject.ProjectMajorInfos.Add(new ProjectMajorInfo());
@@ -901,7 +902,84 @@ namespace Master.Projects
                 }
                 await Manager.InsertAsync(newProject);
             }
-        } 
+        }
+        #endregion
+
+        #region 整体导出相关
+        public virtual async Task ExportAll(int projectId,IEnumerable<SubmitHtmlDto> submitHtmlDtos)
+        {
+            var project = await Manager.GetAll()
+                .Include(o=>o.MatchInstance)
+                .Include(o=>o.PrizeSubMajor)
+                .Include(o=>o.ProjectMajorInfos)
+                .Include("Prize.PrizeSubMajors.Major").Where(o=>o.Id==projectId).SingleAsync();
+            var projectName = project.ProjectName.Replace("\\", "");
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{project.MatchInstance.Name}/项目/{projectName}");
+            System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
+            System.IO.Directory.CreateDirectory(projectFolder + "\\基本信息");//基本文件夹
+
+            var mainForm = submitHtmlDtos.SingleOrDefault(o => o.FormType == "main");
+            if (mainForm != null)
+            {
+                System.IO.File.WriteAllText(projectFolder + "\\基本信息\\项目基本信息.html", mainForm.Content);
+                //基本信息附件
+                var mainProjectMajor = project.ProjectMajorInfos.Where(o => o.MajorId == null).FirstOrDefault();
+                if (mainProjectMajor != null)
+                {
+                    var files=mainProjectMajor.GetData<List<ProjectFile>>("Files")??new List<ProjectFile>();
+                    foreach(var file in files)
+                    {
+                        try
+                        {
+                             System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath(file.FilePath), projectFolder + $"\\基本信息\\{file.FileName}", true);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+            var otherForm = submitHtmlDtos.SingleOrDefault(o => o.FormType == "other");
+            if (otherForm != null)
+            {
+                System.IO.File.WriteAllText(projectFolder + "\\基本信息\\其它信息.html", otherForm.Content);
+            }
+            var prizeSubMajors = project.Prize.PrizeSubMajors;
+            if(project.Prize.PrizeType==PrizeType.Major || project.Prize.PrizeType == PrizeType.Mixed)
+            {
+                prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == project.PrizeSubMajor.MajorId).ToList();
+            }
+            foreach (var subMajor in prizeSubMajors)
+            {
+                if (subMajor.Major != null)
+                {
+                    System.IO.Directory.CreateDirectory(projectFolder + $"\\{subMajor.Major.BriefName}");//专业文件夹
+                    var majorForm = submitHtmlDtos.SingleOrDefault(o => o.FormType == subMajor.MajorId.ToString());
+                    if (majorForm != null)
+                    {
+                        System.IO.File.WriteAllText(projectFolder + $"\\{subMajor.Major.BriefName}\\{subMajor.Major.BriefName}.html", majorForm.Content);
+                    }
+                    //专业附件
+                    var major = project.ProjectMajorInfos.Where(o => o.MajorId == subMajor.MajorId).FirstOrDefault();
+                    if (major != null)
+                    {
+                        var files = major.GetData<List<ProjectFile>>("Files") ?? new List<ProjectFile>();
+                        foreach (var file in files)
+                        {
+                            try
+                            {
+                                System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath(file.FilePath), projectFolder + $"\\{subMajor.Major.BriefName}\\{file.FileName}", true);
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                    }
+                }                
+            }
+        }
         #endregion
     }
 }

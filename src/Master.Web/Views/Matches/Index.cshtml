@@ -51,9 +51,11 @@
     </div>
 </div>
 <script type="text/html" id="toolbar">
-    <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="MatchInstance" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;600px&quot;, &quot;500px&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Matches/Edit" onclick="func.callModuleButtonEvent()" >@L("编辑")</a>
+    <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="MatchInstance" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;600px&quot;, &quot;500px&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Matches/Edit" onclick="func.callModuleButtonEvent()">@L("编辑")</a>
+    <a dataid="{{d.id}}"  class="layui-btn layui-btn-xs layui-btn-normal"  onclick="doExport({{d.id}})">导出赛事</a>
     @*<a dataid="{{d.id}}" class="layui-btn layui-btn-danger layui-btn-xs" buttonname="@L("删除")" modulekey="" params="" lay-event="Delete" confirmmsg="@(L("确认删除"))？" buttonactiontype="Ajax" buttonactionurl="abp.services.app.role.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>*@
 </script>
+<iframe id="_hidden" name="_hidden" style="display:none"></iframe>
 @section scripts{
     <script>
         config.ready = function () {
@@ -101,6 +103,40 @@
             })
 
             return false;
+        }
+
+        var projectIds = [];//待导出项目
+        var exportedProjectIds = [];//已导出项目
+        function doExport(matchInstanceId) {
+            layer.confirm('确认导出赛事所有数据?', async function (index) {
+                layer.close(index);
+                loadmsg('正在初始化导出');
+                projectIds = await abp.services.app.matchInstance.initExport(matchInstanceId);                
+                exportProject(projectIds[0]);
+            });       
+            //abp.message.confirm("确认导出赛事所有数据?", function () {
+            //    loadmsg('正在初始化导出');
+            //    //var projectIds = await abp.services.app.matchInstance.initExport(matchInstanceId);
+            //})
+        }
+        function exportProject(projectId) {
+            loadmsg('正在导出项目,' + (exportedProjectIds.length+1) + '/' + projectIds.length);
+            _hidden.location.href = '/ProjectReport/View?projectId=' + projectId + "&mode=export";
+        }
+        function onExportProject(projectId) {
+            exportedProjectIds.push(projectId);
+            if (exportedProjectIds.length == projectIds.length) {
+                //全部项目已导出，则进行下一步
+                loadmsg('正在导出评审数据');
+            } else {
+                exportProject(projectIds[exportedProjectIds.length]);
+            }
+        }
+        function loadmsg(msg) {
+            layer.msg(msg, {
+                icon: 16
+                , shade: 0.01, time: 0
+            })
         }
     </script>
 }

@@ -314,8 +314,21 @@ namespace Master.Web.Controllers
         {
             var matchInstance = await GetCurrentMatchInstance();
             var project = await ProjectRepository.GetAsync(projectId);
-            var finalScore = reviewType == ReviewType.Initial ? project.ScoreInitial : project.ScoreFinal;
-            ViewBag.FinalScore = finalScore;
+            decimal? score = 0;
+            switch (reviewType)
+            {
+                case ReviewType.Initial:
+                    score = project.ScoreInitial;
+                    break;
+                case ReviewType.Finish:
+                    score = project.ScoreFinal;
+                    break;
+                case ReviewType.Champion:
+                    score = project.ScoreChampion;
+                    break;
+            }
+            //var finalScore = reviewType == ReviewType.Initial ? project.ScoreInitial : project.ScoreFinal;
+            ViewBag.FinalScore = score;
             //获取项目对应的所有评选数据
             var projectMajorScoreDtos = await ReviewAppService.GetProjectMajorScores(projectId, reviewType);
             return View("ProjectScoreViewSingle", projectMajorScoreDtos);

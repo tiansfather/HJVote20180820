@@ -407,22 +407,28 @@ namespace Master.Reviews
             var result = new List<ProjectMajorScoreDto>();
 
             var project = await ProjectRepository.GetAsync(projectId);
-            var reviewQuery = Repository.GetAll().Where(o => o.MatchInstanceId == project.MatchInstanceId && o.ReviewType == reviewType && o.MajorId==project.Prize.MajorId);
-            //不同的奖项类型获取对应的评选条件不同
-            if (project.Prize.PrizeType == Prizes.PrizeType.Major )
+            var reviewQuery = Repository.GetAll().Where(o => o.MatchInstanceId == project.MatchInstanceId && o.ReviewType == reviewType );
+            if (reviewType != ReviewType.Champion)
             {
-                reviewQuery = reviewQuery.Where(o => o.SubMajorId == project.PrizeSubMajor.MajorId);
-            }else if (project.Prize.PrizeType == Prizes.PrizeType.Base || project.Prize.PrizeType == Prizes.PrizeType.Mixed || (project.Prize.PrizeType==Prizes.PrizeType.Multiple && reviewType==ReviewType.Finish))
-            {
-                //混排类按基本类处理
-                //终评下的综合类也按基本类处理
-                reviewQuery = reviewQuery.Where(o => o.SubMajorId == null);
+                reviewQuery = reviewQuery.Where(o => o.MajorId == project.Prize.MajorId);
+                //不同的奖项类型获取对应的评选条件不同
+                if (project.Prize.PrizeType == Prizes.PrizeType.Major)
+                {
+                    reviewQuery = reviewQuery.Where(o => o.SubMajorId == project.PrizeSubMajor.MajorId);
+                }
+                else if (project.Prize.PrizeType == Prizes.PrizeType.Base || project.Prize.PrizeType == Prizes.PrizeType.Mixed || (project.Prize.PrizeType == Prizes.PrizeType.Multiple && reviewType == ReviewType.Finish))
+                {
+                    //混排类按基本类处理
+                    //终评下的综合类也按基本类处理
+                    reviewQuery = reviewQuery.Where(o => o.SubMajorId == null);
+                }
+                else
+                {
+                    var projectSubMajorIds = project.Prize.PrizeSubMajors.Select(o => o.MajorId);
+                    reviewQuery = reviewQuery.Where(o => o.SubMajorId != null && projectSubMajorIds.Contains(o.SubMajorId.Value));
+                }
             }
-            else
-            {
-                var projectSubMajorIds = project.Prize.PrizeSubMajors.Select(o => o.MajorId);
-                reviewQuery = reviewQuery.Where(o => o.SubMajorId != null && projectSubMajorIds.Contains(o.SubMajorId.Value));
-            }
+            
             //
             Logger.Error("1:" + DateTime.Now.ToString("HH:mm:ss:fff"));
             foreach (var review in await reviewQuery.ToListAsync())
@@ -438,9 +444,9 @@ namespace Master.Reviews
                 }
                 else
                 {
-                    subMajorName = review.Major.BriefName;
+                    subMajorName = review.Major?.BriefName;
                 }
-                if (project.Prize.PrizeType == Prizes.PrizeType.Multiple && reviewType!=ReviewType.Finish)
+                if (project.Prize.PrizeType == Prizes.PrizeType.Multiple && reviewType==ReviewType.Initial)
                 {
                     var projectMajor = project.ProjectMajorInfos.Where(o => o.MajorId == review.SubMajorId.Value).SingleOrDefault();
                     var prizeSubMajor = project.Prize.PrizeSubMajors.Where(o => o.MajorId == review.SubMajorId.Value).SingleOrDefault();
@@ -462,7 +468,8 @@ namespace Master.Reviews
                 }
                 else
                 {//非综合类直接取项目分数
-                    tempScore = reviewType == ReviewType.Initial ? project.ScoreInitial : project.ScoreFinal;
+                    //tempScore = reviewType == ReviewType.Initial ? project.ScoreInitial : project.ScoreFinal;
+                    tempScore = project.GetScoreForReviewType(reviewType);
                     if (tempScore.HasValue)
                     {
                         subMajorScore= tempScore.Value;
