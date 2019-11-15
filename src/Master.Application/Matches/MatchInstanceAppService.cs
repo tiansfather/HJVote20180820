@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Abp.Domain.Repositories;
+using Abp.UI;
 using Master.Authentication;
 using Master.Dto;
+using Master.Reviews;
 using Microsoft.EntityFrameworkCore;
 
 namespace Master.Matches
 {
     public class MatchInstanceAppService : MasterAppServiceBase<MatchInstance, int>
     {
+        public IRepository<Review, int> ReviewRepository { get; set; }
         public override async Task FormSubmit(FormSubmitRequestDto request)
         {
             switch (request.Action)
@@ -53,7 +57,7 @@ namespace Master.Matches
 
             var data = (await pageResult.Queryable.Include(o => o.Match).ToListAsync())
                 .Select(o => {
-                    return new { o.Id, MatchName=o.Match.Name, o.Identifier,o.Year,o.Remarks,o.MatchInstanceStatus };
+                    return new { o.Id, MatchName=o.Match.Name, o.Identifier,o.Year,o.Remarks,o.MatchInstanceStatus,o.DataPath };
                 });
 
 
@@ -129,18 +133,36 @@ namespace Master.Matches
 
         #region 赛事导出
         /// <summary>
-        /// 初始化导出
+        /// 初始化项目导出
         /// </summary>
         /// <param name="matchInstanceId"></param>
         /// <returns></returns>
-        public virtual async Task<object> InitExport(int matchInstanceId)
+        public virtual async Task<object> InitProjectExport(int matchInstanceId)
         {
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            if (matchInstance.MatchInstanceStatus == MatchInstanceStatus.Draft)
+            {
+                throw new UserFriendlyException("无法导出草稿中的赛事");
+            }
             var matchFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}");
+            //删除原有导出文件
+            var dataPath = matchInstance.DataPath;
+            if (!string.IsNullOrEmpty(dataPath) && System.IO.File.Exists(Common.PathHelper.VirtualPathToAbsolutePath(dataPath)))
+            {
+                try
+                {
+                    System.IO.File.Delete(Common.PathHelper.VirtualPathToAbsolutePath(dataPath));
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
             try
             {
                 //先删除原有文件夹
-                System.IO.Directory.Delete(matchFolder,true);
+                System.IO.Directory.Delete(matchFolder,true);                
+                
             }catch(Exception ex)
             {
 
@@ -152,6 +174,40 @@ namespace Master.Matches
             //获取赛事下的所有项目Id
             var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId).Select(o => o.Id).ToListAsync();
             return projectIds;
+        }
+        /// <summary>
+        /// 初始化评审导出
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task<object> InitReviewExport(int matchInstanceId)
+        {
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            var reviewFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/评审数据");
+            try
+            {
+                //先删除原有文件夹
+                System.IO.Directory.Delete(reviewFolder, true);
+            }
+            catch (Exception ex)
+            {
+
+            }
+            System.IO.Directory.CreateDirectory(reviewFolder);//建立评审文件夹
+            //赛事所有评审
+            var reviewIds = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ReviewStatus==ReviewStatus.Reviewed).Select(o => o.Id).ToListAsync();
+            return reviewIds;
+        }
+        /// <summary>
+        /// 压缩
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        public virtual async Task Compress(int matchInstanceId)
+        {
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            var matchFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}");
+            Common.ZipHelper.Zips(matchFolder, Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}.zip"));
+            matchInstance.DataPath = $"/MatchInstance/{matchInstance.Name}.zip";
         }
         #endregion
     }

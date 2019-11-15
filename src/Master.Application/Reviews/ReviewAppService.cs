@@ -670,11 +670,32 @@ namespace Master.Reviews
 
         #region 导出
         /// <summary>
+        /// 导出评审
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task ExportReview(int reviewId)
+        {
+            var review = await Manager.GetAll().Include(o => o.MatchInstance).Include(o => o.ReviewRounds)
+                .Where(o => o.Id == reviewId)
+                .SingleOrDefaultAsync();
+            var reviewFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{review.MatchInstance.Name}/评审数据/{review.ReviewName}");
+            System.IO.Directory.CreateDirectory(reviewFolder);
+            foreach (var reviewRound in review.ReviewRounds)
+            {
+                //单次评审导出数据
+                var reviewExportData = await ExportReviewRound(reviewRound.Id);
+                var sourceFile = Common.PathHelper.VirtualPathToAbsolutePath(reviewExportData.filePath);
+                var fileName = System.IO.Path.GetFileName(sourceFile);
+                System.IO.File.Copy(sourceFile, System.IO.Path.Combine(reviewFolder, fileName));
+            }
+        }
+        /// <summary>
         /// 导出评审详情
         /// </summary>
         /// <param name="reviewRoundId"></param>
         /// <returns></returns>
-        public virtual async Task<object> ExportReviewRound(int reviewRoundId)
+        public virtual async Task<dynamic> ExportReviewRound(int reviewRoundId)
         {
             var manager = Manager as ReviewManager;
             var reviewdetail = await ReviewRoundRepository.GetAsync(reviewRoundId);

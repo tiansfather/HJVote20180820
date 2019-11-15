@@ -42,6 +42,7 @@
                         <th lay-data="{align:'center',field:'year'}">@L("年份")</th>
                         <th lay-data="{align:'center',field:'matchInstanceStatus',templet:'#matchInstanceStatusTpl'}">@L("状态")</th>
                         <th lay-data="{align:'center',field:'remarks'}">@L("备注")</th>
+                        <th lay-data="{align:'center',field:'',templet:'#downloadTpl'}">赛事数据</th>
                         <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
                     </tr>
                 </thead>
@@ -50,6 +51,11 @@
 
     </div>
 </div>
+<script type="text/html" id="downloadTpl">
+    {{#if(d.dataPath){}}
+    <a href="{{d.dataPath}}" target="_hidden" style="text-decoration:underline;color:blue">下载赛事数据</a>
+    {{#}}}
+</script>
 <script type="text/html" id="toolbar">
     <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="MatchInstance" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;600px&quot;, &quot;500px&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Matches/Edit" onclick="func.callModuleButtonEvent()">@L("编辑")</a>
     <a dataid="{{d.id}}"  class="layui-btn layui-btn-xs layui-btn-normal"  onclick="doExport({{d.id}})">导出赛事</a>
@@ -105,14 +111,23 @@
             return false;
         }
 
+        var matchInstanceId;
         var projectIds = [];//待导出项目
         var exportedProjectIds = [];//已导出项目
-        function doExport(matchInstanceId) {
-            layer.confirm('确认导出赛事所有数据?', async function (index) {
+        var reviewIds = [];//待导出评审
+        var exportedReviewIds = [];//已导出评审
+        function doExport(id) {
+            matchInstanceId = id;
+            layer.confirm('确认导出赛事所有数据?原有导出数据将被清除！', async function (index) {
                 layer.close(index);
                 loadmsg('正在初始化导出');
-                projectIds = await abp.services.app.matchInstance.initExport(matchInstanceId);                
-                exportProject(projectIds[0]);
+                projectIds = await abp.services.app.matchInstance.initProjectExport(matchInstanceId);
+                if (projectIds.length > 0) {
+                    exportProject(projectIds[0]);
+                } else {
+                    abp.message.error("没有项目可以导出");
+                }
+                
             });       
             //abp.message.confirm("确认导出赛事所有数据?", function () {
             //    loadmsg('正在初始化导出');
@@ -123,20 +138,43 @@
             loadmsg('正在导出项目,' + (exportedProjectIds.length+1) + '/' + projectIds.length);
             _hidden.location.href = '/ProjectReport/View?projectId=' + projectId + "&mode=export";
         }
-        function onExportProject(projectId) {
+        async function exportReview(reviewId) {
+            loadmsg('正在导出评审,' + (exportedReviewIds.length + 1) + '/' + reviewIds.length);
+            await abp.services.app.review.exportReview(reviewId);
+            exportedReviewIds.push(reviewId);
+        }
+        async function onExportProject(projectId) {
             exportedProjectIds.push(projectId);
             if (exportedProjectIds.length == projectIds.length) {
                 //全部项目已导出，则进行下一步
                 loadmsg('正在导出评审数据');
+                reviewIds = await abp.services.app.matchInstance.initReviewExport(matchInstanceId);
+                for (var i = 0; i < reviewIds.length; i++) {
+                    await exportReview(reviewIds[i]);
+                }
+                //文件压缩
+                loadmsg('正在压缩数据');
+                await abp.services.app.matchInstance.compress(matchInstanceId);
+                loadmsg('导出成功', 3);
+                refreshExport();
+                
             } else {
                 exportProject(projectIds[exportedProjectIds.length]);
             }
         }
-        function loadmsg(msg) {
+        function loadmsg(msg, time) {
+            time = time || 0;
             layer.msg(msg, {
                 icon: 16
-                , shade: 0.01, time: 0
+                , shade: 0.01, time: time
             })
+        }
+        function refreshExport() {
+            layui.table.reload('MatchInstance');
+            projectIds = [];//待导出项目
+            exportedProjectIds = [];//已导出项目
+            reviewIds = [];//待导出评审
+            exportedReviewIds = [];//已导出评审
         }
     </script>
 }

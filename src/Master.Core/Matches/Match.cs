@@ -1,4 +1,5 @@
-﻿using Master.Entity;
+﻿using Abp.Domain.Entities;
+using Master.Entity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -34,6 +35,18 @@ namespace Master.Matches
             get
             {
                 return Match.Name + "(" + Identifier + ")";
+            }
+        }
+        [NotMapped]
+        public string DataPath
+        {
+            get
+            {
+                return this.GetData<string>("DataPath");
+            }
+            set
+            {
+                this.SetData("DataPath", value);
             }
         }
     }

@@ -31,7 +31,7 @@
                 obj.push({ content: html, formType: $(this).attr("formType") })
             });
             abp.services.app.project.exportAll(@ViewBag.ProjectId, obj).done(function () {
-                parent.onExportProject(@ViewBag.ProjectId);
+                parent&&parent.onExportProject(@ViewBag.ProjectId);
             });
         }
     </script>

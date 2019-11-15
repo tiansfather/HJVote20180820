@@ -913,7 +913,15 @@ namespace Master.Projects
                 .Include(o=>o.PrizeSubMajor)
                 .Include(o=>o.ProjectMajorInfos)
                 .Include("Prize.PrizeSubMajors.Major").Where(o=>o.Id==projectId).SingleAsync();
-            var projectName = project.ProjectName.Replace("\\", "");
+            //如果是跨赛事项目，则导出原项目
+            if (project.ProjectSource == ProjectSource.CrossMatch && project.CrossProjectId.HasValue)
+            {
+                await ExportAll(project.CrossProjectId.Value, submitHtmlDtos);
+            }
+            var projectName = project.ProjectName;
+            if (string.IsNullOrEmpty(projectName)) { projectName = project.Id.ToString(); }
+            projectName= projectName.Replace("\\", "").Trim();
+
             var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{project.MatchInstance.Name}/项目/{projectName}");
             System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
             System.IO.Directory.CreateDirectory(projectFolder + "\\基本信息");//基本文件夹

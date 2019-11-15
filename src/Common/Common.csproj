@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetCore.NPOI" Version="1.2.0" />
+  <PackageReference Include="SharpCompress" Version="0.23.0" />
   </ItemGroup>
 
 </Project>
