@@ -387,12 +387,35 @@
 
 				},
             });
+    }
+    function initHtml($obj) {
+            if (!$obj) {
+                $obj = $("body");
+            }
+            $obj.find("input,select").each(function () {
+                $(this).attr("value", $(this).val());
+            })
+            $obj.find("input:radio,input:checkbox").each(function () {
+                $(this).attr("checked", $(this).prop("checked"));
+            })
+        }
+        function doExport() {
+            var obj = [];
+            $(".formPreview").each(function () {
+                initHtml($(this));
+                var html = $(this).html();
+                html = '<meta charset="UTF-8"/><link href = "../../../default.css" rel = "stylesheet" /><link href="../../../layui.css" rel="stylesheet" /><style>.formPreview input{border:none}</style><div class="formPreview">' + html + '</div>';
+                obj.push({ content: html, formType: $(this).attr("formType") })
+            });
+            abp.services.app.project.exportAll(@ViewData["OriProjectId"], obj).done(function () {
+                parent&&parent.onExportProject(@ViewData["OriProjectId"]);
+            });
         }
         var app;
         var allSubMajors=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(allSubMajors.Select(o =>new { o.MajorId ,o.Major.BriefName}) ));
         var prizeSubMajors =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(prizeSubMajors.Select(o => o.MajorId) ));
         prizeSubMajors.push('');//子专业id为空表示主专业
-        
+
     app = new Vue({
         el: '#app',
         data: {
@@ -421,7 +444,7 @@
         }
     });
         function refresh() {
-            Vue.nextTick(function () {               
+            Vue.nextTick(function () {
                 //所有输入框禁用
                 $(".formPreview input").prop("disabled", true).css("background", "none");
                 //导出
@@ -431,7 +454,7 @@
                 }
             });
         }
-    
+
 
 
 </script>

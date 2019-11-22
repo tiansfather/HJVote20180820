@@ -172,7 +172,7 @@ namespace Master.Matches
             System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/layui.css"));
             System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/default.css"));
             //获取赛事下的所有项目Id
-            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId).Select(o => o.Id).ToListAsync();
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus!=Projects.ProjectStatus.Draft && o.ProjectStatus!=Projects.ProjectStatus.Reject).Select(o => o.Id).ToListAsync();
             return projectIds;
         }
         /// <summary>
@@ -206,8 +206,9 @@ namespace Master.Matches
         {
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
             var matchFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}");
-            Common.ZipHelper.Zips(matchFolder, Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}.zip"));
-            matchInstance.DataPath = $"/MatchInstance/{matchInstance.Name}.zip";
+            var filePath = $"/MatchInstance/{matchInstance.Name}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
+            Common.ZipHelper.Zips(matchFolder, Common.PathHelper.VirtualPathToAbsolutePath(filePath));
+            matchInstance.DataPath = filePath;
         }
         #endregion
     }

@@ -24,6 +24,7 @@ namespace Master.Web.Views.Shared.Components.ProjectView
         [UnitOfWork]
         public virtual async Task<IViewComponentResult> InvokeAsync( int projectId)
         {
+            ViewData["OriProjectId"] = projectId;//原始projectId,用于区分下面的关联ProjectId
             var project = await ProjectManager.GetByIdAsync(projectId);
             if (project.ProjectSource == ProjectSource.CrossMatch)
             {

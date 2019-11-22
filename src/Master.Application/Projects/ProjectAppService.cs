@@ -906,23 +906,31 @@ namespace Master.Projects
         #endregion
 
         #region 整体导出相关
-        public virtual async Task ExportAll(int projectId,IEnumerable<SubmitHtmlDto> submitHtmlDtos)
+        public virtual async Task ExportAll(int projectId,IEnumerable<SubmitHtmlDto> submitHtmlDtos,string matchInstanceName="")
         {
             var project = await Manager.GetAll()
                 .Include(o=>o.MatchInstance)
                 .Include(o=>o.PrizeSubMajor)
                 .Include(o=>o.ProjectMajorInfos)
-                .Include("Prize.PrizeSubMajors.Major").Where(o=>o.Id==projectId).SingleAsync();
+                .Include("Prize.PrizeSubMajors.Major").Where(o=>o.Id==projectId).SingleOrDefaultAsync();
+            if (project == null)
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(matchInstanceName))
+            {
+                matchInstanceName = project.MatchInstance.Name;
+            }
             //如果是跨赛事项目，则导出原项目
             if (project.ProjectSource == ProjectSource.CrossMatch && project.CrossProjectId.HasValue)
             {
-                await ExportAll(project.CrossProjectId.Value, submitHtmlDtos);
+                await ExportAll(project.CrossProjectId.Value, submitHtmlDtos,project.MatchInstance.Name);
             }
             var projectName = project.ProjectName;
             if (string.IsNullOrEmpty(projectName)) { projectName = project.Id.ToString(); }
             projectName= projectName.Replace("\\", "").Trim();
 
-            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{project.MatchInstance.Name}/项目/{projectName}");
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstanceName}/项目/{projectName}");
             System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
             System.IO.Directory.CreateDirectory(projectFolder + "\\基本信息");//基本文件夹
 

@@ -56,10 +56,10 @@
                     @for(var i = 2; i <= maxshowturn; i++)
                     { @Html.Raw(",{ align: 'center', field: 'score"+i+"', width: 120, title: '补投"+(i-1)+"' ,templet:'#score"+i+"'}")}
                     , { align: 'center', field: 'projectName',  templet: '#projectTpl', title: '项目名称' }
-                    , { field: 'prizeName', title: '奖项名称', width: 180 }
-                    , { field: 'subMajorName', title: '奖项小类', width: 180 }
+                    //, { field: 'prizeName', title: '奖项名称', width: 180 }
+                    //, { field: 'subMajorName', title: '奖项小类', width: 180 }
                     , { field: 'designOrganizationName', title: '申报单位', width: 180, }
-                    , { width: 100, align: 'center', toolbar: '#btnTpl', fixed: 'right', title: '评审详情' }
+                    , { width: 150, align: 'center', toolbar: '#btnTpl', fixed: 'right', title: '评审详情' }
                 ]]
                 , done: function (res, curr, count) {
                     $("a.confirm").closest("tr").addClass("highlight");

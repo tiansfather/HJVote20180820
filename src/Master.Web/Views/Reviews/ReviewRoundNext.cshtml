@@ -120,7 +120,7 @@
                     layer.msg("请正确设置参数", { icon: 5, anim: 6 })
                     return false;
                 }
-                if (app.currentItem.reviewMethod == 2 && (app.currentItem.reviewMethodSetting.weightLast + app.currentItem.reviewMethodSetting.weightNow != 100)) {
+                if (app.currentItem.reviewMethod == 2 && (parseInt(app.currentItem.reviewMethodSetting.weightLast) + parseInt(app.currentItem.reviewMethodSetting.weightNow) != 100)) {
                     layer.msg("本轮权重与上轮权重之和必须为100", { icon: 5, anim: 6 })
                     return false;
                 }
