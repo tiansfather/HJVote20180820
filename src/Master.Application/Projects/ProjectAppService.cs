@@ -25,11 +25,11 @@ namespace Master.Projects
 {
     public class ProjectAppService : MasterAppServiceBase<Project, int>
     {
-        public IRepository<Review,int> ReviewRepository { get; set; }
-        public IRepository<Major,int> MajorRepository { get; set; }
+        public IRepository<Review, int> ReviewRepository { get; set; }
+        public IRepository<Major, int> MajorRepository { get; set; }
         public ProjectManager ProjectManager { get; set; }
-        public IRepository<ProjectMajorInfo,int> ProjectMajorInfoRepository { get; set; }
-        public IRepository<ProjectTraceLog,int> ProjectTraceLogRepository { get; set; }
+        public IRepository<ProjectMajorInfo, int> ProjectMajorInfoRepository { get; set; }
+        public IRepository<ProjectTraceLog, int> ProjectTraceLogRepository { get; set; }
         public PrizeManager PrizeManager { get; set; }
         /// <summary>
         /// 分页返回
@@ -40,34 +40,34 @@ namespace Master.Projects
         public override async Task<ResultPageDto> GetPageResult(RequestPageDto request)
         {
             var pageResult = await GetPageResultQueryable(request);
-            var data=await pageResult.Queryable
-                .Include(o=>o.DesignOrganization)
-                .Include(o=>o.PrizeSubMajor).ThenInclude(o=>o.Major)
-                .Include(o=>o.ProjectMajorInfos)
-                .Include(o=>o.Prize).ThenInclude(o=>o.Major)
-                .Include(o=>o.CreatorUser).ThenInclude(o=>o.Organization)
-                .Include(o=>o.CrossProject).ThenInclude(o=>o.ProjectMajorInfos)
+            var data = await pageResult.Queryable
+                .Include(o => o.DesignOrganization)
+                .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
+                .Include(o => o.ProjectMajorInfos)
+                .Include(o => o.Prize).ThenInclude(o => o.Major)
+                .Include(o => o.CreatorUser).ThenInclude(o => o.Organization)
+                .Include(o => o.CrossProject).ThenInclude(o => o.ProjectMajorInfos)
                 .Select(o => new {
                     o.Id,
                     o.ProjectName,
                     o.PrizeId,
                     o.ReportSN,
                     o.Prize.PrizeName,
-                    MajorName=o.Prize.Major.BriefName,
-                    SubMajorId=o.PrizeSubMajor!=null?o.PrizeSubMajor.MajorId.ToString():"",
-                    SubMajorName =o.PrizeSubMajor!=null?o.PrizeSubMajor.Major.BriefName:"-",
-                    DesignOrganizationName= o.DesignOrganization!=null?o.DesignOrganization.BriefName:"",
-                    IsOriginal=o.IsOriginalStr,
+                    MajorName = o.Prize.Major.BriefName,
+                    SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
+                    SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
+                    DesignOrganizationName = o.DesignOrganization != null ? o.DesignOrganization.BriefName : "",
+                    IsOriginal = o.IsOriginalStr,
                     o.CreatorUser.Organization.BriefName,
                     o.BuildingCompany,
-                    ProjectStatus=o.ProjectStatusStr,
-                    CreatorOrganizationName=o.CreatorUser.Organization!=null? o.CreatorUser.Organization.BriefName:"",
+                    ProjectStatus = o.ProjectStatusStr,
+                    CreatorOrganizationName = o.CreatorUser.Organization != null ? o.CreatorUser.Organization.BriefName : "",
                     o.ProjectSource,
                     o.ProjectSN,
                     o.CreatorUser.Name,
-                    BuildingType=GetBuildingType(o),
-                    Coorperation=GetCoorperation(o)
-                }).ToListAsync();            
+                    BuildingType = GetBuildingType(o),
+                    Coorperation = GetCoorperation(o)
+                }).ToListAsync();
 
             var result = new ResultPageDto()
             {
@@ -111,23 +111,23 @@ namespace Master.Projects
                 var layouts = majorInfo.GetData<List<MatchResourceFormDesignItem>>("Layouts");
                 var allControls = new List<MatchResourceFormDesignItem>();
                 allControls.AddRange(layouts);
-                foreach(var item in layouts)
+                foreach (var item in layouts)
                 {
                     allControls.AddRange(GetChildren(item));
                 }
-                var control = allControls.Where(o => o.Id== "1536590402055720" || o.FormName== "建筑类别下拉").FirstOrDefault();
+                var control = allControls.Where(o => o.Id == "1536590402055720" || o.FormName == "建筑类别下拉").FirstOrDefault();
                 return control != null ? control.Value : "";
             }
         }
         private List<MatchResourceFormDesignItem> GetChildren(MatchResourceFormDesignItem item)
         {
             var result = new List<MatchResourceFormDesignItem>();
-            foreach(var subItem in item.Children)
+            foreach (var subItem in item.Children)
             {
                 result.Add(subItem);
                 result.AddRange(GetChildren(subItem));
             }
-            
+
             return result;
         }
         /// <summary>
@@ -137,7 +137,7 @@ namespace Master.Projects
         /// <returns></returns>
         public virtual async Task<ProjectDto> GetProject(int projectId)
         {
-            var project =await Repository.GetAllIncluding(o => o.ProjectMajorInfos, o => o.ProjectTraceLogs,o=>o.DesignOrganization,o=>o.ProjectTraceLogs).Where(o => o.Id == projectId).SingleAsync();
+            var project = await Repository.GetAllIncluding(o => o.ProjectMajorInfos, o => o.ProjectTraceLogs, o => o.DesignOrganization, o => o.ProjectTraceLogs).Where(o => o.Id == projectId).SingleAsync();
 
             var projectDto = project.MapTo<ProjectDto>();
             //三级专业数据另外存储
@@ -163,7 +163,7 @@ namespace Master.Projects
                 project = projectDto.MapTo<Project>();
                 //第三级专业另外存储
                 project.SetData("ThirdLevelMajors", projectDto.ThirdLevelMajors);
-                foreach(var majorInfoDto in projectDto.ProjectMajorInfos)
+                foreach (var majorInfoDto in projectDto.ProjectMajorInfos)
                 {
                     var majorInfo = project.ProjectMajorInfos.Single(o => o.MajorId == majorInfoDto.MajorId);
                     majorInfoDto.SyncTo(majorInfo);
@@ -179,12 +179,12 @@ namespace Master.Projects
                 var fromStatus = project.ProjectStatus;
                 projectDto.MapTo(project);
                 //如果是导入做的修改，项目状态保留原来状态
-                if(fromStatus==ProjectStatus.UnderReview || fromStatus == ProjectStatus.Reviewing)
+                if (fromStatus == ProjectStatus.UnderReview || fromStatus == ProjectStatus.Reviewing)
                 {
                     project.ProjectStatus = fromStatus;
                 }
                 //modi:20181012如果是退回状态的暂存，保留退回状态
-                if(fromStatus==ProjectStatus.Reject && project.ProjectStatus == ProjectStatus.Draft)
+                if (fromStatus == ProjectStatus.Reject && project.ProjectStatus == ProjectStatus.Draft)
                 {
                     project.ProjectStatus = fromStatus;
                 }
@@ -192,7 +192,7 @@ namespace Master.Projects
                 project.SetData("ThirdLevelMajors", projectDto.ThirdLevelMajors);
                 project.ProjectMajorInfos.Clear();
                 await ProjectManager.UpdateAsync(project);
-                
+
                 //await ProjectManager.ChangeProjectStatus(project.Id, fromStatus, project.ProjectStatus);
                 await ProjectMajorInfoRepository.DeleteAsync(o => o.ProjectId == projectDto.Id);
                 foreach (var majorInfoDto in projectDto.ProjectMajorInfos)
@@ -206,16 +206,16 @@ namespace Master.Projects
 
                     await ProjectMajorInfoRepository.InsertAsync(majorInfo);
                 }
-                
+
             }
-            
+
 
             //项目状态变更
-            if (project.ProjectStatus != ProjectStatus.Draft && project.ProjectStatus != ProjectStatus.Reject && project.ProjectSource!=ProjectSource.Import)
+            if (project.ProjectStatus != ProjectStatus.Draft && project.ProjectStatus != ProjectStatus.Reject && project.ProjectSource != ProjectSource.Import)
             {
                 await ProjectManager.TraceLog(project.Id, "提交申报", project.ProjectStatus);
             }
-            
+
         }
 
         /// <summary>
@@ -226,10 +226,10 @@ namespace Master.Projects
         /// <param name="reviewMsg"></param>
         /// <param name="isVerify"></param>
         /// <returns></returns>
-        public virtual async Task Verify(int projectId, ProjectStatus targetStatus,string reviewMsg,bool isVerify)
+        public virtual async Task Verify(int projectId, ProjectStatus targetStatus, string reviewMsg, bool isVerify)
         {
             var project = await Repository.GetAsync(projectId);
-            string actionName="";
+            string actionName = "";
             if (!isVerify)
             {
                 targetStatus = ProjectStatus.Reject;
@@ -241,10 +241,10 @@ namespace Master.Projects
                 if (targetStatus == ProjectStatus.UnderMajorVerify)
                 {
                     actionName = "初审通过";
-                }else if (targetStatus == ProjectStatus.UnderFinalVerify)
+                } else if (targetStatus == ProjectStatus.UnderFinalVerify)
                 {
                     actionName = "专业鉴定通过";
-                }else if (targetStatus == ProjectStatus.UnderReview)
+                } else if (targetStatus == ProjectStatus.UnderReview)
                 {
                     actionName = "审批通过";
                 }
@@ -253,7 +253,7 @@ namespace Master.Projects
             //记录日志
             await ProjectManager.TraceLog(projectId, actionName, targetStatus, reviewMsg);
 
-            
+
         }
 
         /// <summary>
@@ -293,11 +293,11 @@ namespace Master.Projects
         /// </summary>
         /// <returns></returns>
         [DontWrapResult]
-        public virtual async Task<object> GetReviewProjects(int? majorId, int? subMajorId,  string projectName,int? organizationId, string exclude,int reviewId)
+        public virtual async Task<object> GetReviewProjects(int? majorId, int? subMajorId, string projectName, int? organizationId, string exclude, int reviewId)
         {
             //var major = await MajorRepository.GetAsync(majorId);
             var review = await ReviewRepository.GetAll().Where(o => o.Id == reviewId).SingleAsync();
-            var projectQuery = Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).Where(o => o.MatchInstanceId == review.MatchInstanceId );
+            var projectQuery = Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).Where(o => o.MatchInstanceId == review.MatchInstanceId);
             if (majorId.HasValue)
             {
                 projectQuery = projectQuery.Where(o => o.Prize.MajorId == majorId);
@@ -308,15 +308,15 @@ namespace Master.Projects
             }
             if (organizationId.HasValue)
             {
-                projectQuery = projectQuery.Where(o => o.DesignOrganizationId==organizationId);
+                projectQuery = projectQuery.Where(o => o.DesignOrganizationId == organizationId);
             }
             //
             if (review.ReviewType == ReviewType.Initial)
             {
                 //初评选择项目条件为待评选项目或者初评中项目
-                projectQuery = projectQuery.Where(o => (o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing ));
+                projectQuery = projectQuery.Where(o => (o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing));
             }
-            else if(review.ReviewType==ReviewType.Finish)
+            else if (review.ReviewType == ReviewType.Finish)
             {
                 //终评选择项目条件为进入终评的项目
                 projectQuery = projectQuery.Where(o => o.IsInFinalReview);
@@ -345,18 +345,21 @@ namespace Master.Projects
             }
             //数据处理
             List<ReviewProjectDto> reviewProjectDtos = new List<ReviewProjectDto>();
+            //所有赛事评审
+            var allReviews = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == review.MatchInstanceId).ToListAsync();
             foreach (var project in await projectQuery.ToListAsync())
             {
                 var reviewProjectDto = new ReviewProjectDto()
                 {
-                    Id=project.Id,
+                    Id = project.Id,
 
                 };
                 reviewProjectDto.ProjectName = project.ProjectName;
                 reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
                 reviewProjectDto.PrizeName = project.Prize.PrizeName;
                 reviewProjectDto.SubMajorName = project.PrizeSubMajor?.Major.BriefName;
-
+                //获取项目在上次评审中的序号
+                reviewProjectDto.Sort = GetLatestSortInReview(project.Id, allReviews);
                 reviewProjectDtos.Add(reviewProjectDto);
             }
 
@@ -369,8 +372,27 @@ namespace Master.Projects
 
             return result;
         }
+        /// <summary>
+        /// 获取项目在评审中最后一个序号
+        /// </summary>
+        /// <param name="projectId"></param>
+        /// <param name="allReviews"></param>
+        /// <returns></returns>
+        private int GetLatestSortInReview(int projectId, List<Review> allReviews)
+        {
+            var sort = 0;
+            foreach(var review in allReviews.OrderByDescending(o=>o.CreationTime))
+            {
+                var reviewProject = review.ReviewProjects.Where(o => o.Id == projectId).FirstOrDefault();
+                if (reviewProject != null)
+                {
+                    sort = reviewProject.Sort;
+                    break;
+                }
+            }
+            return sort;
+        }
 
-        
         /// <summary>
         /// 评选活动的所有项目
         /// </summary>
