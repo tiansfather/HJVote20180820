@@ -535,16 +535,31 @@ namespace Master.Reviews
                 }
                 obj.TotalScore = obj.Score * 1000;//TotalScore用来存本轮的总分用来排序
                                                   //需要将同轮下面几次的分数也列出
-
-                otherReviewDetails.ForEach(p => {
-                    var subscore = p.ExpertReviewDetails.Where(e=>e.FinishTime!=null).SelectMany(v => v.ProjectReviewDetails).Where(v => v.ProjectId == o.Id).Sum(d =>
+                
+                for(var i = 0; i < otherReviewDetails.Count; i++)
+                {
+                    var p = otherReviewDetails[i];
+                    var subscore = p.ExpertReviewDetails.Where(e => e.FinishTime != null).SelectMany(v => v.ProjectReviewDetails).Where(v => v.ProjectId == o.Id).Sum(d =>
                     {
                         if (d.IsAvoid) { return 0; }
                         return d.VoteFlag ? 1 : 0;
                     });
                     obj.SubScores.Add(subscore);
-                    obj.TotalScore += subscore;
-                });
+                    obj.TotalScore +=Convert.ToDecimal( subscore*Math.Pow(10,-i));
+                }
+
+                #region old
+                //otherReviewDetails.ForEach(p =>
+                //{
+                //    var subscore = p.ExpertReviewDetails.Where(e => e.FinishTime != null).SelectMany(v => v.ProjectReviewDetails).Where(v => v.ProjectId == o.Id).Sum(d =>
+                //        {
+                //            if (d.IsAvoid) { return 0; }
+                //            return d.VoteFlag ? 1 : 0;
+                //        });
+                //    obj.SubScores.Add(subscore);
+                //    obj.TotalScore += subscore;
+                //}); 
+                #endregion
 
                 return obj;
             }).OrderByDescending(o => o.TotalScore).ToList();
