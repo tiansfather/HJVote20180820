@@ -31,6 +31,7 @@ namespace Master.Projects
         public IRepository<ProjectMajorInfo, int> ProjectMajorInfoRepository { get; set; }
         public IRepository<ProjectTraceLog, int> ProjectTraceLogRepository { get; set; }
         public PrizeManager PrizeManager { get; set; }
+        public MatchInstanceManager MatchInstanceManager { get; set; }
         /// <summary>
         /// 分页返回
         /// </summary>
@@ -359,7 +360,12 @@ namespace Master.Projects
                 reviewProjectDto.PrizeName = project.Prize.PrizeName;
                 reviewProjectDto.SubMajorName = project.PrizeSubMajor?.Major.BriefName;
                 //获取项目在上次评审中的序号
-                reviewProjectDto.Sort = GetLatestSortInReview(project.Id, allReviews);
+                var reviewSort = project.ReviewSort;
+                if ((reviewSort ?? 0) == 0)
+                {
+                    reviewProjectDto.Sort = GetLatestSortInReview(project.Id, allReviews);
+                }
+                
                 reviewProjectDtos.Add(reviewProjectDto);
             }
 
@@ -741,6 +747,7 @@ namespace Master.Projects
                         return new
                         {
                             o.Id,
+                            o.ReviewSort,
                             o.ProjectName,
                             o.PrizeId,
                             o.ReportSN,
@@ -1019,5 +1026,23 @@ namespace Master.Projects
             }
         }
         #endregion
+
+        public virtual async Task InitProjectSort()
+        {
+            var matchInstances = await MatchInstanceManager.GetAll().ToListAsync();
+            foreach(var matchInstance in matchInstances)
+            {
+                var reviews = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
+                var projects = await Repository.GetAll().Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
+                foreach(var project in projects)
+                {
+                    var reviewSort = GetLatestSortInReview(project.Id, reviews);
+                    if (reviewSort > 0)
+                    {
+                        project.ReviewSort = reviewSort;
+                    }
+                }
+            }
+        }
     }
 }

@@ -112,7 +112,21 @@ namespace Master.Projects
         public virtual Project CrossProject { get; set; }
         #endregion
 
-
+        /// <summary>
+        /// 评审序号
+        /// </summary>
+        [NotMapped]
+        public int? ReviewSort
+        {
+            get
+            {
+                return this.GetData<int?>("ReviewSort");
+            }
+            set
+            {
+                this.SetData("ReviewSort", value);
+            }
+        }
         [NotMapped]
         public string IsOriginalStr
         {

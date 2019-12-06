@@ -55,10 +55,10 @@
                 <thead>
                     <tr>
                         <th lay-data="{templet:'#checkboxTpl',width:'70',fixed:'left'}">选择</th>
-                        <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
+                        @*<th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>*@
+                        <th lay-data="{align:'center',field:'reportSN',sort:true}">@L("申报序号")</th>
                         <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',minWidth:'250',sort:true}">@L("项目名称")</th>
                         <th lay-data="{align:'center',field:'projectSource',templet:'#projectSourceTpl',sort:true}">@L("获得方式")</th>
-                        <th lay-data="{align:'center',field:'reportSN',sort:true}">@L("归档编号")</th>
                         <th lay-data="{align:'center',field:'prizeName',minWidth:'150',sort:true}">@L("奖项大类")</th>
                         <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
                         <th lay-data="{align:'center',field:'designOrganizationName',sort:true}">@L("申报单位")</th>

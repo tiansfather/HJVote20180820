@@ -109,6 +109,12 @@ namespace Master.Reviews
             {
                 review.ReviewRounds.First().SourceProjectIDs= string.Join(',', review.ReviewProjects.Select(o => o.Id));
             }
+            //add 20191206 将排序保存至项目
+            var projects = await ProjectManager.GetListByIdsAsync(review.ReviewProjects.Select(o => o.Id));
+            foreach(var project in projects)
+            {
+                project.ReviewSort = review.ReviewProjects.Single(o => o.Id == project.Id).Sort;
+            }
             await manager.UpdateAsync(review);
         }
         /// <summary>

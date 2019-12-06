@@ -216,7 +216,8 @@
         function getColumns() {
             var columns = [
                 { type: 'checkbox', fixed: 'left' },
-                { align: 'center', type: 'numbers', title: '序号' },
+                //{ align: 'center', type: 'numbers', title: '序号' },
+                { align: 'center', field: 'reviewSort', title: '序号' },
 				{ align: 'left', field: 'projectName', templet: '#projectNameTpl', minWidth: '180', title: '项目名称' },
 				{ align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创' },
                 { align: 'center', field: 'prizeName', minWidth: '150', title: '奖项大类' },

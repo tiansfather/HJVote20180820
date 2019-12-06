@@ -45,9 +45,9 @@
             <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id  and projectsource=1'}, page:true, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                 <thead>
                     <tr>
-                        <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
-                        <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',sort:true}">@L("项目名称")</th>
+                        @*<th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>*@
                         <th lay-data="{align:'center',field:'reportSN',sort:true}">@L("申报序号")</th>
+                        <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',sort:true}">@L("项目名称")</th>
                         <th lay-data="{align:'center',field:'projectSN',sort:true}">@L("归档编号")</th>
                         <th lay-data="{align:'center',field:'prizeName',sort:true}">@L("奖项大类")</th>
                         <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
