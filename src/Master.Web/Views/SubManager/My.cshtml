@@ -35,7 +35,7 @@
 
 
 
-                <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and creatoruser.organizationId=@organizationIdStr and projectsource=1 and projectstatus!=0'}, page:true, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+                <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and creatoruser.organizationId=@organizationIdStr and projectsource=1 and projectstatus!=0'}, page:true,limit:30, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                     <thead>
                         <tr>
                             <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>

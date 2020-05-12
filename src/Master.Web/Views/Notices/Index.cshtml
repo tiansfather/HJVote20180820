@@ -34,7 +34,7 @@
             </form>
             
 
-            <table autoevent="1" id="Notice" lay-filter="Notice" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/Notice/GetPageResult', page:true, id:'Notice', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+            <table autoevent="1" id="Notice" lay-filter="Notice" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/Notice/GetPageResult', page:true,limit:30, id:'Notice', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                 <thead>
                     <tr>
                         <th lay-data="{align:'center',field:'title'}">@L("公告标题")</th>

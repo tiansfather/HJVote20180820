@@ -28,7 +28,7 @@
             </form>
 
 
-            <table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-120', url:'/api/services/app/User/GetPageResult',where:{where:'@Model.Where',searchKeys:'@Model.SearchKeys'}, page:true, id:'User', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Name',type:'asc'}}">
+            <table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-120', url:'/api/services/app/User/GetPageResult',where:{where:'@Model.Where',searchKeys:'@Model.SearchKeys'}, page:true, limit:30,id:'User', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Name',type:'asc'}}">
                 <thead>
                     <tr>
                         <th lay-data="{checkbox:true,fixed:'left'}"></th>

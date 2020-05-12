@@ -44,7 +44,7 @@
 
 
 
-            <table autoevent="1" id="Prize" lay-filter="Prize" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-270', url:'/api/services/app/Prize/GetPageResult',where:{where:'matchInstanceId=null'}, page:true, id:'Prize', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+            <table autoevent="1" id="Prize" lay-filter="Prize" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-270', url:'/api/services/app/Prize/GetPageResult',where:{where:'matchInstanceId=null'}, page:true,limit:30, id:'Prize', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                 <thead>
                     <tr>
                         <th lay-data="{align:'center',field:'matchName'}">@L("赛事名称")</th>

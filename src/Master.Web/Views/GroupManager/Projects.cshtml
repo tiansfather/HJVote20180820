@@ -51,7 +51,7 @@
 
 
 
-            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'150',height:'full-280',toolbar:'#toolbarTpl', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus>=4 '}, page:true, id:'Project',  even: false,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'150',height:'full-280',toolbar:'#toolbarTpl', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus>=4 '}, page:true, id:'Project',limit:30,  even: false,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
                 <thead>
                     <tr>
                         <th lay-data="{templet:'#checkboxTpl',width:'70',fixed:'left'}">选择</th>
@@ -61,6 +61,7 @@
                         <th lay-data="{align:'center',field:'projectSource',templet:'#projectSourceTpl',sort:true}">@L("获得方式")</th>
                         <th lay-data="{align:'center',field:'prizeName',minWidth:'150',sort:true}">@L("奖项大类")</th>
                         <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
+                        <th lay-data="{align:'center',field:'buildingType'}">@L("建筑类别")</th>
                         <th lay-data="{align:'center',field:'designOrganizationName',sort:true}">@L("申报单位")</th>
                         <th lay-data="{align:'center',field:'coorperation'}">@L("合作单位")</th>
                         <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl',sort:true}">@L("是否原创")</th>

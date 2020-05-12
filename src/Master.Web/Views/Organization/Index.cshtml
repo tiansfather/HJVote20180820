@@ -105,7 +105,7 @@
                             <button class="layui-btn layui-btn-danger layui-btn-sm" moduleKey="User" type="button" buttonname="移出人员"  lay-event="Move" confirmmsg="确认将这些用户移出?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.organization.moveUserOutOrganization" onclick="func.callModuleButtonEvent()" callback="loadUser">移出人员</button>
 
                         </blockquote>
-                        <table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{ url:'/api/services/app/User/GetPageResult',height:480, page:true, id:'User', skin: 'row', even: true,initSort:{field:'Name',type:'asc'}}">
+                        <table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{ url:'/api/services/app/User/GetPageResult',height:480, page:true,limit:30, id:'User', skin: 'row', even: true,initSort:{field:'Name',type:'asc'}}">
                             <thead>
                                 <tr>
                                     <th lay-data="{checkbox:true,fixed:'left'}"></th>

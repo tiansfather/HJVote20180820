@@ -46,7 +46,7 @@
 
 
 
-            <table autoevent="1" id="DownloadList" lay-filter="DownloadList" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/MatchResource/GetDownloadListPageResult',where:{where:'matchInstanceId=null and matchResourceType=3'}, page:true, id:'DownloadList', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+            <table autoevent="1" id="DownloadList" lay-filter="DownloadList" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/MatchResource/GetDownloadListPageResult',where:{where:'matchInstanceId=null and matchResourceType=3'}, page:true, limit:30,id:'DownloadList', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                 <thead>
                     <tr>
                         <th lay-data="{align:'center',field:'matchName'}">@L("赛事名称")</th>

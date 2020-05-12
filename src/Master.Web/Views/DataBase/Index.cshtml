@@ -16,7 +16,7 @@
             </form>
 
 
-            <table autoevent="1" id="Database" lay-filter="Database" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-170', url:'/api/services/app/DataBase/GetPageResult', page:true, id:'Database', skin: 'row', even: true,done:config.onTableDone}">
+            <table autoevent="1" id="Database" lay-filter="Database" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-170', url:'/api/services/app/DataBase/GetPageResult', page:true,limit:30, id:'Database', skin: 'row', even: true,done:config.onTableDone}">
                 <thead>
                     <tr>
                         <th lay-data="{align:'center',field:'fileName',sort:true}">@L("文件名称")</th>

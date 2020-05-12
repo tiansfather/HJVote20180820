@@ -53,7 +53,7 @@
 			</form>
 
 
-			<table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/User/GetPageResult', page:true, id:'User',where:{where:'1=1',orderField:'creationtime',orderType:'desc'}, skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+			<table autoevent="1" id="User" lay-filter="User" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-220', url:'/api/services/app/User/GetPageResult', page:true,limit:30, id:'User',where:{where:'1=1',orderField:'creationtime',orderType:'desc'}, skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
 				<thead>
 					<tr>
 						<th lay-data="{align:'center',field:'name',sort:true}">@L("姓名")</th>

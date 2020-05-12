@@ -24,7 +24,7 @@
 
 
 
-            <table autoevent="1" id="Review" lay-filter="Review" class="layui-table " lay-data="{cellMinWidth:'120',height:'full-170',toolbar:'#toolbarTpl',defaultToolbar:null, url:'/api/services/app/Review/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and ReviewRounds.Count>0'}, page:true, id:'Review', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
+            <table autoevent="1" id="Review" lay-filter="Review" class="layui-table " lay-data="{cellMinWidth:'120',height:'full-170',toolbar:'#toolbarTpl',defaultToolbar:null, url:'/api/services/app/Review/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and ReviewRounds.Count>0'}, page:true,limit:30, id:'Review', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'asc'}}">
                 <thead>
                     <tr>
                         @*<th lay-data="{align:'center',type:'checkbox',fixed:'left'}"></th>*@

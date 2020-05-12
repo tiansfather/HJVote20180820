@@ -743,7 +743,8 @@ namespace Master.Reviews
             dt.Columns.AddRange(new DataColumn[] {
                 new DataColumn("排名"),
                 new DataColumn("序号"),
-                new DataColumn("项目名称")
+                new DataColumn("项目名称"),
+                new DataColumn("申报单位")
             });
             if (reviewdetail.ReviewMethod == ReviewMethod.Weighting)
             {
@@ -787,6 +788,7 @@ namespace Master.Reviews
                 row["排名"] = p.Rank;
                 row["序号"] = p.Sort;
                 row["项目名称"] = p.ProjectName;
+                row["申报单位"] = p.DesignOrganizationName;
                 if (reviewdetail.ReviewMethod == ReviewMethod.Weighting)
                 {
                     row["加权得分"] = p.Score;
