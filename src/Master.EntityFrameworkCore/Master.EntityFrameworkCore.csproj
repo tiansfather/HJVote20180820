@@ -20,6 +20,8 @@
     <Compile Remove="Migrations\20180917015322_ProjectScore.cs" />
     <Compile Remove="Migrations\20180928011521_MajorCharger.cs" />
     <Compile Remove="Migrations\20181101010110_UserSpeciality.cs" />
+    <Compile Remove="Migrations\20200828122809_ShowScope.cs" />
+    <Compile Remove="Migrations\20200828122809_ShowScope.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Master.Core\Master.Core.csproj" />

@@ -77,6 +77,8 @@ namespace Master.Matches
         public virtual async Task<object> GetAvailableMatchInstance()
         {
             var query = Repository.GetAllIncluding(o => o.Match);
+            //add 20200828 过滤不显示的
+            query = query.Where(o => o.Match.IsDisplay);
             //申报者和分公司科管及专业负责人列出所有申报中的赛事实例
             if (AbpSession.IsReporter()||AbpSession.IsSubManager()||AbpSession.IsMajorManager())
             {
@@ -89,7 +91,7 @@ namespace Master.Matches
             }
 
             return (await query.ToListAsync())
-                .Select(o => new {o.Id,MatchName=o.Match.Name,o.Identifier });
+                .Select(o => new {o.Id,MatchName=o.Match.Name,o.Identifier,o.DisplayGroup });
         }
         public virtual async Task<bool> GetIfMatchInstanceAvailable(int matchInstanceId)
         {            

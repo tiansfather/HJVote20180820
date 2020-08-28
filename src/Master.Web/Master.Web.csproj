@@ -23,6 +23,7 @@
     <None Include="wwwroot\assets\huajian\js\layui.all.js" />
     <None Include="wwwroot\lib\dropdowntree\js\dropDownTool.js" />
     <None Include="wwwroot\lib\dropdowntree\js\utils.js" />
+    <None Include="wwwroot\lib\element\element.min.js" />
     <None Include="wwwroot\lib\powerfloat\js\jquery-powerFloat.js" />
     <None Include="wwwroot\lib\powerfloat\js\mini\jquery-powerFloat-min.js" />
     <None Include="wwwroot\pdfviewer\build\pdf.js" />

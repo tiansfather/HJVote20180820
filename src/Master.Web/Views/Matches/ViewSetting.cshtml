@@ -1,0 +1,136 @@
+﻿@using Master.Web.Components
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("比赛展示管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("赛事名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="name" name="name" autocomplete="off" class="layui-input">
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="app.loadData($('#name').val())">@L("查询")</button>
+                        <button class="layui-btn " type="button" onclick="app.save()">@L("保存")</button>
+                        <span style="color:cadetblue">如果将两个赛事的展示名写成完全一样，则前台展示时，会合为一个入口</span>
+                    </div>
+                </div>
+            </form>
+            <div id="app">
+                <table class="layui-table">
+                    <colgroup>
+                        <col width="80">
+                        <col width="300">
+                        <col  width="200">
+                        <col />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>展示</th>
+                            <th>赛事名称</th>
+                            <th>展示名称</th>
+                            <th>届</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,index) in matches">
+                            <td><el-checkbox v-model="item.isDisplay"></el-checkbox></td>
+                            <td>{{item.name}}</td>
+                            <td>
+                                <a href="#_" @@click="edit(item)"><i class="el-icon-edit" style="color:blue"></i></a>
+                                {{item.displayName}}
+                            </td>
+                            <td>
+                                <template v-for="(instance) in item.instances">
+                                    <div>
+                                        <span style="width:150px;display:inline-block">{{instance.identifier}} </span>
+                                        <el-select v-model="instance.displayScope" size="mini" style="width:150px">
+                                            <el-option label="普通" :value="0"></el-option>
+                                            <el-option label="其它" :value="1"></el-option>
+                                            <el-option label="历史" :value="2"></el-option>
+                                        </el-select></div>
+                                </template>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+</div>
+<iframe id="_hidden" name="_hidden" style="display:none"></iframe>
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+            
+            app = new Vue({
+                el: '#app',
+                data: {
+                    matches:[]
+                },
+                methods: {
+                    loadData: function (keyword) {
+                        var that = this;
+                        func.runAsync(abp.services.app.match.getAllWithShowStatus(keyword).done(function (res) {
+                            that.matches = res;
+                        }));
+                    },
+                    edit: function (item) {
+                        layer.prompt(function(value, index, elem){                          
+                            layer.close(index);
+                            item.displayName = value;
+                        });
+                    },
+                    save: function () {                        
+                        func.runAsync(abp.services.app.match.submitMatchShowStatus(this.matches).done(function (res) {
+                            layer.msg('提交成功');
+                        }));
+                    }
+                },
+                mounted: function () {
+                    this.loadData();
+                }
+            });
+
+        };
+        config.onTableDone = function () {
+
+        };
+        config.refresh = function () {
+
+        };
+        function doSearch() {
+            var where = {where:'1=1'};
+            var name = $("#name").val();
+            var identifier = $("#identifier").val();
+            if (name) {
+                where.where += " and Match.Name.Contains(\"" + name + "\") ";
+            }
+            if (identifier) {
+                where.where += " and Identifier.Contains(\"" + identifier + "\")";
+            }
+            layui.table.reload('MatchInstance', {
+                where: where
+
+            })
+
+            return false;
+        }
+
+        function loadmsg(msg, time) {
+            time = time || 0;
+            layer.msg(msg, {
+                icon: 16
+                , shade: 0.01, time: time
+            })
+        }
+    </script>
+}

@@ -33,7 +33,10 @@ namespace Master.Web.Controllers
         {
             return View();
         }
-
+        public IActionResult ViewSetting()
+        {
+            return View();
+        }
         public async Task<IActionResult> Add()
         {
             var matches = await _matchManager.GetAll().ToListAsync();

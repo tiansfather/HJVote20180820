@@ -3,6 +3,7 @@
 @using Master.Configuration;
 @using Master.Web.Views.Shared.Components.SideBarNav;
 @using Master.Web.Views.Shared.Components.TopBarNav;
+@using Master.Authentication;
 @inject Master.Timing.AppTimes AppTimes
 @model Master.Session.Dto.LoginInformationDto
 @{
@@ -25,7 +26,7 @@
     <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
     <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
     <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
-
+    <link href="~/lib/element/element.min.css" rel="stylesheet" />
     <!---->
     <link rel="stylesheet" href="/assets/huajian/css/layui.css">
     <!---->
@@ -42,15 +43,39 @@
             <div class="layui-row" style="margin-top:80px;margin-bottom:80px">
                 <div id="app" class="layui-hide layui-col-md8">
                     <div class="main_pc_nr" style="position:static;margin:0px auto;width:auto;">
-                        <div class="main_anniu">
-                            <ul>
-                                <a href="#_" v-for="(item,index) in matchInstances" @@click="gotoMatchInstance(item.id)">
-                                    <li>
-                                        {{item.matchName}}<br>
-                                        {{item.identifier}}
-                                    </li>
-                                </a>
-                            </ul>
+                        <div class="main_anniu" style="padding:20px">
+                            <div v-if="!currentGroup">
+                                <ul>
+                                    <a href="#_" v-for="(item,index) in displayGroups" @@click="gotoGroup(item)">
+                                        <li>
+                                            {{item}}
+                                        </li>
+                                    </a>
+                                    <a href="#_" @@click="gotoGroup('Other')">
+                                        <li>
+                                            {{getGroupName('Other')}}
+                                        </li>
+                                    </a>
+                                </ul>
+                            </div>
+                            <div v-else>
+                                <el-card class="box-card">
+                                    <div slot="header" class="clearfix">
+                                        <span style="font-size:20px">{{getGroupName(currentGroup)}}</span>
+                                        <el-button style="float: right; padding: 3px 0" type="text" @@click="currentGroup=''">返回上一级</el-button>
+                                    </div>
+                                    <ul>
+                                        <a href="#_" v-for="(item,index) in groupInstances" @@click="gotoMatchInstance(item.id)">
+                                            <li>
+                                                {{item.matchName}}<br>
+                                                {{item.identifier}}
+                                            </li>
+                                        </a>
+                                    </ul>
+                                </el-card>
+                                
+                            </div>
+
                         </div>
                     </div>
 
@@ -74,11 +99,21 @@
                                     </tr>
                                 </thead>
                             </table>
+                            @if (AbpSession.IsGroupManager())
+                            {
+                        <div style="margin-top:20px;">
+                            <button type="button" class="layui-btn " style="width:100%">查询搜索评选结果</button>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <button type="button" class="layui-btn layui-btn-normal" style="width:100%" onclick="app.gotoGroup('History')">查看历史项目</button>
+                        </div>
+                                
+                            }
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 辅助元素，一般用于移动设备下遮罩 -->
             <div class="layadmin-body-shade" layadmin-event="shade"></div>
         </div>
@@ -105,9 +140,10 @@
     <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
 
 
-
+    <script src="~/lib/element/element.min.js" asp-append-version="true"></script>
     <script src="~/assets/js/global.js" asp-append-version="true"></script>
     <script src="~/assets/js/index.js" asp-append-version="true"></script>
+
     <script>
         layui.config({
             base: config.layuiBase //静态资源所在路径
@@ -128,15 +164,40 @@
         var app = new Vue({
             el: '#app',
             data: {
-                matchInstances: []
-
+                currentGroup: '',
+                matchInstances: [],
+                displayGroups: []
+            },
+            computed: {
+                groupInstances: function () {
+                    var that = this;
+                    return this.matchInstances.filter(function (o) { return o.displayGroup == that.currentGroup });
+                },                
             },
             methods: {
+                getGroupName: function (group) {
+                    if (group == 'Other') {
+                        return '其它评选';
+                    } else if (group == 'History') {
+                        return '历史评选';
+                    } else {
+                        return group;
+                    }
+                },
                 loadMatchInstances: function () {
+                    var that = this;
                     func.runAsync(abp.services.app.matchInstance.getAvailableMatchInstance().done(function (data) {
                         app.matchInstances = data;
+                        $.each(data, function (i, v) {
+                            if (!that.displayGroups.some(function (val) { val == v.displayGroup }) && v.displayGroup != 'Other' && v.displayGroup != 'History') {
+                                that.displayGroups.push(v.displayGroup);
+                            }
+                        })
                         $("#app").removeClass("layui-hide");
                     }));
+                },
+                gotoGroup: function (groupName) {
+                    this.currentGroup = groupName;
                 },
                 gotoMatchInstance: function (matchInstanceId) {
                     func.runAsync(abp.services.app.matchInstance.getIfMatchInstanceAvailable(matchInstanceId).done(function (data) {
@@ -147,13 +208,10 @@
                             layer.msg("此赛事目前不可用", { icon: 5, anim: 6 });
                         }
                     }));
-                    
-
                 }
-
             },
             mounted: function () {
-                
+
                 this.loadMatchInstances();
 
             }

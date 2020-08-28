@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
+using Abp.Linq.Extensions;
 using Abp.UI;
 using Abp.Web.Models;
 using Master.Dto;
@@ -61,5 +62,41 @@ namespace Master.Matches
             return await MatchInstanceRepository.CountAsync(o => o.MatchId == matchId && o.MatchInstanceStatus == MatchInstanceStatus.Applying) > 0;
         }
 
+        public virtual async Task<object> GetAllWithShowStatus(string keyword)
+        {
+            var matches = await Manager.GetAll().Include(o => o.MatchInstances)
+                .Where(o=>o.MatchInstances.Count(m=>m.MatchInstanceStatus!=MatchInstanceStatus.Draft)>0)
+                .WhereIf(!string.IsNullOrEmpty(keyword), o => o.Name.Contains(keyword)).ToListAsync();
+            return matches
+                .Select(o => new
+                {
+                    o.Id,
+                    o.Name,
+                    o.DisplayName,
+                    o.IsDisplay,
+                    Instances = o.MatchInstances.Select(m => new
+                    {
+                        m.Id,
+                        m.Identifier,
+                        m.DisplayScope
+                    }).ToList()
+                });
+        }
+        public virtual async Task SubmitMatchShowStatus(dynamic obj)
+        {
+            foreach(var matchDto in obj)
+            {
+                var matchId = (int)matchDto.id;
+                var match = await Manager.GetAll().Include(o => o.MatchInstances).Where(o => o.Id == matchId).FirstOrDefaultAsync();
+                match.DisplayName = matchDto.displayName;
+                match.IsDisplay = matchDto.isDisplay;
+                foreach(var instanceDto in matchDto.instances)
+                {
+                    var instanceId = (int)instanceDto.id;
+                    var instance = match.MatchInstances.First(o => o.Id == instanceId);
+                    instance.DisplayScope = (MatchInstanceDisplayScope)instanceDto.displayScope;
+                }
+            }
+        }
     }
 }

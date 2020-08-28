@@ -50,6 +50,12 @@
         "url": "/Matches"
       },
       {
+        "name": "matchmanager.matchshow",
+        "displayName": "比赛展示管理",
+        "icon": "layui-icon layui-icon-set",
+        "url": "/Matches/ViewSetting"
+      },
+      {
         "name": "matchmanager.major",
         "displayName": "专业分类管理",
         "icon": "layui-icon layui-icon-zcontrol",

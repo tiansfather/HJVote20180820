@@ -17,41 +17,43 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="renderer" content="webkit">
-    <title>评优系统</title>
-    <!--[if lt IE 9]>
-    <meta http-equiv="refresh" content="0;ie.html" />
-    <![endif]-->
-    <link rel="shortcut icon" href="favicon.ico">
-    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
-    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true">
-    <link rel="stylesheet" href="/assets/layuiadmin/style/admin.css" media="all" asp-append-version="true">
-    <link href="~/assets/css/default.css" rel="stylesheet" asp-append-version="true" />
-    <link href="~/lib/pace/pace-theme-barber-shop.css" rel="stylesheet" />
-    <!-- View specific styles -->
-    @RenderSection("styles", required: false)
-    <script type="text/javascript">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="renderer" content="webkit">
+	<title>评优系统</title>
+	<!--[if lt IE 9]>
+	<meta http-equiv="refresh" content="0;ie.html" />
+	<![endif]-->
+	<link rel="shortcut icon" href="favicon.ico">
+	<link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+	<link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true">
+	<link rel="stylesheet" href="/assets/layuiadmin/style/admin.css" media="all" asp-append-version="true">
+	<link href="~/assets/css/default.css" rel="stylesheet" asp-append-version="true" />
+	<link href="~/lib/pace/pace-theme-barber-shop.css" rel="stylesheet" />
+	<link href="~/lib/element/element.min.css" rel="stylesheet" />
+	<!-- View specific styles -->
+	@RenderSection("styles", required: false)
+	<script type="text/javascript">
         // This is used to get the application's root path from javascript. It's useful if you're running application in a virtual directory under IIS.
         var abp = abp || {};
         abp.appPath = '@ApplicationPath';
-    </script>
-    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
-    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
-    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
-    <script src="~/assets/js/global.js" asp-append-version="true"></script>
-    <script src="~/lib/pace/pace.min.js" asp-append-version="true"></script>
-    <script>
-        layui.config({
+	</script>
+	<script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+	<script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+	<script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+	<script src="~/assets/js/global.js" asp-append-version="true"></script>
+	<script src="~/lib/pace/pace.min.js" asp-append-version="true"></script>
+	<script src="~/lib/element/element.min.js" asp-append-version="true"></script>
+	<script>
+		layui.config({
 			base: config.layuiBase //静态资源所在路径
 			, version: 201811061
-        }).extend($.extend({
-            index: config.layuiIndex //主入口模块
-        }, config.layuiExtends));
+		}).extend($.extend({
+			index: config.layuiIndex //主入口模块
+		}, config.layuiExtends));
 
 
-    </script>
+	</script>
 </head>
 <body class="gray-bg" @*style="overflow-y:scroll" *@>
     @RenderSection("mainbody",required:false)
