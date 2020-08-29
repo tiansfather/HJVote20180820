@@ -1,0 +1,256 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    ViewData["Title"] = "Index";
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+    var awards = ViewData["awards"] as List<MatchAward>;
+}
+@section styles{
+    <style>
+        #prizeContainer {
+            overflow: auto;
+        }
+		.layui-table tr.selected {
+			background: #37b9ec !important
+		}
+        .inputtext{
+            height:25px;
+            text-align:center;
+            padding:0;
+            width:60px;
+        }
+            #prizeContainer .item.current {
+                background: #0094ff;
+                color: white;
+            }
+
+            #prizeContainer .item {
+                width: 200px;
+                height: 40px;
+                line-height: 40px;
+                text-align: center;
+                border: 1px solid #000;
+                float: left;
+                margin: 10px 20px 10px 0;
+                cursor: pointer;
+            }
+    </style>
+}
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("评选结果管理")</div>
+        <div class="layui-card-body">
+            
+            <form class="layui-form layui-form-pane layui-hide" onsubmit="return doSearch();" id="app">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        
+                        <label class="layui-form-label">@L("项目名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
+                        </div>
+                        <label class="layui-form-label">申报单位</label>
+                        <div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
+                             name="OrganizationId" value="" class="layui-input-inline" style="position:relative">
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    </div>
+                </div>
+            </form>
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " @*lay-data="{cellMinWidth:'80',toolbar:'<div></div>',  url:'/api/services/app/Project/GetReviewResult',limit:1000,where:{where:'1>2',orderField:'rankChampion asc'}, page:false, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'ScoreChampion',type:'desc'}}"*@>
+                
+            </table>
+        </div>
+
+    </div>
+</div>
+<script type="text/html" id="projectNameTpl">
+    <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
+</script>
+<script type="text/html" id="rankManualTpl">
+    <input type="text" value="{{d.rankManual||''}}" class="layui-input inputtext" name="rankManual_{{d.id}}" relid="{{d.id}}"/>
+</script>
+<script type="text/html" id="scoreManualTpl">
+    <input type="text" value="{{d.scoreManual||''}}" class="layui-input inputtext" name="scoreManual_{{d.id}}"/>
+</script>
+<script type="text/html" id="matchAwardTpl">
+    <select relvalue="{{d.matchAwardId}}" lay-ignore name="matchAwardId_{{d.id}}">
+        <option value="">未设定</option>
+        @foreach(var award in awards)
+        {
+            <option value="@award.Id" >@award.AwardName</option>
+        }
+    </select>
+</script>
+<script type="text/html" id="toolbar">
+
+    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType={{d.maxReviewType}}" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
+
+</script>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出评选结果</button>
+        <button type="button" class="layui-btn layui-btn-sm " onclick="doSave()">保存结果</button>
+        <button type="button" class="layui-btn layui-btn-sm " onclick="restore()">恢复评审情况</button>
+    </div>
+</script>
+<script type="text/html" id="isOriginalTpl2">
+	{{#if(d.isOriginal){}}
+	<span class="layui-badge layui-bg-green">Y</span>
+	{{#}}}
+</script>
+<iframe style="display:none" id="_hidden" name="_hidden"></iframe>
+@section scripts{
+    <script>
+        var currentPrizeId;
+        var app
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+
+			//监听行单击事件
+			layui.table.on('row', function (obj) {
+				$(obj.tr).siblings("tr").removeClass("selected");
+				$(obj.tr).addClass("selected");
+				console.log(obj.tr) //得到当前行元素对象
+				console.log(obj.data) //得到当前行数据
+				//obj.del(); //删除当前行
+				//obj.update(fields) //修改当前行数据
+			});
+            
+
+            config.refresh();
+            doSearch();
+        };
+        config.onTableDone = function () {
+            $(window).trigger("resize");
+            $("[relvalue]").each(function () {
+                var relvalue = $(this).attr("relvalue");
+                if (relvalue) {
+                    $(this).children("[value='" + relvalue + "']").prop("selected", true);
+                }
+            })
+        };
+        config.refresh = function () {
+
+        };
+        function doExport() {
+            abp.message.confirm("确认导出?", function () {
+                var where = getWhere();
+                where.limit = 1000;
+                func.runAsync(abp.services.app.project.doExportResult(where).done(function (data) {
+                    _hidden.location.href = data;
+                    console.log(data);
+                }));
+            })
+        }
+        function getWhere() {
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4  ', orderField: 'rankManual asc' };
+            
+            return where;
+        }
+        function doSearch() {
+            var where = getWhere();
+			
+			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + "决赛情况" + new Date().Format("yyyyMMddhhmmss");
+            var columns = getColumns();
+			layui.table.render({
+                toolbar: '#toolbarTpl',
+                elem: '#Project',
+                where: where,
+                cellMinWidth: '120',
+                url: '/api/services/app/Project/GetReviewResult',
+				limit: 1000,
+				height: 'full-0',
+				page: false,
+				title: sheetName,
+                id: 'Project',
+                skin: 'row',
+                even: true,
+                done: config.onTableDone,
+                initSort: { field: 'ScoreChampion', type: 'desc' },
+                cols: [columns]
+
+            });
+
+            return false;
+
+        }
+        function getColumns() {
+            var columns = [
+                //{ type: 'checkbox', fixed: 'left' },
+                //{ align: 'center', type: 'numbers', title: '序号' },
+                { align: 'center', field: 'rankManual',width:'100', title: '排名',templet:'#rankManualTpl' },
+                { align: 'center', field: 'scoreManual', width:'100',title: '总分',templet:'#scoreManualTpl' },
+                { align: 'center', field: 'matchAwardId', title: '获奖',templet:'#matchAwardTpl' },
+				{ align: 'left', field: 'projectName', templet: '#projectNameTpl', minWidth: '180', title: '项目名称' },
+				{ align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创' },
+                { align: 'center', field: 'prizeName', minWidth: '180', title: '奖项大类' },
+                { align: 'center', field: 'subMajorName', title: '奖项子类' },
+                { align: 'center', field: 'designOrganizationName', title: '申报单位' },
+                { align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }
+            ];
+            //modi20181104 终评综合类不加入专业列
+            //如果是综合类，则需要加入专业列
+            //if (app.prizeType === 1) {
+            //    for (var i = 0; i < app.majors.length; i++) {
+            //        columns.push({ align: 'center', field: 'majorScore' + i + "Final", title: app.majors[i].BriefName });
+            //    }
+            //}
+            //columns = columns.concat([{ align: 'center', field: 'rankChampion', title: '排名' },
+            //{ align: 'center', field: 'expertCountAllChampion', title: '分发专家' },
+            //    { align: 'center', field: 'expertCountRankedChampion', title: '打分专家' },
+            //{ align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
+            return columns;
+        }
+        //打开申报窗口
+        function showReport(projectId,prizeName) {
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+
+        }
+        function restore() {
+            abp.message.confirm('确认恢复评审数据?已设置的数据将丢失').done(function () {
+                func.runAsync(abp.services.app.review.restoreResult(@matchInstance.Id).done(function () {
+                    layer.msg('提交成功');
+                    doSearch();
+                }))
+            })
+        }
+        function doSave() {
+            abp.message.confirm('确认提交').done(function () {
+                var data = fetchData();
+                func.runAsync(abp.services.app.review.submitResult(data).done(function () {
+                    layer.msg('提交成功');
+                }))
+            })
+        }
+        function fetchData() {
+            var data = [];
+            $("[relid]").each(function (i, v) {
+                var id = $(this).attr("relid")
+                data.push({
+                    id: id,
+                    rankManual: $('[name="rankManual_' + id + '"]').val(),
+                    scoreManual: $('[name="scoreManual_' + id + '"]').val(),
+                    matchAwardId: $('[name="matchAwardId_' + id + '"]').val(),
+                })
+            });
+            return data;
+        }
+        function refresh(){
+            Vue.nextTick(function () {
+                layui.form.render();
+            });
+
+        }
+    </script>
+}

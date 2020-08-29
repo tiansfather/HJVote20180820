@@ -43,6 +43,7 @@ namespace Master.EntityFrameworkCore
         public virtual DbSet<File> Files { get; set; }
         public virtual DbSet<Organization> Organizations { get; set; }
         public virtual DbSet<Match> Matches { get; set; }
+        public virtual DbSet<MatchAward> MatchAwards { get; set; }
         public virtual DbSet<MatchInstance> MatchInstances { get; set; }
         public virtual DbSet<Major> Majors { get; set; }
         public virtual DbSet<Speciality> Specialities { get; set; }

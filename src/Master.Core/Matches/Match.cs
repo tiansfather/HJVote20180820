@@ -19,6 +19,7 @@ namespace Master.Matches
         public virtual string DisplayName { get; set; }
         public virtual bool IsDisplay { get; set; }
         public virtual ICollection<MatchInstance> MatchInstances { get; set; }
+        public virtual ICollection<MatchAward> MatchAwards { get; set; }
 
     }
     /// <summary>

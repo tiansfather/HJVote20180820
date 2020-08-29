@@ -101,6 +101,19 @@ namespace Master.Projects
         /// 决赛排名
         /// </summary>
         public int? RankChampion { get; set; }
+        /// <summary>
+        /// 手动排名
+        /// </summary>
+        public int? RankManual { get; set; }
+        /// <summary>
+        /// 手动分数
+        /// </summary>
+        public decimal? ScoreManual { get; set; }
+        /// <summary>
+        /// 获奖
+        /// </summary>
+        public int? MatchAwardId { get; set; }
+        public virtual MatchAward MatchAward { get; set; }
 
         public virtual ICollection<ProjectMajorInfo> ProjectMajorInfos { get; set; }
         public virtual ICollection<ProjectTraceLog> ProjectTraceLogs { get; set; }
@@ -191,6 +204,26 @@ namespace Master.Projects
                     break;
             }
             return score;
+        }
+        /// <summary>
+        /// 最大评审类型：决赛、终评、初评
+        /// </summary>
+        public ReviewType MaxReviewType
+        {
+            get
+            {
+                if (this.IsInChampionReview)
+                {
+                    return ReviewType.Champion;
+                }else if (this.IsInFinalReview)
+                {
+                    return ReviewType.Finish;
+                }
+                else
+                {
+                    return ReviewType.Initial;
+                }
+            }
         }
     }
     /// <summary>

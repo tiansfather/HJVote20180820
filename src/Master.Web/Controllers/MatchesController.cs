@@ -37,6 +37,16 @@ namespace Master.Web.Controllers
         {
             return View();
         }
+        public IActionResult Award()
+        {
+            return View();
+        }
+        public async Task<IActionResult> AwardAdd()
+        {
+            var matches = await _matchManager.GetAll().ToListAsync();
+            ViewData["matches"] = matches;
+            return View();
+        }
         public async Task<IActionResult> Add()
         {
             var matches = await _matchManager.GetAll().ToListAsync();

@@ -22,6 +22,8 @@
     <Compile Remove="Migrations\20181101010110_UserSpeciality.cs" />
     <Compile Remove="Migrations\20200828122809_ShowScope.cs" />
     <Compile Remove="Migrations\20200828122809_ShowScope.Designer.cs" />
+    <Compile Remove="Migrations\20200829104119_MatchAward.cs" />
+    <Compile Remove="Migrations\20200829104119_MatchAward.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Master.Core\Master.Core.csproj" />

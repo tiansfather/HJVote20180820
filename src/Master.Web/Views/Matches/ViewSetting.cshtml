@@ -41,7 +41,7 @@
                             <td><el-checkbox v-model="item.isDisplay"></el-checkbox></td>
                             <td>{{item.name}}</td>
                             <td>
-                                <a href="#_" @@click="edit(item)"><i class="el-icon-edit" style="color:blue"></i></a>
+                                <a href="#_" @@click="edit(item,'displayName')"><i class="el-icon-edit" style="color:blue"></i></a>
                                 {{item.displayName}}
                             </td>
                             <td>
@@ -83,10 +83,10 @@
                             that.matches = res;
                         }));
                     },
-                    edit: function (item) {
-                        layer.prompt(function(value, index, elem){                          
+                    edit: function (item,field) {
+                        layer.prompt({value:item[field]},function(value, index, elem){                          
                             layer.close(index);
-                            item.displayName = value;
+                            item[field] = value;
                         });
                     },
                     save: function () {                        

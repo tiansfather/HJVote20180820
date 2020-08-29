@@ -1,0 +1,106 @@
+﻿@using Master.Web.Components
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="layui-fluid" id="LAY-app-message">
+    <div class="layui-card">
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("获奖等级管理")</div>
+        <div class="layui-card-body">
+            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("赛事名称")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="name" name="name" autocomplete="off" class="layui-input">
+                        </div>
+                        <button class="layui-btn layui-btn-primary" type="button" onclick="app.loadData($('#name').val())">@L("查询")</button>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <button class="layui-btn  " fornonerow="1" buttonname="@L("新建获奖等级")" type="button" params="{&quot;area&quot;: [&quot;600px&quot;, &quot;450px&quot;],&quot;btn&quot;:[&quot;提交&quot;,&quot;关闭&quot;]}" lay-event="Add" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Matches/AwardAdd" onclick="func.callModuleButtonEvent()">@L("新建获奖等级")</button>
+                </div>
+            </form>
+            <div id="app">
+                <table class="layui-table">
+                    <thead>
+                        <tr>
+                            <th>赛事名称</th>
+                            <th>获奖名称</th>
+                            <th>获奖等级</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,index) in awards">
+                            <td>{{item.matchName}}</td>
+                            <td><a href="#_" @@click="edit(item,'awardName')"><i class="el-icon-edit" style="color:blue"></i></a>{{item.awardName}}</td>
+                            <td>
+                                <a href="#_" @@click="edit(item,'awardRank')"><i class="el-icon-edit" style="color:blue"></i></a>
+                                {{item.awardRank}}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+</div>
+<iframe id="_hidden" name="_hidden" style="display:none"></iframe>
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            var element = layui.element,
+                table = layui.table;
+            
+            app = new Vue({
+                el: '#app',
+                data: {
+                    awards:[]
+                },
+                methods: {
+                    loadData: function (keyword) {
+                        var that = this;
+                        func.runAsync(abp.services.app.match.getAllAwards(keyword).done(function (res) {
+                            that.awards = res;
+                        }));
+                    },
+                    edit: function (item,field) {
+                        layer.prompt({ value: item[field] }, function (value, index, elem) {       
+                            func.runAsync(abp.services.app.match.submitAwardField(item.id,field,value).done(function (res) {
+                                layer.msg('提交成功');
+                                layer.close(index);
+                                item[field] = value;
+                            }));
+                            
+                        });
+                    },
+                    save: function () {                        
+                        func.runAsync(abp.services.app.match.submitMatchShowStatus(this.matches).done(function (res) {
+                            layer.msg('提交成功');
+                        }));
+                    }
+                },
+                mounted: function () {
+                    this.loadData();
+                }
+            });
+
+        };
+        config.onTableDone = function () {
+
+        };
+        config.refresh = function () {
+            app.loadData($('#name').val())
+        };
+
+        function loadmsg(msg, time) {
+            time = time || 0;
+            layer.msg(msg, {
+                icon: 16
+                , shade: 0.01, time: time
+            })
+        }
+    </script>
+}

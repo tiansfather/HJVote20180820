@@ -1,0 +1,37 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div>
+    <form class="layui-form layui-form-pane">
+        <div class="layui-form-item">
+            <label class="layui-form-label">赛事</label>
+            <div class="layui-input-block">
+                <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-verify="required"></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">获奖名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="AwardName" lay-verify="required" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">获奖等级</label>
+            <div class="layui-input-block">
+                <input type="text" name="AwardRank" lay-verify="required|number" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="Match",ButtonKey="AwardAdd"})"></vc:form-submit>
+        @*<div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+            </div>
+        </div>*@
+    </form>
+</div>

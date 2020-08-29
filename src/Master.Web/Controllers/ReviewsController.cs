@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abp.AspNetCore.Mvc.Authorization;
 using Abp.AutoMapper;
+using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Master.Controllers;
 using Master.Majors;
+using Master.Matches;
 using Master.Prizes;
 using Master.Projects;
 using Master.Reviews;
@@ -26,6 +28,7 @@ namespace Master.Web.Controllers
         public ProjectManager ProjectManager { get; set; }
         public ReviewManager ReviewManager { get; set; }
         public IRepository<Speciality, int> SpecialityRepository { get; set; }
+        public IRepository<MatchAward,int> MatchAwardRepository { get; set; }
 
         #region 评选活动
         /// <summary>
@@ -302,6 +305,24 @@ namespace Master.Web.Controllers
             var matchInstance = await GetCurrentMatchInstance();
             
             ViewData["matchInstance"] = matchInstance;
+            return View();
+        }
+        /// <summary>
+        /// 评选结果管理
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> Result()
+        {
+            var matchInstance = await GetCurrentMatchInstance();
+            //如果比赛没有手动设置过排名，则根据评审自动生成排名
+            var manual = matchInstance.GetData<bool>("Manual");
+            if (!manual)
+            {
+                await ReviewManager.RegenerateResult(matchInstance.Id);
+            }
+            var awards = await MatchAwardRepository.GetAll().Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
+            ViewData["matchInstance"] = matchInstance;
+            ViewData["awards"] = awards;
             return View();
         }
         /// <summary>

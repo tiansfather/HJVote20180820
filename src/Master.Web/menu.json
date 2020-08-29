@@ -90,6 +90,12 @@
         "displayName": "评分表管理",
         "icon": "layui-icon layui-icon-form",
         "url": "/MatchResource/RateTable"
+      },
+      {
+        "name": "matchmanager.award",
+        "displayName": "获奖等级管理",
+        "icon": "layui-icon layui-icon-zbookmark",
+        "url": "/Matches/Award"
       }
     ]
   },
@@ -218,6 +224,12 @@
         "displayName": "决赛情况查看",
         "icon": "layui-icon layui-icon-table",
         "url": "/Reviews/ChampionReview"
+      },
+      {
+        "name": "groupmanager.reviewresult",
+        "displayName": "评选结果管理",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/Reviews/Result"
       },
       {
         "name": "groupmanager.notice",

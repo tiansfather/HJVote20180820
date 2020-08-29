@@ -584,5 +584,36 @@ namespace Master.Reviews
             return score;
         }
         #endregion
+
+        #region 评选结果
+        /// <summary>
+        /// 重新生成评选结果
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task RegenerateResult(int matchInstanceId)
+        {
+            var projects = await ProjectManager.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && (int)o.ProjectStatus>=4).ToListAsync();
+            projects.ForEach(o => {
+                o.MatchAwardId = null;
+                if (o.MaxReviewType == ReviewType.Champion)
+                {
+                    o.ScoreManual = o.ScoreChampion;
+                }else if (o.MaxReviewType == ReviewType.Finish)
+                {
+                    o.ScoreManual = o.ScoreFinal;
+                }
+                else
+                {
+                    o.ScoreManual = o.ScoreInitial;
+                }                
+            });
+            var orderdProjects = projects.OrderByDescending(o => o.ScoreManual);
+            for (var i=0;i< orderdProjects.Count(); i++)
+            {
+                orderdProjects.ElementAt(i).RankManual = i + 1;
+            }
+        }
+        #endregion
     }
 }

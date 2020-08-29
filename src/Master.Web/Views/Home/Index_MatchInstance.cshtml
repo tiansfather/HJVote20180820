@@ -189,7 +189,7 @@
                     func.runAsync(abp.services.app.matchInstance.getAvailableMatchInstance().done(function (data) {
                         app.matchInstances = data;
                         $.each(data, function (i, v) {
-                            if (!that.displayGroups.some(function (val) { val == v.displayGroup }) && v.displayGroup != 'Other' && v.displayGroup != 'History') {
+                            if (!that.displayGroups.some(function (val) {return  val == v.displayGroup }) && v.displayGroup != 'Other' && v.displayGroup != 'History') {
                                 that.displayGroups.push(v.displayGroup);
                             }
                         })

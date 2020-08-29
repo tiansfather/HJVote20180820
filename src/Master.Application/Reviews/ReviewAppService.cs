@@ -822,5 +822,49 @@ namespace Master.Reviews
             }
         }
         #endregion
+
+        #region 评审结果
+        /// <summary>
+        /// 恢复评审结果
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task RestoreResult(int matchInstanceId)
+        {
+            await (Manager as ReviewManager).RegenerateResult(matchInstanceId);
+        }
+        public virtual async Task SubmitResult(dynamic data)
+        {
+            foreach(var item in data)
+            {
+                var projectId = (int)item.id;
+                var project = await ProjectManager.GetByIdAsync(projectId);
+                if(int.TryParse((string)item.rankManual,out var rankManual))
+                {
+                    project.RankManual = rankManual;
+                }
+                else
+                {
+                    project.RankManual = null;
+                }
+                if (decimal.TryParse((string)item.scoreManual, out var scoreManual))
+                {
+                    project.ScoreManual = scoreManual;
+                }
+                else
+                {
+                    project.ScoreManual = null;
+                }
+                if (int.TryParse((string)item.matchAwardId, out var matchAwardId))
+                {
+                    project.MatchAwardId = matchAwardId;
+                }
+                else
+                {
+                    project.MatchAwardId = null;
+                }
+            }
+        }
+        #endregion
     }
 }

@@ -723,6 +723,60 @@ namespace Master.Projects
         }
         #endregion
 
+        #region 评选结果导出 
+        public virtual async Task<string> DoResultExport(RequestPageDto requestPageDto)
+        {
+            var pageResult = await GetPageResultQueryable(requestPageDto);
+            var projects = (await pageResult.Queryable
+                .Include(o => o.DesignOrganization)
+                .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
+                .Include(o => o.Prize).ThenInclude(o => o.Major)
+                .Include(o=>o.MatchAward)
+                .ToListAsync());
+
+            var dt = BuildResultExportDataTable();
+            foreach (var project in projects)
+            {
+                var row = dt.NewRow();
+                row["排名"] = project.RankManual;
+                row["总分"] = project.ScoreManual;
+                row["获奖"] = project.MatchAward?.AwardName;
+                row["项目名称"] = project.ProjectName;
+                row["是否原创"] = project.IsOriginalStr;
+                row["设计单位"] = project.DesignOrganization?.DisplayName;
+                row["联系人"] = project.DesignOrganizationContact;
+                row["电话"] = project.DesignOrganizationPhone;
+                row["手机"] = project.DesignOrganizationMobile;
+                row["EMAIL"] = project.DesignOrganizationEmail;
+                row["申报奖项大类"] = project.Prize?.PrizeName;
+                row["奖项子类"] = project.PrizeSubMajor?.Major.DisplayName;
+                row["建设单位"] = project.BuildingCompany;
+                row["建设国家"] = project.BuildingCountry;
+                row["建设省份"] = project.BuildingProvince;
+                row["建设城市"] = project.BuildingCity;
+                dt.Rows.Add(row);
+            }
+            EnsureTempDirectoryCreated();
+            var filePath = "/temp/" + Guid.NewGuid() + ".xlsx";
+            var fileName = HostingEnvironment.WebRootPath + filePath.Replace("/", "\\");
+            Common.ExcelHelper.DataTableToExcel(dt, fileName, "Sheet1", true);
+
+            return filePath;
+        }
+        private DataTable BuildResultExportDataTable()
+        {
+            string[] columnNeededs = { "排名","总分","获奖","项目名称", "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家", "建设省份", "建设城市" };
+
+            var dt = new DataTable();
+            foreach (var columnName in columnNeededs)
+            {
+                DataColumn column = new DataColumn(columnName);
+                dt.Columns.Add(column);
+            }
+            return dt;
+        }
+        #endregion
+
         /// <summary>
         /// 获取评选结果
         /// </summary>
@@ -762,9 +816,13 @@ namespace Master.Projects
                             o.ScoreInitial,
                             o.ScoreFinal,
                             o.ScoreChampion,
+                            o.ScoreManual,
                             o.RankFinal,
                             o.RankInitial,
                             o.RankChampion,
+                            o.RankManual,
+                            o.MaxReviewType,
+                            o.MatchAwardId,
                             ExpertCountAllInitial = initialExpertCount.allCount,
                             ExpertCountRankedInitial = initialExpertCount.rankedCount,
                             ExpertCountAllFinal = finalExpertCount.allCount,
