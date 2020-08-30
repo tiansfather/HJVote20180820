@@ -1,9 +1,25 @@
 ﻿@using Master.Web.Components
 @using Master.Matches
+@using Master.Reviews
 @{
     ViewData["Title"] = "Index";
     var matchInstance = ViewData["matchInstance"] as MatchInstance;
     var awards = ViewData["awards"] as List<MatchAward>;
+    var maxReviewType = (ReviewType)ViewData["maxReviewType"] ;
+
+    var reviewTypeName = "";
+    switch (maxReviewType)
+    {
+        case ReviewType.Initial:
+            reviewTypeName = "初评";
+            break;
+        case ReviewType.Finish:
+            reviewTypeName = "终评";
+            break;
+        case ReviewType.Champion:
+            reviewTypeName = "决赛";
+            break;
+    }
 }
 @section styles{
     <style>
@@ -38,7 +54,7 @@
 }
 <div class="layui-fluid" id="LAY-app-message">
     <div class="layui-card">
-        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("评选结果管理")</div>
+        <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("评选结果管理")--@reviewTypeName</div>
         <div class="layui-card-body">
             
             <form class="layui-form layui-form-pane layui-hide" onsubmit="return doSearch();" id="app">
@@ -84,7 +100,7 @@
 </script>
 <script type="text/html" id="toolbar">
 
-    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType={{d.maxReviewType}}" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
+    <a dataid="{{d.id}}" buttonname="{{d.projectName}}@L("专家打分详情")" modulekey="Project" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Reviews/ProjectScoreView?projectId={{d.id}}&reviewType=@((int)maxReviewType)" onclick="func.callModuleButtonEvent() ">@L("评选详情")</a>
 
 </script>
 <script type="text/html" id="toolbarTpl">
@@ -103,6 +119,7 @@
 @section scripts{
     <script>
         var currentPrizeId;
+        var maxReviewType =@((int)maxReviewType);
         var app
         config.ready = function () {
             var element = layui.element,
@@ -138,7 +155,7 @@
             abp.message.confirm("确认导出?", function () {
                 var where = getWhere();
                 where.limit = 1000;
-                func.runAsync(abp.services.app.project.doExportResult(where).done(function (data) {
+                func.runAsync(abp.services.app.project.doResultExport(where).done(function (data) {
                     _hidden.location.href = data;
                     console.log(data);
                 }));
@@ -146,13 +163,17 @@
         }
         function getWhere() {
             var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4  ', orderField: 'rankManual asc' };
-            
+            if (maxReviewType == 2) {
+                where.where += ' and isInFinalReview=true';
+            } else if (maxReviewType == 3) {
+                where.where += ' and isInChampionReview=true';
+            }
             return where;
         }
         function doSearch() {
             var where = getWhere();
 			
-			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + "决赛情况" + new Date().Format("yyyyMMddhhmmss");
+			var sheetName = '@Html.Raw(matchInstance.Match.Name)' + "评选结果" + new Date().Format("yyyyMMddhhmmss");
             var columns = getColumns();
 			layui.table.render({
                 toolbar: '#toolbarTpl',
@@ -168,7 +189,7 @@
                 skin: 'row',
                 even: true,
                 done: config.onTableDone,
-                initSort: { field: 'ScoreChampion', type: 'desc' },
+                initSort: { field: 'ScoreManual', type: 'desc' },
                 cols: [columns]
 
             });

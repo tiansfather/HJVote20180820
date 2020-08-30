@@ -593,7 +593,17 @@ namespace Master.Reviews
         /// <returns></returns>
         public virtual async Task RegenerateResult(int matchInstanceId)
         {
-            var projects = await ProjectManager.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && (int)o.ProjectStatus>=4).ToListAsync();
+            var maxReviewType = GetAll().Where(o => o.MatchInstanceId == matchInstanceId).Max(o => o.ReviewType);
+            var projectQuery = ProjectManager.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && (int)o.ProjectStatus >= 4);
+            if (maxReviewType == ReviewType.Finish)
+            {
+                projectQuery = projectQuery.Where(o => o.IsInFinalReview);
+            }
+            if (maxReviewType == ReviewType.Champion)
+            {
+                projectQuery = projectQuery.Where(o => o.IsInChampionReview);
+            }
+            var projects = await projectQuery.ToListAsync();
             projects.ForEach(o => {
                 o.MatchAwardId = null;
                 if (o.MaxReviewType == ReviewType.Champion)

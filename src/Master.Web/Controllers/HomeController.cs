@@ -46,7 +46,7 @@ namespace Master.Web.Controllers
         }
         
         [AbpMvcAuthorize]
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(string view)
         {
             var user = AbpSession.ToUserIdentifier();
             Session.Dto.LoginInformationDto loginInfo;
@@ -82,6 +82,10 @@ namespace Master.Web.Controllers
                 AbpSession.IsMajorManager()
                 )
             {
+                if (view == "resultsearch")
+                {
+                    return View("ResultSearch", loginInfo);
+                }
                 return View("Index_MatchInstance", loginInfo);
             }
             if (AbpSession.IsExpert())

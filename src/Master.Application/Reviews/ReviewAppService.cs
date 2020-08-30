@@ -14,6 +14,9 @@ using Master.Majors;
 using Master.Projects;
 using Microsoft.EntityFrameworkCore;
 using Abp.Runtime.Caching;
+using Master.Matches;
+using Abp.Domain.Entities;
+
 namespace Master.Reviews
 {
     public class ReviewAppService : MasterAppServiceBase<Review, int>
@@ -24,6 +27,7 @@ namespace Master.Reviews
         public IRepository<ProjectTraceLog,int> ProjectTraceLogRepository { get; set; }
         public IRepository<Major,int> MajorRepository { get; set; }
         public IRepository<Review,int> ReviewRepository { get; set; }
+        public MatchInstanceManager MatchInstanceManager { get; set; }
         [DontWrapResult]
 
         #region 评选活动
@@ -832,9 +836,12 @@ namespace Master.Reviews
         public virtual async Task RestoreResult(int matchInstanceId)
         {
             await (Manager as ReviewManager).RegenerateResult(matchInstanceId);
+            var matchInstance = await MatchInstanceManager.GetByIdAsync(matchInstanceId);
+            matchInstance.SetData("Manual", false);
         }
         public virtual async Task SubmitResult(dynamic data)
         {
+            int matchInstanceId = 0;
             foreach(var item in data)
             {
                 var projectId = (int)item.id;
@@ -863,7 +870,12 @@ namespace Master.Reviews
                 {
                     project.MatchAwardId = null;
                 }
+
+                matchInstanceId = project.MatchInstanceId;
             }
+
+            var matchInstance = await MatchInstanceManager.GetByIdAsync(matchInstanceId);
+            matchInstance.SetData("Manual", true);
         }
         #endregion
     }

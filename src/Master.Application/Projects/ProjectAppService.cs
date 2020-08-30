@@ -742,18 +742,10 @@ namespace Master.Projects
                 row["总分"] = project.ScoreManual;
                 row["获奖"] = project.MatchAward?.AwardName;
                 row["项目名称"] = project.ProjectName;
-                row["是否原创"] = project.IsOriginalStr;
-                row["设计单位"] = project.DesignOrganization?.DisplayName;
-                row["联系人"] = project.DesignOrganizationContact;
-                row["电话"] = project.DesignOrganizationPhone;
-                row["手机"] = project.DesignOrganizationMobile;
-                row["EMAIL"] = project.DesignOrganizationEmail;
-                row["申报奖项大类"] = project.Prize?.PrizeName;
+                row["原创"] = project.IsOriginalStr;
+                row["申报单位"] = project.DesignOrganization?.DisplayName;
+                row["奖项大类"] = project.Prize?.PrizeName;
                 row["奖项子类"] = project.PrizeSubMajor?.Major.DisplayName;
-                row["建设单位"] = project.BuildingCompany;
-                row["建设国家"] = project.BuildingCountry;
-                row["建设省份"] = project.BuildingProvince;
-                row["建设城市"] = project.BuildingCity;
                 dt.Rows.Add(row);
             }
             EnsureTempDirectoryCreated();
@@ -765,7 +757,7 @@ namespace Master.Projects
         }
         private DataTable BuildResultExportDataTable()
         {
-            string[] columnNeededs = { "排名","总分","获奖","项目名称", "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家", "建设省份", "建设城市" };
+            string[] columnNeededs = { "排名","总分","获奖","项目名称", "原创", "奖项大类", "奖项子类", "申报单位"};
 
             var dt = new DataTable();
             foreach (var columnName in columnNeededs)
@@ -777,6 +769,54 @@ namespace Master.Projects
         }
         #endregion
 
+        #region 评选查询结果导出 
+        public virtual async Task<string> DoResultSearchExport(RequestPageDto requestPageDto)
+        {
+            var pageResult = await GetPageResultQueryable(requestPageDto);
+            var projects = (await pageResult.Queryable
+                .Include(o=>o.MatchInstance).ThenInclude(o=>o.Match)
+                .Include(o => o.DesignOrganization)
+                .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
+                .Include(o => o.Prize).ThenInclude(o => o.Major)
+                .Include(o => o.MatchAward)
+                .ToListAsync());
+
+            var dt = BuildResultSearchExportDataTable();
+            foreach (var project in projects)
+            {
+                var row = dt.NewRow();
+                row["赛事名称"] = project.MatchInstance.Match.Name;
+                row["届"] = project.MatchInstance.Identifier;
+                row["排名"] = project.RankManual;
+                row["总分"] = project.ScoreManual;
+                row["获奖"] = project.MatchAward?.AwardName;
+                row["项目名称"] = project.ProjectName;
+                row["原创"] = project.IsOriginalStr;
+                row["申报单位"] = project.DesignOrganization?.DisplayName;
+                row["奖项大类"] = project.Prize?.PrizeName;
+                row["奖项子类"] = project.PrizeSubMajor?.Major.DisplayName;
+                dt.Rows.Add(row);
+            }
+            EnsureTempDirectoryCreated();
+            var filePath = "/temp/" + Guid.NewGuid() + ".xlsx";
+            var fileName = HostingEnvironment.WebRootPath + filePath.Replace("/", "\\");
+            Common.ExcelHelper.DataTableToExcel(dt, fileName, "Sheet1", true);
+
+            return filePath;
+        }
+        private DataTable BuildResultSearchExportDataTable()
+        {
+            string[] columnNeededs = {"赛事名称","届", "获奖", "排名", "总分",  "项目名称", "原创", "奖项大类", "奖项子类", "申报单位" };
+
+            var dt = new DataTable();
+            foreach (var columnName in columnNeededs)
+            {
+                DataColumn column = new DataColumn(columnName);
+                dt.Columns.Add(column);
+            }
+            return dt;
+        }
+        #endregion
         /// <summary>
         /// 获取评选结果
         /// </summary>
@@ -786,10 +826,12 @@ namespace Master.Projects
         {
             var pageResult = await GetPageResultQueryable(request);
             var data = (await pageResult.Queryable
+                .Include(o=>o.MatchInstance).ThenInclude(o=>o.Match)
                 .Include(o => o.DesignOrganization)
                 .Include(o=>o.ProjectMajorInfos)
                 .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
                 .Include(o => o.Prize).ThenInclude(o => o.Major)
+                .Include(o=>o.MatchAward)
                 .ToListAsync())
                 .Select(o => {
                     return CacheManager.GetCache<int, object>("ProjectResultCache").Get(o.Id, id => {
@@ -801,11 +843,14 @@ namespace Master.Projects
                         return new
                         {
                             o.Id,
+                            MatchName=o.MatchInstance.Match.Name,
+                            o.MatchInstance.Identifier,
                             o.ReviewSort,
                             o.ProjectName,
                             o.PrizeId,
                             o.ReportSN,
                             o.Prize.PrizeName,
+                            o.BuildingCompany,
                             IsOriginal=o.IsOriginal,
                             MajorName = o.Prize.Major.BriefName,
                             SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
@@ -823,6 +868,7 @@ namespace Master.Projects
                             o.RankManual,
                             o.MaxReviewType,
                             o.MatchAwardId,
+                            o.MatchAward?.AwardName,
                             ExpertCountAllInitial = initialExpertCount.allCount,
                             ExpertCountRankedInitial = initialExpertCount.rankedCount,
                             ExpertCountAllFinal = finalExpertCount.allCount,

@@ -314,6 +314,8 @@ namespace Master.Web.Controllers
         public async Task<IActionResult> Result()
         {
             var matchInstance = await GetCurrentMatchInstance();
+            //maxReviewType 最后的比赛类型：初评、终评、决赛
+            var maxReviewType = ReviewManager.GetAll().Where(o => o.MatchInstanceId == matchInstance.Id).Max(o => o.ReviewType);
             //如果比赛没有手动设置过排名，则根据评审自动生成排名
             var manual = matchInstance.GetData<bool>("Manual");
             if (!manual)
@@ -321,6 +323,7 @@ namespace Master.Web.Controllers
                 await ReviewManager.RegenerateResult(matchInstance.Id);
             }
             var awards = await MatchAwardRepository.GetAll().Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
+            ViewData["maxReviewType"] = maxReviewType;
             ViewData["matchInstance"] = matchInstance;
             ViewData["awards"] = awards;
             return View();

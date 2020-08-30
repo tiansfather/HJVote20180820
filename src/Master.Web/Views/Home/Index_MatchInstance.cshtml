@@ -40,41 +40,44 @@
         <div class="layui-layout layui-layout-admin">
             <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
 
-            <div class="layui-row" style="margin-top:80px;margin-bottom:80px">
-                <div id="app" class="layui-hide layui-col-md8">
+            <div class="layui-row layui-hide" style="margin-top:80px;margin-bottom:80px" id="app">
+                <div  class="layui-col-md8">
                     <div class="main_pc_nr" style="position:static;margin:0px auto;width:auto;">
-                        <div class="main_anniu" style="padding:20px">
-                            <div v-if="!currentGroup">
-                                <ul>
-                                    <a href="#_" v-for="(item,index) in displayGroups" @@click="gotoGroup(item)">
-                                        <li>
-                                            {{item}}
-                                        </li>
-                                    </a>
-                                    <a href="#_" @@click="gotoGroup('Other')">
-                                        <li>
-                                            {{getGroupName('Other')}}
-                                        </li>
-                                    </a>
-                                </ul>
-                            </div>
-                            <div v-else>
-                                <el-card class="box-card">
-                                    <div slot="header" class="clearfix">
-                                        <span style="font-size:20px">{{getGroupName(currentGroup)}}</span>
-                                        <el-button style="float: right; padding: 3px 0" type="text" @@click="currentGroup=''">返回上一级</el-button>
-                                    </div>
+                        <div class="main_anniu" style="padding:20px">                            
+                            <template >
+                                <div v-if="!currentGroup">
                                     <ul>
-                                        <a href="#_" v-for="(item,index) in groupInstances" @@click="gotoMatchInstance(item.id)">
+                                        <a href="#_" v-for="(item,index) in displayGroups" @@click="gotoGroup(item)">
                                             <li>
-                                                {{item.matchName}}<br>
-                                                {{item.identifier}}
+                                                {{item}}
+                                            </li>
+                                        </a>
+                                        <a href="#_" @@click="gotoGroup('Other')">
+                                            <li>
+                                                {{getGroupName('Other')}}
                                             </li>
                                         </a>
                                     </ul>
-                                </el-card>
-                                
-                            </div>
+                                </div>
+                                <div v-else>
+                                    <el-card class="box-card">
+                                        <div slot="header" class="clearfix">
+                                            <span style="font-size:20px">{{getGroupName(currentGroup)}}</span>
+                                            <el-button style="float: right; padding: 3px 0" type="text" @@click="currentGroup='';">返回上一级</el-button>
+                                        </div>
+                                        <ul>
+                                            <a href="#_" v-for="(item,index) in groupInstances" @@click="gotoMatchInstance(item.id)">
+                                                <li>
+                                                    {{item.matchName}}<br>
+                                                    {{item.identifier}}
+                                                </li>
+                                            </a>
+                                        </ul>
+                                    </el-card>
+
+                                </div>
+                            </template>
+                            
 
                         </div>
                     </div>
@@ -102,7 +105,7 @@
                             @if (AbpSession.IsGroupManager())
                             {
                         <div style="margin-top:20px;">
-                            <button type="button" class="layui-btn " style="width:100%">查询搜索评选结果</button>
+                            <button type="button" class="layui-btn " style="width:100%" onclick="location.href='/Home/Index?view=resultsearch'">查询搜索评选结果</button>
                         </div>
                         <div style="margin-top:20px;">
                             <button type="button" class="layui-btn layui-btn-normal" style="width:100%" onclick="app.gotoGroup('History')">查看历史项目</button>
@@ -164,6 +167,7 @@
         var app = new Vue({
             el: '#app',
             data: {
+                searchView:false,
                 currentGroup: '',
                 matchInstances: [],
                 displayGroups: []
@@ -198,6 +202,7 @@
                 },
                 gotoGroup: function (groupName) {
                     this.currentGroup = groupName;
+                    //this.contentView = true;
                 },
                 gotoMatchInstance: function (matchInstanceId) {
                     func.runAsync(abp.services.app.matchInstance.getIfMatchInstanceAvailable(matchInstanceId).done(function (data) {
