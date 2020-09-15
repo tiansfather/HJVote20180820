@@ -45,15 +45,27 @@ namespace Master.Matches
             }
         }
         [NotMapped]
-        public string DataPath
+        public string DataProjectPath
         {
             get
             {
-                return this.GetData<string>("DataPath");
+                return this.GetData<string>("DataProjectPath");
             }
             set
             {
-                this.SetData("DataPath", value);
+                this.SetData("DataProjectPath", value);
+            }
+        }
+        [NotMapped]
+        public string DataReviewPath
+        {
+            get
+            {
+                return this.GetData<string>("DataReviewPath");
+            }
+            set
+            {
+                this.SetData("DataReviewPath", value);
             }
         }
         [NotMapped]

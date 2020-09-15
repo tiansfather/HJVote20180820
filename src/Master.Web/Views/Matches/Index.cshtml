@@ -52,8 +52,11 @@
     </div>
 </div>
 <script type="text/html" id="downloadTpl">
-    {{#if(d.dataPath){}}
-    <a href="{{d.dataPath}}" target="_hidden" style="text-decoration:underline;color:blue">下载赛事数据</a>
+    {{#if(d.dataProjectPath){}}
+    <a href="{{d.dataProjectPath}}" target="_hidden" style="text-decoration:underline;color:blue">项目数据</a>
+    {{#}}}
+    {{#if(d.dataReviewPath){}}
+    <a href="{{d.dataReviewPath}}" target="_hidden" style="text-decoration:underline;color:blue">评审数据</a>
     {{#}}}
 </script>
 <script type="text/html" id="toolbar">
