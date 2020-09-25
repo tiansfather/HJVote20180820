@@ -44,7 +44,6 @@ namespace Master.Web.Controllers
             _env = hostingEnvironment;
             _matchInstanceRepository = matchInstanceRepository;
         }
-        
         [AbpMvcAuthorize]
         public async Task<ActionResult> Index(string view)
         {
