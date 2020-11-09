@@ -814,7 +814,7 @@ namespace Master.Reviews
                     var expertprojectreviewdetail = allreviewdetails[i - 1].ExpertReviewDetails;
                     experts.ForEach(o =>
                     {
-                        var projectdetail = expertprojectreviewdetail.Single(e => e.ExpertID == o.Id).ProjectReviewDetails.SingleOrDefault(e => e.ProjectId == p.Id);
+                        var projectdetail = expertprojectreviewdetail.Single(e => e.ExpertID == o.Id).ProjectReviewDetails.FirstOrDefault(e => e.ProjectId == p.Id);
                         if (projectdetail != null)
                         {
                             row[o.Name + i] = projectdetail.IsAvoid ? "" : (allreviewdetails[i - 1].ReviewMethod == ReviewMethod.Vote ? (projectdetail.VoteFlag ? "Y" : "") : projectdetail.Score.ToString());
