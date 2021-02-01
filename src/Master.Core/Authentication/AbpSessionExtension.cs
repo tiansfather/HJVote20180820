@@ -36,6 +36,10 @@ namespace Master.Authentication
         {
             return GetRoleName(abpSession) == StaticRoleNames.Host.MajorManager.Split('|')[0];
         }
+        public static bool IsProjectViewer(this IAbpSession abpSession)
+        {
+            return GetRoleName(abpSession) == StaticRoleNames.Host.ProjectViewer.Split('|')[0];
+        }
         public static string GetRoleName(this IAbpSession abpSession)
         {
             var userid = abpSession.UserId;

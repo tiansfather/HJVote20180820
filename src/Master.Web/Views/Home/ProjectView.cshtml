@@ -1,0 +1,285 @@
+﻿@using Master.Web.Startup
+@using Master.Web
+@using Master.Configuration;
+@using Master.Web.Views.Shared.Components.SideBarNav;
+@using Master.Web.Views.Shared.Components.TopBarNav;
+@using Master.Authentication;
+@inject Master.Timing.AppTimes AppTimes
+@model Master.Session.Dto.LoginInformationDto
+@{
+    Layout = null;
+    var matchNames=ViewData["MatchNames"] as List<string>;
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewData["SoftTitle"]</title>
+    <meta name="keywords" content="华建集团">
+    <meta name="description" content="华建集团">
+    <meta name="renderer" content="webkit"><!--360默认急速模式打开-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta content="telephone=no, address=no" name="format-detection">
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <link href="~/view-resources/Views/_Bundles/base.min.css" rel="stylesheet" asp-append-version="true" />
+    <link rel="stylesheet" href="/assets/layuiadmin/layui/css/layui.css" media="all" asp-append-version="true" />
+    <link rel="icon" href="/assets/huajian/images/small_logo.ico" type="image/ico" />
+    <link href="~/lib/element/element.min.css" rel="stylesheet" />
+    <!---->
+    @*<link rel="stylesheet" href="/assets/huajian/css/layui.css">*@
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/font-awesome.css">
+    <!---->
+    <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css">
+    <style>
+        body{
+            overflow:hidden !important;
+        }
+    </style>
+</head>
+<body class="layui-layout-body" style="overflow:auto">
+
+    <div id="LAY_app">
+        <div class="layui-layout layui-layout-admin">
+            <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
+
+            <div class="layui-row " style="margin-top:80px;margin-bottom:80px" id="app">
+                <div class="layui-col-md12">
+                    <div class="main_pc_nr" style="position:static;margin:0px auto;width:auto;">
+                        <div class="main_anniu" style="padding:20px">
+                            <div id="app">
+                                <el-card class="box-card">
+                                    <div slot="header" class="clearfix">
+                                        <span style="font-size:20px">申报项目查询搜索</span>
+                                        @*<el-button style="float: right; padding: 3px 0" type="text" @@click="history.back(-1)">返回首页</el-button>*@
+                                    </div>
+                                    <el-form :inline="true" :model="form" label-width="120px" size="mini">
+                                        <el-form-item label="年份">
+                                            <el-select v-model="form.year" style="width:165px">
+                                                <el-option v-for="(item) in (new Date().getFullYear()-2017+1)"
+                                                           :value="item+2016"
+                                                           :label="item+2016"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="奖项名称">
+                                            <el-input v-model="form.prizeName"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="项目名称">
+                                            <el-input v-model="form.projectName"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="所属领域">
+                                            <el-input v-model="form.majorName"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="关键词">
+                                            <el-input v-model="form.keyword"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="申报单位">
+                                            <el-input v-model="form.designOrganizationName"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="获奖单位">
+                                            <el-input v-model="form.buildingCompany"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="奖项级别">
+                                            <el-input v-model="form.awardRank" type="number"></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="评选名称">
+                                            <el-input v-model="form.matchName"></el-input>
+                                            <el-select v-model="form.matchName" placeholder="全部" clearable>
+                                                <el-option v-for="item in matchNames"
+                                                           :key="item"
+                                                           :label="item"
+                                                           :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item style="margin-left:50px">
+                                            <el-button type="primary" @@click="doSearch">查询</el-button>
+                                            <el-button type="success" @@click="doExport" v-if="searched">导出查询结果</el-button>
+                                        </el-form-item>
+                                    </el-form>
+
+                                </el-card>
+                            </div>
+                            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table ">
+                            </table>
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 辅助元素，一般用于移动设备下遮罩 -->
+            <div class="layadmin-body-shade" layadmin-event="shade"></div>
+        </div>
+        <footer>
+            <p>
+                华东建筑集团有限公司 版权所有<br>
+                本系统暂不支持IE系列浏览器，推荐使用GOOGLE浏览器及360极速浏览器
+            </p>
+        </footer>
+    </div>
+
+    <script src="/assets/layuiadmin/layui/layui.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/base.min.js" asp-append-version="true"></script>
+    <script src="~/view-resources/Views/_Bundles/abp.min.js" asp-append-version="true"></script>
+
+
+    <!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+    <script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+    <script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+
+    <script src="~/lib/element/element.min.js" asp-append-version="true"></script>
+    <script src="~/assets/js/global.js" asp-append-version="true"></script>
+    <script src="~/assets/js/index.js" asp-append-version="true"></script>
+
+    <script>
+        layui.config({
+            base: config.layuiBase //静态资源所在路径
+        }).extend({
+            index: config.layuiIndex //主入口模块
+        }).use(config.layuiModules, function () {
+            initIndex();
+            checkToken();
+        });
+
+    </script>
+
+
+    <iframe style="display:none" id="_hidden" name="_hidden"></iframe>
+    <div class="layui-layer-move"></div>
+    <script type="text/html" id="toolbarTpl">
+        <div class="layui-btn-container">
+            <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" onclick="doExport()">导出查询结果</button>
+        </div>
+    </script>
+    <script type="text/html" id="projectNameTpl">
+        <a projectid="{{d.id}}" href="#_" style="color:blue;text-decoration:underline" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
+    </script>
+    <script type="text/html" id="isOriginalTpl2">
+        {{#if(d.isOriginal){}}
+        <span class="layui-badge layui-bg-green">Y</span>
+        {{#}}}
+    </script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                form: {},
+                searched: false,
+                matchNames:@(Newtonsoft.Json.JsonConvert.SerializeObject(matchNames)),
+            },
+            computed: {
+
+            },
+            methods: {
+
+            },
+            mounted: function () {
+                $('#app').removeClass("layui-hide")
+            }
+
+        });
+        function getWhere() {
+            var where = { where: 'projectStatus>=4  ', orderField: 'rankManual asc' };
+            app.form.year && (where.where += ' and MatchInstance.Year=' + app.form.year);
+            app.form.prizeName && (where.where += ' and Prize.PrizeName.Contains("' + app.form.prizeName + '")');
+            app.form.projectName && (where.where += ' and ProjectName.Contains("' + app.form.projectName + '")');
+            app.form.majorName && (where.where += ' and PrizeSubMajor.Major.DisplayName.Contains("' + app.form.majorName + '")');
+            app.form.designOrganizationName && (where.where += ' and DesignOrganization.DisplayName.Contains("' + app.form.designOrganizationName + '")');
+            app.form.buildingCompany && (where.where += ' and BuildingCompany.Contains("' + app.form.buildingCompany + '")');
+            app.form.awardRank && (where.where += ' and MatchAward.AwardRank=' + app.form.awardRank);
+            app.form.matchName && (where.where += ' and MatchInstance.Match.Name.Contains("' + app.form.matchName + '")');
+            return where;
+        }
+        function doSearch() {
+            app.searched = true;
+            var where = getWhere();
+
+            var sheetName = "查询结果" + new Date().Format("yyyyMMddhhmmss");
+            var columns = getColumns();
+            layui.table.render({
+                //toolbar: '#toolbarTpl',
+                elem: '#Project',
+                where: where,
+                cellMinWidth: '120',
+                url: '/api/services/app/Project/GetReviewResult',
+                limit: 20,
+                height: 'full-450',
+                page: true,
+                title: sheetName,
+                id: 'Project',
+                skin: 'row',
+                even: true,
+                //done: config.onTableDone,
+                initSort: { field: 'ScoreManual', type: 'desc' },
+                cols: [columns]
+
+            });
+
+            return false;
+
+        }
+        function getColumns() {
+            var columns = [
+                //{ type: 'checkbox', fixed: 'left' },
+                //{ align: 'center', type: 'numbers', title: '序号' },
+                { align: 'center', field: 'matchName', title: '赛事名称', width: '200' },
+                { align: 'center', field: 'identifier', title: '届', width: '100' },
+                { align: 'center', field: 'awardName', title: '获奖', width: '120' },
+                { align: 'center', field: 'rankManual', title: '排名', width: '120' },
+                { align: 'center', field: 'scoreManual', title: '总分', width: '120' },
+
+                { align: 'left', field: 'projectName', templet: '#projectNameTpl', minWidth: '250', title: '项目名称' },
+                { align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创', width: '80' },
+                { align: 'center', field: 'prizeName', minWidth: '180', title: '奖项大类' },
+                { align: 'center', field: 'subMajorName', title: '奖项子类', width: '180' },
+                { align: 'center', field: 'designOrganizationName', title: '申报单位', width: '180' },
+                //{ align: 'center', field: 'buildingCompany', title: '建设单位' ,width:'180'},
+            ];
+            //modi20181104 终评综合类不加入专业列
+            //如果是综合类，则需要加入专业列
+            //if (app.prizeType === 1) {
+            //    for (var i = 0; i < app.majors.length; i++) {
+            //        columns.push({ align: 'center', field: 'majorScore' + i + "Final", title: app.majors[i].BriefName });
+            //    }
+            //}
+            //columns = columns.concat([{ align: 'center', field: 'rankChampion', title: '排名' },
+            //{ align: 'center', field: 'expertCountAllChampion', title: '分发专家' },
+            //    { align: 'center', field: 'expertCountRankedChampion', title: '打分专家' },
+            //{ align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
+            return columns;
+        }
+        function doExport() {
+            abp.message.confirm("确认导出?", function () {
+                var where = getWhere();
+                where.limit = 1000;
+                func.runAsync(abp.services.app.project.doResultSearchExport(where).done(function (data) {
+                    _hidden.location.href = data;
+                    console.log(data);
+                }));
+            })
+        }
+        //打开申报窗口
+        function showReport(projectId, prizeName) {
+            var title = prizeName;
+            top.layer.open({
+                type: 2,
+                title: title,
+                shadeClose: false,
+                shade: 0.8,
+                area: ['100%', '100%'],
+                content: "/GroupManager/View?projectId=" + projectId,
+                btn: ['关闭']
+            })
+
+        }
+    </script>
+</body>
+</html>
+

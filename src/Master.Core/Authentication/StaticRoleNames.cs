@@ -21,6 +21,10 @@ namespace Master.Authentication
             /// </summary>
             public const string ProjectReporter = "ProjectReporter|项目填报人";
             /// <summary>
+            /// 项目查看人员
+            /// </summary>
+            public const string ProjectViewer = "ProjectViewer|项目查看人";
+            /// <summary>
             /// 分子公司科管
             /// </summary>
             public const string SubManager = "SubManager|分子公司科管";

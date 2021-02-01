@@ -36,6 +36,7 @@ namespace Master.Web.Controllers
 
         public BackUpManager BackUpManager { get; set; }
         public ProjectAppService ProjectAppService { get; set; }
+        public MatchManager MatchManager { get; set; }
         public HomeController(ISessionAppService sessionAppService, UserManager userManager, IRepository<Setting> settingRepository, IHostingEnvironment hostingEnvironment, IRepository<MatchInstance, int> matchInstanceRepository)
         {
             _userManager = userManager;
@@ -90,6 +91,11 @@ namespace Master.Web.Controllers
             if (AbpSession.IsExpert())
             {
                 return View("Index_Review", loginInfo);
+            }
+            if (AbpSession.IsProjectViewer())
+            {
+                ViewData["MatchNames"] = await MatchManager.GetAll().Select(o => o.Name).ToListAsync();
+                return View("ProjectView", loginInfo);
             }
             return View(loginInfo);
         }
