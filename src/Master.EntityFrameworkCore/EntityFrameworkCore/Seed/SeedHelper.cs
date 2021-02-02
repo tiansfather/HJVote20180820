@@ -43,7 +43,7 @@ namespace Master.EntityFrameworkCore.Seed
                     .ToList();
             }
 
-            var rolesToBeCreated = new string[] { StaticRoleNames.Host.Admin, StaticRoleNames.Host.GroupManager, StaticRoleNames.Host.MatchManager, StaticRoleNames.Host.ProjectReporter, StaticRoleNames.Host.SubManager,StaticRoleNames.Host.MajorManager, StaticRoleNames.Host.SystemManager, StaticRoleNames.Host.Expert };
+            var rolesToBeCreated = new string[] { StaticRoleNames.Host.Admin, StaticRoleNames.Host.GroupManager, StaticRoleNames.Host.MatchManager, StaticRoleNames.Host.ProjectReporter, StaticRoleNames.Host.SubManager,StaticRoleNames.Host.MajorManager, StaticRoleNames.Host.SystemManager, StaticRoleNames.Host.Expert,StaticRoleNames.Host.ProjectViewer };
             foreach(var roleDefinition in rolesToBeCreated)
             {
                 var roleName = roleDefinition.Split('|')[0];

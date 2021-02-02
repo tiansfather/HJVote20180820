@@ -86,7 +86,7 @@
                                             <el-input v-model="form.awardRank" type="number"></el-input>
                                         </el-form-item>
                                         <el-form-item label="评选名称">
-                                            <el-input v-model="form.matchName"></el-input>
+                                            @*<el-input v-model="form.matchName"></el-input>*@
                                             <el-select v-model="form.matchName" placeholder="全部" clearable>
                                                 <el-option v-for="item in matchNames"
                                                            :key="item"
@@ -172,7 +172,7 @@
             data: {
                 form: {},
                 searched: false,
-                matchNames:@(Newtonsoft.Json.JsonConvert.SerializeObject(matchNames)),
+                matchNames:@(Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(matchNames))),
             },
             computed: {
 
