@@ -4,13 +4,13 @@
 @using Abp.Domain.Entities;
 @using Master.Organizations;
 @model Prize
-@{ 
+@{
     var allSubMajors = Model.PrizeSubMajors;
     var prizeSubMajors = allSubMajors.Where(o => o.Checked);
     var subMajorId = ViewData["subMajorId"].ToString();
     int? prizeSubMajorId = null;
-    var thirdLevelMajors=ViewData["ThirdLevelMajors"] as List<string>;//第三级专业
-    //如果是专业类或混排类，只需要列出对应选中的专业
+    var thirdLevelMajors = ViewData["ThirdLevelMajors"] as List<string>;//第三级专业
+                                                                        //如果是专业类或混排类，只需要列出对应选中的专业
     if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
     {
         prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == int.Parse(subMajorId));
@@ -18,6 +18,8 @@
 
     }
     var matchResources = ViewData["matchResources"] as List<MatchResource>;
+    var matchInstance = ViewData["matchInstance"] as MatchInstance;
+    var simpleMode = matchInstance.MatchInstanceType == MatchInstanceType.简单评选项目;
 }
 <style>
     .layui-collapse {
@@ -172,7 +174,7 @@
                                         <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                             @foreach (var thirdLevelMajor in thirdLevelMajors)
                                             {
-                                                <label><input type="checkbox" value="@thirdLevelMajor" v-model="project.thirdLevelMajors" disabled/>@thirdLevelMajor</label>
+                                                <label><input type="checkbox" value="@thirdLevelMajor" v-model="project.thirdLevelMajors" disabled />@thirdLevelMajor</label>
                                             }
                                         </div>
                                     </div>
@@ -189,69 +191,73 @@
                                     <input style="margin-left:20px" type="text" v-show="project.hasCoorparation" v-model="project.coorparation" />
                                 </div>
                             </div>
-                            @if (prizeSubMajors.Count() > 0)
+                            @if (!simpleMode)
                             {
-                                <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
-                                    <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
-                                        <label>我方承担合作内容:</label>
+                                @if (prizeSubMajors.Count() > 0)
+                                {
+                                    <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
+                                            <label>我方承担合作内容:</label>
+                                        </div>
+                                        <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
+                                            @foreach (var subMajor in prizeSubMajors)
+                                            {
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>@subMajor.Major.BriefName:</label>
+                                                </div>
+                                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                                    <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').fangAn" disabled />方案</label>
+                                                    <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').chuShe" disabled />初设</label>
+                                                    <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').shiGongTu" disabled />施工图</label>
+                                                    <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').hasOther" disabled />其它</label>
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').other" />
+                                                    <label style="margin-left:10px;">合作单位</label>
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').coorperation" />
+                                                </div>
+                                            }
+                                        </div>
                                     </div>
-                                    <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
-                                        @foreach (var subMajor in prizeSubMajors)
-                                        {
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>@subMajor.Major.BriefName:</label>
-                                            </div>
-                                            <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').fangAn" disabled />方案</label>
-                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').chuShe" disabled />初设</label>
-                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').shiGongTu" disabled />施工图</label>
-                                                <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').hasOther" disabled />其它</label>
-                                                <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').other" />
-                                                <label style="margin-left:10px;">合作单位</label>
-                                                <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').coorperation" />
-                                            </div>
-                                        }
+                                }
+                                <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                    <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                        <label>建设单位:</label>
+                                    </div>
+                                    <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                        <input type="text" v-model="project.buildingCompany" />
+                                    </div>
+                                    <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                        <label>建设地点<font color="red">*</font>:</label>
+                                    </div>
+                                    <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                        国<input type="text" v-model="project.buildingCountry" style="width:50px;margin-left:10px" />
+                                        省<input type="text" v-model="project.buildingProvince" style="width:50px;margin-left:10px" />
+                                        市<input type="text" v-model="project.buildingCity" style="width:50px;margin-left:10px" />
                                     </div>
                                 </div>
+                                @if (prizeSubMajors.Count() > 0)
+                                {
+                                    <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
+                                            <label>参与人员:</label>
+                                        </div>
+                                        <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
+                                            @foreach (var subMajor in prizeSubMajors)
+                                            {
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>@subMajor.Major.BriefName:</label>
+                                                </div>
+                                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                                    @for (var i = 1; i <= 10; i++)
+                                                    {
+                                                        <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
                             }
-                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
-                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                    <label>建设单位:</label>
-                                </div>
-                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                    <input type="text" v-model="project.buildingCompany" />
-                                </div>
-                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                    <label>建设地点<font color="red">*</font>:</label>
-                                </div>
-                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                    国<input type="text" v-model="project.buildingCountry" style="width:50px;margin-left:10px" />
-                                    省<input type="text" v-model="project.buildingProvince" style="width:50px;margin-left:10px" />
-                                    市<input type="text" v-model="project.buildingCity" style="width:50px;margin-left:10px" />
-                                </div>
-                            </div>
-                            @if (prizeSubMajors.Count() > 0)
-                            {
-                                <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
-                                    <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
-                                        <label>参与人员:</label>
-                                    </div>
-                                    <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
-                                        @foreach (var subMajor in prizeSubMajors)
-                                        {
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>@subMajor.Major.BriefName:</label>
-                                            </div>
-                                            <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                @for (var i = 1; i <= 10; i++)
-                                                {
-                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />
-                                                }
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            }
+
                         </div>
                     </div>
                 </div>

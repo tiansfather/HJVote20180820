@@ -78,7 +78,7 @@ namespace Master.Web.Controllers
             //所有单位
             var organizations = (await OrganizationManager.FindChildrenAsync(null, true));
             ViewData["organizations"] = organizations;
-
+            ViewData["matchInstance"] = matchInstance;
             return View(prize);
         }
         public async Task<IActionResult> View(int projectId)

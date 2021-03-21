@@ -35,6 +35,13 @@
                 </select>
             </div>
         </div>
+        <div class="layui-form-item" pane="">
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-block">
+                <input type="radio" name="MatchInstanceType" value="0" title="复杂建筑项目" >
+                <input type="radio" name="MatchInstanceType" value="1" title="简单评选项目">
+            </div>
+        </div>
         <div class="layui-form-item layui-form-text">
             <label class="layui-form-label">备注</label>
             <div class="layui-input-block">
@@ -55,11 +62,11 @@
                 @*<a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>*@
             }
             @*@if (Model.MatchInstanceStatus == MatchInstanceStatus.Reviewing)
-        {
-            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
-            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>
-            <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(4)" rel="4">评选完成</a>
-        }*@
+            {
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(3)" rel="3">申报结束</a>
+                <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(4)" rel="4">评选完成</a>
+            }*@
             @if (Model.MatchInstanceStatus == MatchInstanceStatus.Complete)
             {
                 <a class="layui-layer-btn1 layui-bg-green" href="javascript:doSubmit(2)" rel="2">发布</a>
@@ -68,14 +75,14 @@
         </div>
         @if (Model.MatchInstanceStatus != MatchInstanceStatus.Draft)
         {
-        <div class="layui-layer-btn layui-layer-btn-" style="text-align:center">
-            @if (Model.MatchInstanceStatus == MatchInstanceStatus.Applying)
-            {
-            <a class="layui-layer-btn1 layui-bg-orange" href="javascript:doReSubmit()">重新发布</a>
-            }
-            
-            <a class="layui-layer-btn1 layui-bg-red" href="javascript:doClear()">清空本届赛事</a>
-        </div>
+            <div class="layui-layer-btn layui-layer-btn-" style="text-align:center">
+                @if (Model.MatchInstanceStatus == MatchInstanceStatus.Applying)
+                {
+                    <a class="layui-layer-btn1 layui-bg-orange" href="javascript:doReSubmit()">重新发布</a>
+                }
+
+                <a class="layui-layer-btn1 layui-bg-red" href="javascript:doClear()">清空本届赛事</a>
+            </div>
         }
 
         @*<div class="layui-form-item">
@@ -94,9 +101,10 @@
 </div>
 
 @section scripts{
-<script>
+    <script>
         config.ready = function () {
             $("select[name='Year']").val('@Model.Year');
+            $("input[name='MatchInstanceType'][value='@((int)Model.MatchInstanceType)']").attr("checked", true);
             layui.form.render();
         }
         function doSubmit(status) {
@@ -127,6 +135,6 @@
                 }));
             });
         }
-</script>
+    </script>
 }
 
