@@ -443,6 +443,7 @@
             });
         }
         var app;
+        var simpleMode = "@simpleMode" == "True";
         var allSubMajors=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(allSubMajors.Select(o =>new { o.MajorId ,o.Major.BriefName}) ));
         var prizeSubMajors =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(prizeSubMajors.Select(o => o.MajorId) ));
         prizeSubMajors.push('');//子专业id为空表示主专业
@@ -807,7 +808,7 @@
                 flag = false;
                 return false;
             }
-            if (flag && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
+            if (flag && !simpleMode && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
                 layer.msg("请填写建设地点", { icon: 5, anim: 6 });
                 flag = false;
                 return false;
