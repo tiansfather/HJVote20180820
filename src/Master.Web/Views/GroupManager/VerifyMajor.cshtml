@@ -45,10 +45,14 @@
                     <tr>
                         <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
                         <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',sort:true}">@L("项目名称")</th>
-                        <th lay-data="{align:'center',field:'reportSN',sort:true}">@L("申报序号")</th>
+                        @*<th lay-data="{align:'center',field:'reportSN',sort:true}">@L("申报序号")</th>*@
+                        <th lay-data="{align:'center',field:'projectSN',sort:true}">@L("归档编号")</th>
+                        <th lay-data="{align:'center',field:'designTime',sort:true}">@L("设计时间")</th>
                         <th lay-data="{align:'center',field:'prizeName',sort:true}">@L("奖项大类")</th>
                         <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
+                        <th lay-data="{align:'center',field:'buildingType'}">@L("建筑类别")</th>
                         <th lay-data="{align:'center',field:'designOrganizationName',sort:true}">@L("申报单位")</th>
+                        <th lay-data="{align:'center',field:'coorperation'}">@L("合作单位")</th>
                         <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl',sort:true}">@L("是否原创")</th>
                     </tr>
                 </thead>

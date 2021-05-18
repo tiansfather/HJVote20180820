@@ -67,7 +67,8 @@ namespace Master.Projects
                     o.ProjectSN,
                     o.CreatorUser.Name,
                     BuildingType = GetBuildingType(o),
-                    Coorperation = GetCoorperation(o)
+                    Coorperation = GetCoorperation(o),
+                    DesignTime=GetDesignTime(o)
                 }).ToListAsync();
 
             var result = new ResultPageDto()
@@ -90,6 +91,26 @@ namespace Master.Projects
             coorperations.AddRange(project.ProjectMajorInfos.Select(o => o.GetData<string>("Coorperation")).ToList());
             coorperations.RemoveAll(o => string.IsNullOrEmpty(o));
             return string.Join(',', coorperations);
+        }
+        private string GetDesignTime(Project project)
+        {
+            var majorInfo = project.ProjectMajorInfos.Where(o => o.MajorId == null).SingleOrDefault();
+            if (majorInfo == null)
+            {
+                return "";
+            }
+            else
+            {
+                var layouts = majorInfo.GetData<List<MatchResourceFormDesignItem>>("Layouts");
+                var allControls = new List<MatchResourceFormDesignItem>();
+                allControls.AddRange(layouts);
+                foreach (var item in layouts)
+                {
+                    allControls.AddRange(GetChildren(item));
+                }
+                var control = allControls.Where(o => o.Id == "1566533430205775" || o.FormName== "设计时间下拉").FirstOrDefault();
+                return control != null ? control.Value : "";
+            }
         }
         /// <summary>
         /// 获取建筑类别
