@@ -112,10 +112,10 @@
                                         <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                             <select v-model="project.designOrganizationId">
                                                 <option value="">--请选择--</option>
-                                                @foreach (var organization in organizations.Where(o => o.ParentId == null).OrderBy(o => o.Sort))
+                                                @foreach (var organization in organizations.Where(o => o.ParentId == null && o.IsActive).OrderBy(o => o.Sort))
                                                 {
                                                     <optgroup label="@organization.BriefName">
-                                                        @foreach (var subOrganization in organizations.Where(o => o.ParentId == organization.Id).OrderBy(o => o.Sort))
+                                                        @foreach (var subOrganization in organizations.Where(o => o.ParentId == organization.Id && o.IsActive).OrderBy(o => o.Sort))
                                                         {
                                                             <option value="@subOrganization.Id">@subOrganization.BriefName</option>
                                                         }

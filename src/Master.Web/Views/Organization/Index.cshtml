@@ -79,6 +79,12 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="layui-form-item" pane="">
+                                <label class="layui-form-label">有效</label>
+                                <div class="layui-input-block">
+                                    <input type="checkbox" :checked="currentItem.isActive" name="IsActive" value="true" lay-skin="switch" lay-filter="swtichActive" lay-text="ON|OFF">
+                                </div>
+                            </div>
                             <div class="layui-form-item layui-form-text">
                                 <label class="layui-form-label">备注</label>
                                 <div class="layui-input-block">
@@ -91,10 +97,10 @@
                             </div>
                             <vc:form-submit param="@(new FormSubmitViewParam() { ModuleKey="Organization",ButtonKey="Submit",Callback="submitCallback"})"></vc:form-submit>
                             @*<div class="layui-form-item">
-                            <div class="layui-input-block">
-                                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
-                            </div>
-                        </div>*@
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="submit">提交</button>
+            </div>
+        </div>*@
                         </form>
                     </div>
 
@@ -151,6 +157,7 @@
                         $("#userDiv").hide();
                         if (treeNode.level >= 0) {
                             app.currentItem = treeNode;
+                            app.$nextTick(function () { layui.form.render(); });
                             reloadDropDown();
                         }
                         if (treeNode.level == 1) {
@@ -229,6 +236,9 @@
                     $("#app").removeClass("layui-hide");
                     this.doAdd();
                     $('div[cytype="dropDownTool"]').dropDownTool();
+                    layui.form.on('switch(swtichActive)', function (data) {
+                        app.currentItem.isActive = data.elem.checked;                       
+                    });  
                 }
 
             });

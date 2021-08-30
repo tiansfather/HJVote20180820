@@ -45,6 +45,7 @@ namespace Master.Organizations
         /// </summary>
         public virtual ICollection<Organization> Children { get; set; }
         public int Sort { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public Organization()
         {

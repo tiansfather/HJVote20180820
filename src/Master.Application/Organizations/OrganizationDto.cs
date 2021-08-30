@@ -17,6 +17,7 @@ namespace Master.Organizations
         public string BriefName { get; set; }
         public string BriefCode { get; set; }
         public int Sort { get; set; }
+        public bool IsActive { get; set; }
         public string Remarks { get; set; }
         public string ExtendData1 { get; set; }
         public string ExtendData2 { get; set; }

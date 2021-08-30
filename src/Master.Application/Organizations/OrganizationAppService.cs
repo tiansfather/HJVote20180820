@@ -28,6 +28,7 @@ namespace Master.Organizations
         {
             var manager = Manager as OrganizationManager;
             Organization organization = null;
+            
             if (request.Datas["Id"]=="0")
             {
                 //添加
