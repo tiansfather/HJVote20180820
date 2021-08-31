@@ -114,6 +114,8 @@ namespace Master.Matches
             //奖项
             await _prizeRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);
             await CurrentUnitOfWork.SaveChangesAsync();
+            //评审信息
+            await _reviewRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);
             //专业分类
             await _majorRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);            
             //赛事资源

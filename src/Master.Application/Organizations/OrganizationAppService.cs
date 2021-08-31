@@ -32,6 +32,10 @@ namespace Master.Organizations
             if (request.Datas["Id"]=="0")
             {
                 //添加
+                if(request.Datas.ContainsKey("IsActive") && string.IsNullOrEmpty(request.Datas["IsActive"]))
+                {
+                    request.Datas["IsActive"] = "false";
+                }
                 organization =await manager.LoadEntityFromDatas(request.Datas);
                 //var organization = new Organization()
                 //{
