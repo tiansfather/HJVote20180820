@@ -96,8 +96,9 @@
                                     <label>归档编号<font color="red">*</font>:</label>
                                 </div>
                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                    <input type="text" v-model="project.projectSN" style="width:200px" />
+                                    <input type="text" v-model="project.projectSN" style="width:300px" />
                                     <label><input type="checkbox" :checked="project.isOriginal" v-model="project.isOriginal" />原创</label>
+                                    <label style="margin-left:20px;color:blue">根据本项目涉及的课题分别提交归档编号，多个编号请用逗号分隔</label>
                                 </div>
                             </div>
                             <div class="layout layui-col-md12 layout-height3" style="border-right:0">
