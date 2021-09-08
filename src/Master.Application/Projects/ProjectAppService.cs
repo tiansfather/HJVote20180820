@@ -137,7 +137,7 @@ namespace Master.Projects
                 {
                     allControls.AddRange(GetChildren(item));
                 }
-                var control = allControls.Where(o => o.Id == "1536590402055720" || o.FormName == "建筑类别下拉").FirstOrDefault();
+                var control = allControls.Where(o => o.Id == "1536590402055720" || o.Id== "1566534458218148" || o.FormName == "建筑类别下拉").FirstOrDefault();
                 return control != null ? control.Value : "";
             }
         }

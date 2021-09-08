@@ -33,7 +33,7 @@ namespace Master.Web.Views.Shared.Components.ProjectView
             }
             var prize = await PrizeManager.GetByIdAsync(project.PrizeId);
             ProjectManager.Repository.EnsurePropertyLoaded(project, o => o.PrizeSubMajor);
-            var matchInstance = await MatchInstanceManager.GetByIdAsync(project.MatchInstanceId);
+            var matchInstance = await MatchInstanceManager.Repository.GetAllIncluding(o=>o.Match).Where(o=>o.Id==project.MatchInstanceId).FirstOrDefaultAsync();
             var matchResources = await MatchResourceManager.Repository.GetAll().Where(o => o.MajorId == prize.MajorId && o.MatchInstanceId == project.MatchInstanceId && o.MatchResourceStatus == Matches.MatchResourceStatus.Publish).ToListAsync();
             ViewData["matchInstance"] = matchInstance;
             ViewData["matchResources"] = matchResources;

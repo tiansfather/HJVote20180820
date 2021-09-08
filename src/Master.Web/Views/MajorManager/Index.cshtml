@@ -46,7 +46,10 @@
                             <th lay-data="{align:'center',field:'prizeName',sort:true}">@L("奖项大类")</th>
                             <th lay-data="{align:'center',field:'subMajorName',sort:true}">@L("奖项子类")</th>
                             <th lay-data="{align:'center',field:'designOrganizationName',sort:true}">@L("申报单位")</th>
-                            <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl',sort:true}">@L("是否原创")</th>
+                            @if (matchInstance.Match.Name != "科技进步奖评选")
+                            {
+                                <th lay-data="{align:'center',field:'isOriginal',templet:'#isOriginalTpl'}">@L("是否原创")</th>
+                            }
                         </tr>
                     </thead>
                 </table>
