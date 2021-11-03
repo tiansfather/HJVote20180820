@@ -102,6 +102,7 @@ namespace Master.Projects
             else
             {
                 var layouts = majorInfo.GetData<List<MatchResourceFormDesignItem>>("Layouts");
+                if (layouts == null) return "";
                 var allControls = new List<MatchResourceFormDesignItem>();
                 allControls.AddRange(layouts);
                 foreach (var item in layouts)
