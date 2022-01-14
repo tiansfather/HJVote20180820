@@ -42,6 +42,7 @@
                         <th lay-data="{align:'center',field:'year'}">@L("年份")</th>
                         <th lay-data="{align:'center',field:'matchInstanceStatus',templet:'#matchInstanceStatusTpl'}">@L("状态")</th>
                         <th lay-data="{align:'center',field:'remarks'}">@L("备注")</th>
+                       @* <th lay-data="{align:'center',field:'matchInstanceDisplayMode',templet: '#switchTpl'}">@L("项目展示")</th>*@
                         <th lay-data="{align:'center',field:'',templet:'#downloadTpl'}">赛事数据</th>
                         <th lay-data="{align:'center', toolbar: '#toolbar'}">@L("操作")</th>
                     </tr>
@@ -59,6 +60,10 @@
     <a href="{{d.dataReviewPath}}" target="_hidden" style="text-decoration:underline;color:blue">评审数据</a>
     {{#}}}
 </script>
+<script type="text/html" id="switchTpl">
+  <!-- 这里的 checked 的状态只是演示 -->
+  <input type="checkbox" name="matchInstanceDisplayMode" value="{{d.id}}" lay-skin="switch" lay-text="项目明细|仅项目名称" lay-filter="matchInstanceDisplayMode" {{ d.matchInstanceDisplayMode == '0' ? 'checked' : '' }}>
+</script>
 <script type="text/html" id="toolbar">
     <a dataid="{{d.id}}" buttonname="@L("编辑")" modulekey="MatchInstance" class="layui-btn layui-btn-xs " params="{&quot;area&quot;: [&quot;600px&quot;, &quot;550px&quot;],&quot;btn&quot;:null}" lay-event="Edit" confirmmsg="" buttonactiontype="Form" buttonactionurl="/Matches/Edit" onclick="func.callModuleButtonEvent()">@L("编辑")</a>
     <a dataid="{{d.id}}"  class="layui-btn layui-btn-xs layui-btn-normal"  onclick="doExport({{d.id}})">导出赛事</a>
@@ -69,7 +74,8 @@
     <script>
         config.ready = function () {
             var element = layui.element,
-                table = layui.table;
+                table = layui.table,
+                form=layui.form;
             table.on('sort(MatchInstance)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
                 //console.log(obj.field); //当前排序的字段名
                 //console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
@@ -85,7 +91,11 @@
                     }
                 });
             });
-
+            //监听性别操作
+              form.on('switch(matchInstanceDisplayMode)', async function(obj){
+                  await abp.services.app.matchInstance.setMatchInstanceDisplayMode(this.value,obj.elem.checked?0:1);
+                  layer.msg('设置成功');
+              });
             config.refresh();
 
 

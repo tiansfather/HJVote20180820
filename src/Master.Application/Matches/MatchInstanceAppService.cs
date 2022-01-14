@@ -57,7 +57,7 @@ namespace Master.Matches
 
             var data = (await pageResult.Queryable.Include(o => o.Match).ToListAsync())
                 .Select(o => {
-                    return new { o.Id, MatchName=o.Match.Name, o.Identifier,o.Year,o.Remarks,o.MatchInstanceStatus,o.DataProjectPath ,o.DataReviewPath};
+                    return new { o.Id, MatchName=o.Match.Name, o.Identifier,o.Year,o.Remarks,o.MatchInstanceStatus,o.DataProjectPath ,o.DataReviewPath,o.MatchInstanceDisplayMode};
                 });
 
 
@@ -131,6 +131,18 @@ namespace Master.Matches
             var manager = Manager as MatchInstanceManager;
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
             await manager.ReSyncMatchInstanceResource(matchInstance);
+        }
+        /// <summary>
+        /// 设置赛事的项目展示方式
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
+        public virtual async Task SetMatchInstanceDisplayMode(int matchInstanceId,MatchInstanceDisplayMode mode)
+        {
+            var manager = Manager as MatchInstanceManager;
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            matchInstance.MatchInstanceDisplayMode = mode;
         }
 
         #region 赛事导出

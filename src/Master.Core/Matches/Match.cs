@@ -37,6 +37,7 @@ namespace Master.Matches
         public virtual MatchInstanceStatus MatchInstanceStatus { get; set; } = MatchInstanceStatus.Draft;
         public virtual MatchInstanceDisplayScope DisplayScope { get; set; } = MatchInstanceDisplayScope.Normal;
         public virtual MatchInstanceType MatchInstanceType { get; set; } = MatchInstanceType.复杂建筑项目;
+        public virtual MatchInstanceDisplayMode MatchInstanceDisplayMode { get; set; } = MatchInstanceDisplayMode.默认;
         [NotMapped]
         public virtual string Name
         {
@@ -130,5 +131,14 @@ namespace Master.Matches
     {
         复杂建筑项目,
         简单评选项目
+    }
+    /// <summary>
+    /// 项目内容展示方式
+    /// </summary>
+
+    public enum MatchInstanceDisplayMode
+    {
+        默认,
+        仅显示名称
     }
 }

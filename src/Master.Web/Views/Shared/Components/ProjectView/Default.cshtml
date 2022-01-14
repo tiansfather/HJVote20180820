@@ -21,6 +21,8 @@
     var matchInstance = ViewData["matchInstance"] as MatchInstance;
     var matchName = matchInstance.Match?.Name;
     var simpleMode = matchInstance.MatchInstanceType == MatchInstanceType.简单评选项目;
+    //是否只显示项目名称
+    var showProjectNameOnly = matchInstance.MatchInstanceDisplayMode==MatchInstanceDisplayMode.仅显示名称;
 }
 <style>
     .layui-collapse {
@@ -69,7 +71,7 @@
         <div class="layui-tab-item layui-show">
 
             <div class="layui-collapse">
-                @if(true)
+                @if(showProjectNameOnly)
                 {
                     <div class="layui-colla-item">
                         <h2 class="layui-colla-title"><span>项目基本信息</span></h2>
@@ -87,7 +89,7 @@
                         </div>
                     </div>
                 }
-                @if (false)
+                @if (!showProjectNameOnly)
                 {
                     <div class="layui-colla-item">
                         <h2 class="layui-colla-title"><span>项目基本信息</span></h2>
@@ -298,7 +300,7 @@
                     var mainMajorFormResoure = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DynamicForm && o.SubMajorId == null);
                     //父专业的下载样例
                     var mainMajorDownLoadList = matchResources.FirstOrDefault(o => o.MatchResourceType == MatchResourceType.DownloadList && o.SubMajorId == null);
-                    if (mainMajorFormResoure != null && false)
+                    if (mainMajorFormResoure != null && !showProjectNameOnly)
                     {
                         <div class="layui-colla-item">
                             <h2 class="layui-colla-title">
