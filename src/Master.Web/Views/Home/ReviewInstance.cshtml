@@ -185,7 +185,7 @@
                                 <th><div align="center">项目名称</div></th>
                                 <th><div align="center">奖项</div></th>
                                 <th><div align="center">专业</div></th>
-                                <th><div align="center">申报单位</div></th>
+                                @*<th><div align="center">申报单位</div></th>*@
                                 @if (currentRound.ReviewMethod != ReviewMethod.Vote)
                                 {
                                     <th><div align="center">回 避</div></th>
@@ -209,7 +209,7 @@
                                 <td><a @@click="showProject(project.id)" href="#_" style="text-decoration:underline;color:blue">{{project.projectName}}</a></td>
                                 <td align="center">{{project.prizeName}}</td>
                                 <td align="center">{{project.subMajorName}}</td>
-                                <td align="center">{{project.designOrganizationName}}</td>
+                                @*<td align="center">{{project.designOrganizationName}}</td>*@
                                 @if (currentRound.ReviewMethod != ReviewMethod.Vote)
                                 {
                                     <td>
