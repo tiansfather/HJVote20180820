@@ -488,23 +488,26 @@
             //    return false;
             //}
             //需要限制，不允许有专家回避所有项目
-            for (var i = 0; i < expertdata.length; i++) {
-                var expertId = expertdata[i].id;
-                var allAvoid = true;
-                //console.log("expertid:" + expertId);
-                for (var j = 0; j < projectdata.length; j++) {
-                    var excludeExpertIds = projectdata[j].excludeExpertIDs;
-                    //console.log("exclude:" + excludeExpertIds);
-                    if (!excludeExpertIds || excludeExpertIds.split(',').indexOf(expertId.toString()) < 0) {
-                        allAvoid = false;
-                        break;
+            if(projectdata.length>0){
+                for (var i = 0; i < expertdata.length; i++) {
+                    var expertId = expertdata[i].id;
+                    var allAvoid = true;
+                    //console.log("expertid:" + expertId);
+                    for (var j = 0; j < projectdata.length; j++) {
+                        var excludeExpertIds = projectdata[j].excludeExpertIDs;
+                        //console.log("exclude:" + excludeExpertIds);
+                        if (!excludeExpertIds || excludeExpertIds.split(',').indexOf(expertId.toString()) < 0) {
+                            allAvoid = false;
+                            break;
+                        }
+                    }
+                    if (allAvoid) {
+                        abp.message.error("专家" + expertdata[i].name + "回避了所有项目!请直接将他从参选专家中移除");
+                        return false;
                     }
                 }
-                if (allAvoid) {
-                    abp.message.error("专家" + expertdata[i].name + "回避了所有项目!请直接将他从参选专家中移除");
-                    return false;
-                }
-			}
+            }
+            
 			projectdata.sort(function (a, b) {
                 return a.sort - b.sort;
 			});
