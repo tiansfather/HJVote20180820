@@ -40,9 +40,10 @@
 
 
 
-            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200', toolbar:'<div></div>',url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus=2 and projectsource=1'}, page:true,limit:30, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
+            <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-200', toolbar:'#toolbar',url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus=2 and projectsource=1'}, page:true,limit:30, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
                 <thead>
                     <tr>
+                        <th lay-data="{align:'center',type:'checkbox'}"></th>
                         <th lay-data="{align:'center',type:'numbers'}">@L("序号")</th>
                         <th lay-data="{align:'left',field:'projectName',templet:'#projectNameTpl',sort:true}">@L("项目名称")</th>
                         @*<th lay-data="{align:'center',field:'reportSN',sort:true}">@L("申报序号")</th>*@
@@ -67,7 +68,11 @@
 <script type="text/html" id="projectNameTpl">
     <a href="#_" style="color:blue;text-decoration:underline;" onclick="showReport('{{d.id}}','{{d.prizeName}}')">{{d.projectName}}</a>
 </script>
-
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckData">批量通过</button>
+  </div>
+</script>
 
 @section scripts{
     <script>
@@ -107,7 +112,17 @@
 					}
 				});
 			});
-
+            table.on('toolbar(Project)',function(obj){
+                var data = table.checkStatus(obj.config.id).data;
+                layer.confirm('确定对选中项目进行批量通过？', function (index) {
+                    var ids=data.map(o=>o.id);
+                    func.runAsync(abp.services.app.project.multiVerify(ids).done(function () {
+                        top.layer.msg("@L("提交成功")");
+                        doSearch();
+                        layer.close(index);
+                    }))
+                });
+            });
 			$('div[cytype="dropDownTool"]').dropDownTool();
 		}
         function doSearch() {

@@ -32,6 +32,7 @@ namespace Master.Projects
         public IRepository<ProjectTraceLog, int> ProjectTraceLogRepository { get; set; }
         public PrizeManager PrizeManager { get; set; }
         public MatchInstanceManager MatchInstanceManager { get; set; }
+
         /// <summary>
         /// 分页返回
         /// </summary>
@@ -41,14 +42,17 @@ namespace Master.Projects
         public override async Task<ResultPageDto> GetPageResult(RequestPageDto request)
         {
             var pageResult = await GetPageResultQueryable(request);
-            var data = await pageResult.Queryable
+            var projects = await pageResult.Queryable
                 .Include(o => o.DesignOrganization)
                 .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
                 .Include(o => o.ProjectMajorInfos)
                 .Include(o => o.Prize).ThenInclude(o => o.Major)
                 .Include(o => o.CreatorUser).ThenInclude(o => o.Organization)
                 .Include(o => o.CrossProject).ThenInclude(o => o.ProjectMajorInfos)
-                .Select(o => new {
+                .ToListAsync();
+            var data = projects
+                .Select(o => new
+                {
                     o.Id,
                     o.ProjectName,
                     o.PrizeId,
@@ -68,8 +72,8 @@ namespace Master.Projects
                     o.CreatorUser.Name,
                     BuildingType = GetBuildingType(o),
                     Coorperation = GetCoorperation(o),
-                    DesignTime=GetDesignTime(o)
-                }).ToListAsync();
+                    DesignTime = GetDesignTime(o)
+                });
 
             var result = new ResultPageDto()
             {
@@ -80,6 +84,7 @@ namespace Master.Projects
 
             return result;
         }
+
         private string GetCoorperation(Project project)
         {
             if (project.CrossProjectId.HasValue)
@@ -92,6 +97,7 @@ namespace Master.Projects
             coorperations.RemoveAll(o => string.IsNullOrEmpty(o));
             return string.Join(',', coorperations);
         }
+
         private string GetDesignTime(Project project)
         {
             var majorInfo = project.ProjectMajorInfos.Where(o => o.MajorId == null).SingleOrDefault();
@@ -109,10 +115,11 @@ namespace Master.Projects
                 {
                     allControls.AddRange(GetChildren(item));
                 }
-                var control = allControls.Where(o => o.Id == "1566533430205775" || o.FormName== "设计时间下拉").FirstOrDefault();
+                var control = allControls.Where(o => o.Id == "1566533430205775" || o.FormName == "设计时间下拉").FirstOrDefault();
                 return control != null ? control.Value : "";
             }
         }
+
         /// <summary>
         /// 获取建筑类别
         /// </summary>
@@ -138,10 +145,11 @@ namespace Master.Projects
                 {
                     allControls.AddRange(GetChildren(item));
                 }
-                var control = allControls.Where(o => o.Id == "1536590402055720" || o.Id== "1566534458218148" || o.FormName == "建筑类别下拉").FirstOrDefault();
+                var control = allControls.Where(o => o.Id == "1536590402055720" || o.Id == "1566534458218148" || o.FormName == "建筑类别下拉").FirstOrDefault();
                 return control != null ? control.Value : "";
             }
         }
+
         private List<MatchResourceFormDesignItem> GetChildren(MatchResourceFormDesignItem item)
         {
             var result = new List<MatchResourceFormDesignItem>();
@@ -153,6 +161,7 @@ namespace Master.Projects
 
             return result;
         }
+
         /// <summary>
         ///获取单个项目数据
         /// </summary>
@@ -173,6 +182,7 @@ namespace Master.Projects
 
             return projectDto;
         }
+
         /// <summary>
         /// 提交项目
         /// </summary>
@@ -229,16 +239,27 @@ namespace Master.Projects
 
                     await ProjectMajorInfoRepository.InsertAsync(majorInfo);
                 }
-
             }
-
 
             //项目状态变更
             if (project.ProjectStatus != ProjectStatus.Draft && project.ProjectStatus != ProjectStatus.Reject && project.ProjectSource != ProjectSource.Import)
             {
                 await ProjectManager.TraceLog(project.Id, "提交申报", project.ProjectStatus);
             }
+        }
 
+        /// <summary>
+        /// 批量通过
+        /// </summary>
+        /// <param name="projectIds"></param>
+        /// <param name="targetStatus"></param>
+        /// <returns></returns>
+        public virtual async Task MultiVerify(int[] projectIds)
+        {
+            foreach (var projectId in projectIds)
+            {
+                await Verify(projectId, ProjectStatus.UnderReview, null, true);
+            }
         }
 
         /// <summary>
@@ -264,10 +285,12 @@ namespace Master.Projects
                 if (targetStatus == ProjectStatus.UnderMajorVerify)
                 {
                     actionName = "初审通过";
-                } else if (targetStatus == ProjectStatus.UnderFinalVerify)
+                }
+                else if (targetStatus == ProjectStatus.UnderFinalVerify)
                 {
                     actionName = "专业鉴定通过";
-                } else if (targetStatus == ProjectStatus.UnderReview)
+                }
+                else if (targetStatus == ProjectStatus.UnderReview)
                 {
                     actionName = "审批通过";
                 }
@@ -275,8 +298,6 @@ namespace Master.Projects
             project.ProjectStatus = targetStatus;
             //记录日志
             await ProjectManager.TraceLog(projectId, actionName, targetStatus, reviewMsg);
-
-
         }
 
         /// <summary>
@@ -311,6 +332,7 @@ namespace Master.Projects
             Logger.Error("3:" + DateTime.Now.ToString("HH:mm:ss:fff"));
             return reviewProjectDtos;
         }
+
         /// <summary>
         /// 评选活动选择项目数据接口
         /// </summary>
@@ -333,7 +355,7 @@ namespace Master.Projects
             {
                 projectQuery = projectQuery.Where(o => o.DesignOrganizationId == organizationId);
             }
-            //
+
             if (review.ReviewType == ReviewType.Initial)
             {
                 //初评选择项目条件为待评选项目或者初评中项目
@@ -375,7 +397,6 @@ namespace Master.Projects
                 var reviewProjectDto = new ReviewProjectDto()
                 {
                     Id = project.Id,
-
                 };
                 reviewProjectDto.ProjectName = project.ProjectName;
                 reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
@@ -387,7 +408,7 @@ namespace Master.Projects
                 {
                     reviewProjectDto.Sort = GetLatestSortInReview(project.Id, allReviews);
                 }
-                
+
                 reviewProjectDtos.Add(reviewProjectDto);
             }
 
@@ -400,6 +421,7 @@ namespace Master.Projects
 
             return result;
         }
+
         /// <summary>
         /// 获取项目在评审中最后一个序号
         /// </summary>
@@ -409,7 +431,7 @@ namespace Master.Projects
         private int GetLatestSortInReview(int projectId, List<Review> allReviews)
         {
             var sort = 0;
-            foreach(var review in allReviews.OrderByDescending(o=>o.CreationTime))
+            foreach (var review in allReviews.OrderByDescending(o => o.CreationTime))
             {
                 var reviewProject = review.ReviewProjects.Where(o => o.Id == projectId).FirstOrDefault();
                 if (reviewProject != null)
@@ -426,11 +448,11 @@ namespace Master.Projects
         /// </summary>
         /// <param name="reviewId"></param>
         /// <returns></returns>
-        public virtual async Task<object> GetReviewProjectsByReviewId(int reviewId,string sourceProjectIds="")
+        public virtual async Task<object> GetReviewProjectsByReviewId(int reviewId, string sourceProjectIds = "")
         {
             var review = await ReviewRepository.GetAsync(reviewId);
 
-            var reviewProjectDtos = await ProjectToReviewProjectDtos(review.ReviewProjects.OrderBy(o=>o.Sort).ToList());
+            var reviewProjectDtos = await ProjectToReviewProjectDtos(review.ReviewProjects.OrderBy(o => o.Sort).ToList());
             if (!string.IsNullOrEmpty(sourceProjectIds))
             {
                 var sourceProjectIdsArr = sourceProjectIds.Split(',').Select(o => int.Parse(o));
@@ -441,6 +463,7 @@ namespace Master.Projects
         }
 
         #region 项目导入
+
         /// <summary>
         /// 导入项目
         /// </summary>
@@ -449,7 +472,7 @@ namespace Master.Projects
         /// <returns></returns>
         public virtual async Task<ResultDto> Import(int matchInstanceId, string filePath)
         {
-            string[] columnNeededs = { "项目名称",  "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家","建设省份","建设城市" };
+            string[] columnNeededs = { "项目名称", "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家", "建设省份", "建设城市" };
 
             try
             {
@@ -487,14 +510,13 @@ namespace Master.Projects
                     foreach (var project in projects)
                     {
                         //增加项目的专业信息
-                        var prize = await PrizeRepository.GetAllIncluding(o=>o.PrizeSubMajors).Where(o=>o.Id==project.PrizeId).SingleAsync();
+                        var prize = await PrizeRepository.GetAllIncluding(o => o.PrizeSubMajors).Where(o => o.Id == project.PrizeId).SingleAsync();
                         var allSubMajors = prize.PrizeSubMajors.Where(o => o.Checked);
                         //如果是专业类或混排类，只需要列出对应选中的专业
                         if (prize.PrizeType == PrizeType.Major || prize.PrizeType == PrizeType.Mixed)
                         {
                             allSubMajors = allSubMajors.Where(o => o.Id == project.PrizeSubMajorId.Value);
-
-                        }                        
+                        }
 
                         await ProjectManager.InsertAsync(project);
                         project.ProjectMajorInfos = new List<ProjectMajorInfo>();
@@ -519,7 +541,6 @@ namespace Master.Projects
                         }
                         await ProjectManager.TraceLog(project.Id, "导入", ProjectStatus.UnderReview);
                     }
-
                 }
                 return new ResultDto()
                 {
@@ -533,6 +554,7 @@ namespace Master.Projects
                 throw new UserFriendlyException(ex.Message);
             }
         }
+
         /// <summary>
         /// 将行信息转换为项目信息
         /// </summary>
@@ -541,7 +563,6 @@ namespace Master.Projects
         /// <returns></returns>
         private Project ReadRowToProject(int matchInstanceId, DataRow row, int rowIndex, DataTable dt, out List<ImportErrorDto> errors)
         {
-
             errors = new List<ImportErrorDto>();
             var projectNameStr = row["项目名称"].ToString();
             var isOriginalStr = row["是否原创"].ToString();
@@ -560,8 +581,8 @@ namespace Master.Projects
             var project = new Project()
             {
                 MatchInstanceId = matchInstanceId,
-                ProjectSource=ProjectSource.Import,
-                ProjectStatus=ProjectStatus.UnderReview//导入默认为待评选
+                ProjectSource = ProjectSource.Import,
+                ProjectStatus = ProjectStatus.UnderReview//导入默认为待评选
             };
             //数据验证
             //项目名称
@@ -644,9 +665,9 @@ namespace Master.Projects
                 project.PrizeId = prize.Id;
             }
             //奖项子类
-            if ( prize!=null)
+            if (prize != null)
             {
-                if((prize.PrizeType==Prizes.PrizeType.Major|| prize.PrizeType==Prizes.PrizeType.Mixed) && string.IsNullOrEmpty(subPrizeNameStr))
+                if ((prize.PrizeType == Prizes.PrizeType.Major || prize.PrizeType == Prizes.PrizeType.Mixed) && string.IsNullOrEmpty(subPrizeNameStr))
                 {
                     errors.Add(new ImportErrorDto()
                     {
@@ -663,7 +684,8 @@ namespace Master.Projects
                         Column = dt.Columns.IndexOf("奖项子类") + 1,
                         Message = $"奖项大类\"{prizeNameStr}\"不需要录入奖项子类"
                     });
-                }else if(!string.IsNullOrEmpty(subPrizeNameStr))
+                }
+                else if (!string.IsNullOrEmpty(subPrizeNameStr))
                 {
                     var subPrize = prize.PrizeSubMajors.Where(o => o.Major.BriefName == subPrizeNameStr || o.Major.DisplayName == subPrizeNameStr).SingleOrDefault();
                     if (subPrize == null)
@@ -680,14 +702,15 @@ namespace Master.Projects
                         project.PrizeSubMajorId = subPrize.Id;
                     }
                 }
-                
             }
-            
+
             return project;
         }
-        #endregion
+
+        #endregion 项目导入
 
         #region 项目导出
+
         public virtual async Task<string> DoExport(RequestPageDto requestPageDto)
         {
             var pageResult = await GetPageResultQueryable(requestPageDto);
@@ -698,9 +721,9 @@ namespace Master.Projects
                 .ToListAsync());
 
             var dt = BuildExportDataTable();
-            foreach(var project in projects)
+            foreach (var project in projects)
             {
-                var row=dt.NewRow();
+                var row = dt.NewRow();
                 row["项目名称"] = project.ProjectName;
                 row["是否原创"] = project.IsOriginalStr;
                 row["设计单位"] = project.DesignOrganization?.DisplayName;
@@ -717,24 +740,26 @@ namespace Master.Projects
                 dt.Rows.Add(row);
             }
             EnsureTempDirectoryCreated();
-            var filePath = "/temp/"+ Guid.NewGuid() + ".xlsx";
+            var filePath = "/temp/" + Guid.NewGuid() + ".xlsx";
             var fileName = HostingEnvironment.WebRootPath + filePath.Replace("/", "\\");
             Common.ExcelHelper.DataTableToExcel(dt, fileName, "Sheet1", true);
 
             return filePath;
         }
+
         private DataTable BuildExportDataTable()
         {
             string[] columnNeededs = { "项目名称", "是否原创", "设计单位", "联系人", "电话", "手机", "EMAIL", "申报奖项大类", "奖项子类", "建设单位", "建设国家", "建设省份", "建设城市" };
 
             var dt = new DataTable();
-            foreach(var columnName in columnNeededs)
+            foreach (var columnName in columnNeededs)
             {
                 DataColumn column = new DataColumn(columnName);
                 dt.Columns.Add(column);
             }
             return dt;
         }
+
         private void EnsureTempDirectoryCreated()
         {
             var tempDirectory = HostingEnvironment.WebRootPath + "\\temp";
@@ -743,9 +768,11 @@ namespace Master.Projects
                 System.IO.Directory.CreateDirectory(tempDirectory);
             }
         }
-        #endregion
 
-        #region 评选结果导出 
+        #endregion 项目导出
+
+        #region 评选结果导出
+
         public virtual async Task<string> DoResultExport(RequestPageDto requestPageDto)
         {
             var pageResult = await GetPageResultQueryable(requestPageDto);
@@ -753,7 +780,7 @@ namespace Master.Projects
                 .Include(o => o.DesignOrganization)
                 .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
                 .Include(o => o.Prize).ThenInclude(o => o.Major)
-                .Include(o=>o.MatchAward)
+                .Include(o => o.MatchAward)
                 .ToListAsync());
 
             var dt = BuildResultExportDataTable();
@@ -777,9 +804,10 @@ namespace Master.Projects
 
             return filePath;
         }
+
         private DataTable BuildResultExportDataTable()
         {
-            string[] columnNeededs = { "排名","总分","获奖","项目名称", "原创", "奖项大类", "奖项子类", "申报单位"};
+            string[] columnNeededs = { "排名", "总分", "获奖", "项目名称", "原创", "奖项大类", "奖项子类", "申报单位" };
 
             var dt = new DataTable();
             foreach (var columnName in columnNeededs)
@@ -789,14 +817,16 @@ namespace Master.Projects
             }
             return dt;
         }
-        #endregion
 
-        #region 评选查询结果导出 
+        #endregion 评选结果导出
+
+        #region 评选查询结果导出
+
         public virtual async Task<string> DoResultSearchExport(RequestPageDto requestPageDto)
         {
             var pageResult = await GetPageResultQueryable(requestPageDto);
             var projects = (await pageResult.Queryable
-                .Include(o=>o.MatchInstance).ThenInclude(o=>o.Match)
+                .Include(o => o.MatchInstance).ThenInclude(o => o.Match)
                 .Include(o => o.DesignOrganization)
                 .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
                 .Include(o => o.Prize).ThenInclude(o => o.Major)
@@ -826,9 +856,10 @@ namespace Master.Projects
 
             return filePath;
         }
+
         private DataTable BuildResultSearchExportDataTable()
         {
-            string[] columnNeededs = {"赛事名称","届", "获奖", "排名", "总分",  "项目名称", "原创", "奖项大类", "奖项子类", "申报单位" };
+            string[] columnNeededs = { "赛事名称", "届", "获奖", "排名", "总分", "项目名称", "原创", "奖项大类", "奖项子类", "申报单位" };
 
             var dt = new DataTable();
             foreach (var columnName in columnNeededs)
@@ -838,7 +869,9 @@ namespace Master.Projects
             }
             return dt;
         }
-        #endregion
+
+        #endregion 评选查询结果导出
+
         /// <summary>
         /// 获取评选结果
         /// </summary>
@@ -848,15 +881,17 @@ namespace Master.Projects
         {
             var pageResult = await GetPageResultQueryable(request);
             var data = (await pageResult.Queryable
-                .Include(o=>o.MatchInstance).ThenInclude(o=>o.Match)
+                .Include(o => o.MatchInstance).ThenInclude(o => o.Match)
                 .Include(o => o.DesignOrganization)
-                .Include(o=>o.ProjectMajorInfos)
+                .Include(o => o.ProjectMajorInfos)
                 .Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major)
                 .Include(o => o.Prize).ThenInclude(o => o.Major)
-                .Include(o=>o.MatchAward)
+                .Include(o => o.MatchAward)
                 .ToListAsync())
-                .Select(o => {
-                    return CacheManager.GetCache<int, object>("ProjectResultCache").Get(o.Id, id => {
+                .Select(o =>
+                {
+                    return CacheManager.GetCache<int, object>("ProjectResultCache").Get(o.Id, id =>
+                    {
                         var initialExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Initial);
                         var finalExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Finish);
                         var championExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Champion);
@@ -865,7 +900,7 @@ namespace Master.Projects
                         return new
                         {
                             o.Id,
-                            MatchName=o.MatchInstance.Match.Name,
+                            MatchName = o.MatchInstance.Match.Name,
                             o.MatchInstance.Identifier,
                             o.ReviewSort,
                             o.ProjectName,
@@ -873,7 +908,7 @@ namespace Master.Projects
                             o.ReportSN,
                             o.Prize.PrizeName,
                             o.BuildingCompany,
-                            IsOriginal=o.IsOriginal,
+                            IsOriginal = o.IsOriginal,
                             MajorName = o.Prize.Major.BriefName,
                             SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
                             SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
@@ -911,11 +946,8 @@ namespace Master.Projects
                             MajorScore5Final = projectMajorInfos.ElementAtOrDefault(5)?.ScoreFinal,
                         };
                     });
-
-                    
                 }
                 );
-
 
             var result = new ResultPageDto()
             {
@@ -928,6 +960,7 @@ namespace Master.Projects
         }
 
         #region 跨赛事项目
+
         /// <summary>
         /// 跨赛事选取项目接口
         /// </summary>
@@ -975,7 +1008,6 @@ namespace Master.Projects
                     var reviewProjectDto = new ReviewProjectDto()
                     {
                         Id = project.Id,
-
                     };
                     reviewProjectDto.ProjectName = project.ProjectName;
                     reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
@@ -985,7 +1017,6 @@ namespace Master.Projects
                     reviewProjectDtos.Add(reviewProjectDto);
                 }
             }
-
 
             var result = new ResultPageDto()
             {
@@ -1007,7 +1038,7 @@ namespace Master.Projects
         public virtual async Task CrossProject(IEnumerable<int> projectIds, int prizeId, int? prizeSubMajorId)
         {
             var projects = await Manager.GetListByIdsAsync(projectIds);
-            var prize = await PrizeManager.GetAll().Include(o=>o.PrizeSubMajors).Where(o=>o.Id==prizeId).SingleAsync();
+            var prize = await PrizeManager.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.Id == prizeId).SingleAsync();
             var prizeSubMajors = prize.PrizeSubMajors.ToList();
             if (prizeSubMajorId.HasValue)
             {
@@ -1052,23 +1083,26 @@ namespace Master.Projects
                 {
                     newProject.ProjectMajorInfos.Add(new ProjectMajorInfo()
                     {
-                        MajorId=prizeSubMajor.MajorId
+                        MajorId = prizeSubMajor.MajorId
                     });
                 }
                 await Manager.InsertAsync(newProject);
             }
         }
-        #endregion
+
+        #endregion 跨赛事项目
 
         #region 整体导出相关
-        public virtual async Task ExportAll(int projectId,IEnumerable<SubmitHtmlDto> submitHtmlDtos,string matchInstanceName="")
+
+        public virtual async Task ExportAll(int projectId, IEnumerable<SubmitHtmlDto> submitHtmlDtos, string matchInstanceName = "")
         {
             var project = await Manager.GetAll()
-                .Include(o=>o.Prize)
-                .Include(o=>o.MatchInstance)
-                .Include(o=>o.PrizeSubMajor)
-                .Include(o=>o.ProjectMajorInfos)
-                .Include("Prize.PrizeSubMajors.Major").Where(o=>o.Id==projectId).SingleOrDefaultAsync();
+                .Include(o => o.Prize)
+                .Include(o => o.DesignOrganization)
+                .Include(o => o.MatchInstance)
+                .Include(o => o.PrizeSubMajor)
+                .Include(o => o.ProjectMajorInfos)
+                .Include("Prize.PrizeSubMajors.Major").Where(o => o.Id == projectId).SingleOrDefaultAsync();
             if (project == null)
             {
                 return;
@@ -1080,13 +1114,13 @@ namespace Master.Projects
             //如果是跨赛事项目，则导出原项目
             if (project.ProjectSource == ProjectSource.CrossMatch && project.CrossProjectId.HasValue)
             {
-                await ExportAll(project.CrossProjectId.Value, submitHtmlDtos,project.MatchInstance.Name);
+                await ExportAll(project.CrossProjectId.Value, submitHtmlDtos, project.MatchInstance.Name);
             }
             var projectName = project.ProjectName;
             if (string.IsNullOrEmpty(projectName)) { projectName = project.Id.ToString(); }
-            projectName= projectName.Replace("\\", "").Trim();
+            projectName = projectName.Replace("\\", "").Trim();
 
-            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstanceName}/项目/{project.Prize?.PrizeName}/{projectName}");
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstanceName}/项目/{project.Prize?.PrizeName}/{project.DesignOrganization?.DisplayName}-{projectName}");
             System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
             System.IO.Directory.CreateDirectory(projectFolder + "\\基本信息");//基本文件夹
 
@@ -1098,16 +1132,15 @@ namespace Master.Projects
                 var mainProjectMajor = project.ProjectMajorInfos.Where(o => o.MajorId == null).FirstOrDefault();
                 if (mainProjectMajor != null)
                 {
-                    var files=mainProjectMajor.GetData<List<ProjectFile>>("Files")??new List<ProjectFile>();
-                    foreach(var file in files)
+                    var files = mainProjectMajor.GetData<List<ProjectFile>>("Files") ?? new List<ProjectFile>();
+                    foreach (var file in files)
                     {
                         try
                         {
-                             System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath(file.FilePath), projectFolder + $"\\基本信息\\{file.FileName}", true);
+                            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath(file.FilePath), projectFolder + $"\\基本信息\\{file.FileName}", true);
                         }
                         catch
                         {
-
                         }
                     }
                 }
@@ -1118,7 +1151,7 @@ namespace Master.Projects
                 System.IO.File.WriteAllText(projectFolder + "\\基本信息\\其它信息.html", otherForm.Content);
             }
             var prizeSubMajors = project.Prize.PrizeSubMajors;
-            if(project.Prize.PrizeType==PrizeType.Major || project.Prize.PrizeType == PrizeType.Mixed)
+            if (project.Prize.PrizeType == PrizeType.Major || project.Prize.PrizeType == PrizeType.Mixed)
             {
                 prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == project.PrizeSubMajor.MajorId).ToList();
             }
@@ -1145,23 +1178,23 @@ namespace Master.Projects
                             }
                             catch
                             {
-
                             }
                         }
                     }
-                }                
+                }
             }
         }
-        #endregion
+
+        #endregion 整体导出相关
 
         public virtual async Task InitProjectSort()
         {
             var matchInstances = await MatchInstanceManager.GetAll().ToListAsync();
-            foreach(var matchInstance in matchInstances)
+            foreach (var matchInstance in matchInstances)
             {
                 var reviews = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
                 var projects = await Repository.GetAll().Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
-                foreach(var project in projects)
+                foreach (var project in projects)
                 {
                     var reviewSort = GetLatestSortInReview(project.Id, reviews);
                     if (reviewSort > 0)
