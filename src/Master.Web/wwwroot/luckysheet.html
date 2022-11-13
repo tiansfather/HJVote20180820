@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/assets/iconfont/iconfont.css' />
+<script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js"></script>
+
+</head>
+<body>
+    <div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left: 0px;top: 0px;"></div>
+    <script>
+        $(function () {
+            //配置项
+            var options = {
+                container: 'luckysheet' //luckysheet为容器id
+                ,showtoolbar:false
+                ,showinfobar:false
+                ,showsheetbar:false
+                ,enableAddRow:false
+                ,enableAddBackTop:false
+                ,data:[
+                    {
+                        "row":10,
+                        "column":10,
+                        "celldata":[{
+    "r": 0,
+    "c": 0,
+    "v": "value1"
+}, {
+    "r": 0,
+    "c": 1,
+    "v": "value2"
+}]
+                    }
+                ]
+            }
+            luckysheet.create(options)
+        })
+
+
+        //luckysheet.getLuckysheetfile()[0].data
+    </script>
+    
+</body>
+</html>
