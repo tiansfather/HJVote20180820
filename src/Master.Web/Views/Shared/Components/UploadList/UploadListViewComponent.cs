@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities;
+using Master.Authentication;
 using Master.Majors;
 using Master.Matches;
 using Master.Web.Components;
@@ -13,7 +14,8 @@ namespace Master.Web.Views.Shared.Components.UploadList
     public class UploadListViewComponent : MasterViewComponent
     {
         public MajorManager MajorManager { get; set; }
-        public async Task<IViewComponentResult> InvokeAsync(MatchResource matchResource, string subMajorId,bool viewMode)
+
+        public async Task<IViewComponentResult> InvokeAsync(MatchResource matchResource, string subMajorId, bool viewMode)
         {
             List<MatchResourceUploadList> uploadList = new List<MatchResourceUploadList>();
             try
@@ -22,13 +24,12 @@ namespace Master.Web.Views.Shared.Components.UploadList
             }
             catch
             {
-
             }
             ViewData["subMajorId"] = subMajorId;
             var subMajorName = "基本信息";
             if (!string.IsNullOrEmpty(subMajorId))
             {
-                subMajorName = "专业"+(await MajorManager.GetByIdAsync(int.Parse(subMajorId))).BriefName;
+                subMajorName = "专业" + (await MajorManager.GetByIdAsync(int.Parse(subMajorId))).BriefName;
             }
             ViewData["subMajorName"] = subMajorName;
 
@@ -37,7 +38,11 @@ namespace Master.Web.Views.Shared.Components.UploadList
             {
                 viewName = "View";
             }
-            return View(viewName,uploadList);
+
+            //是否分子公司科管
+            ViewData["SubManager"] = AbpSession.IsSubManager();
+
+            return View(viewName, uploadList);
         }
     }
 }

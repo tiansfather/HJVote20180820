@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Default";
     var subMajorId = ViewData["subMajorId"].ToString();
+    var isSubManager = (bool)ViewData["SubManager"];
 }
 
 <table class="layui-table" >
@@ -13,6 +14,9 @@
         <tr>
             <th>文件名称</th>
             <th>文件类别</th>
+            @if(isSubManager){
+                <th>操作</th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -21,6 +25,10 @@
             <td>
                 {{item.fileType}}
             </td>
+            @if (isSubManager)
+            {
+                <td><a style="color:blue;text-decoration:underline" :href="'/File/Download?filename='+item.fileName+'&filepath='+item.filePath"  target="_blank">下载</a></td>
+            }
         </tr>
     </tbody>
 </table>

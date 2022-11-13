@@ -87,6 +87,7 @@ namespace Master.Projects
 
         private string GetCoorperation(Project project)
         {
+            if (project == null) return String.Empty;
             if (project.CrossProjectId.HasValue)
             {
                 return GetCoorperation(project.CrossProject);
@@ -407,6 +408,10 @@ namespace Master.Projects
                 if ((reviewSort ?? 0) == 0)
                 {
                     reviewProjectDto.Sort = GetLatestSortInReview(project.Id, allReviews);
+                }
+                else
+                {
+                    reviewProjectDto.Sort = reviewSort.Value;
                 }
 
                 reviewProjectDtos.Add(reviewProjectDto);

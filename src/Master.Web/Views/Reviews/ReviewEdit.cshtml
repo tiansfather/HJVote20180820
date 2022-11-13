@@ -511,6 +511,13 @@
 			projectdata.sort(function (a, b) {
                 return a.sort - b.sort;
 			});
+            //项目序号不允许重复
+            for(var i=0;i<projectdata.length-1;i++){
+                if(projectdata[i].sort==projectdata[i+1].sort){
+                    abp.message.error("序号"+projectdata[i].sort+"重复,请检查后重新提交");
+                    return false;
+                }
+            }
 			var reviewname = $("input[name='reviewname']").val();
 			if (!reviewname) {
 				abp.message.error("请输入评选活动名称");
