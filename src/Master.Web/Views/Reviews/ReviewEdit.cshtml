@@ -113,9 +113,10 @@
 		<a class="layui-btn layui-btn-xs " onclick="selExperts()">选入专家</a>
 		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
 	</script>
-	<script type="text/html" id="projectToolBarTpl">
+	<script type="text/html" id="projectToolBarTpl">        
 		<a class="layui-btn layui-btn-xs " onclick="selProjects()">选入项目</a>
 		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
+        <a class="layui-btn layui-btn-xs layui-bg-blue" onclick="showProjectOrderDlg()">项目排序</a>
 	</script>
 	<script type="text/html" id="sortTpl">
 		<input type="text" class="layui-input" style="height:25px;text-align:center;padding:0;" value="{{d.sort==0?'':d.sort}}" onblur="reorderprojectitem({{d.id}},this.value)" />
@@ -409,7 +410,7 @@
         }
         function reorderprojectitem(id, val) {
             if (isNaN(val) || val <= 0 || val % 1 != 0) {
-                layer.msg("请正确输入序号", {icon:5,anim:6});
+                layer.msg("请正确输入序号,"+val+" 不正确", {icon:5,anim:6});
 
                 return false;
             }
@@ -419,6 +420,7 @@
                     break;
                 }
             }
+            return true;
             //projectdata.sort(function (a, b) {
             //    return a.sort - b.sort;
             //});
@@ -479,7 +481,7 @@
         }
         //打开排序窗口
         function showProjectOrderDlg(){
-            localStorage.setItem("projectdata",projectdata);
+            localStorage.setItem("projectdata",JSON.stringify( projectdata));
             layui.layer.open({
                 type: 2,
                 title: "项目排序",
@@ -491,9 +493,24 @@
                 yes: function (index, layero) {
                     var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
                     iframeWin.submit();
+                    sortProjectFromSheet();
+                    loadProjectTable();
+                    layui.layer.close(index);
                 }
 
             })
+        }
+        //重新排序
+        function sortProjectFromSheet(){
+            var sortData=localStorage.getItem("projectsortresult");
+            if(sortData){
+                sortData=JSON.parse(sortData);
+                for(var i=0;i<sortData.length;i++){
+                    if(!reorderprojectitem(sortData[i].id,sortData[i].sort)){
+                        break;
+                    }
+                }
+            }
         }
         function submit() {
             //if (expertdata.length == 0) {
