@@ -52,10 +52,6 @@
         // 计算每一列的所有单元格宽度
         // 先遍历行
         data.forEach((row, index) => {
-            //存在设置且非第一行
-            if (currentSetting && index >= 1) {
-                renderRow(row);
-            }
             // 列序号
             for (let i = 0; i < row.length; i++) {
                 if (colWidths[i] == null) colWidths[i] = [];
@@ -107,18 +103,19 @@
         var wbout = xlsxStyle.write(wb, wopts);
         //保存，使用FileSaver.js
         saveAs(new Blob([XSU.s2ab(wbout)], { type: "" }), fileName);
-                                                                                                                                                                                                                                            //XLSX.writeFile(workBook, fileName);
+        parent.layui.layer.closeAll();
+                                                                                                                                                                                                                                                    //XLSX.writeFile(workBook, fileName);
 
-                                                                                                                                                                                                                                            //var html_string = XLSX.utils.sheet_to_html(ws, { id: "data-table", editable: true });
-                                                                                                                                                                                                                                            //document.getElementById("container").innerHTML = html_string;
-                                                                                                                                                                                                                                            //doit('biff8', titleName);
-                                                                                                                                                                                                                                            //setTimeout(function () {
-                                                                                                                                                                                                                                            //    window.localStorage.setItem("excelDataDiv", "");
-                                                                                                                                                                                                                                            //    window.localStorage.setItem("excelTitleDiv", "");
-                                                                                                                                                                                                                                            //    window.close();
-                                                                                                                                                                                                                                            //}, 3000)
-                                                                                                                                                                                                                                            // window.excelDataDiv=null;
-                                                                                                                                                                                                                                            // window.excelTitleDiv=null;
+                                                                                                                                                                                                                                                    //var html_string = XLSX.utils.sheet_to_html(ws, { id: "data-table", editable: true });
+                                                                                                                                                                                                                                                    //document.getElementById("container").innerHTML = html_string;
+                                                                                                                                                                                                                                                    //doit('biff8', titleName);
+                                                                                                                                                                                                                                                    //setTimeout(function () {
+                                                                                                                                                                                                                                                    //    window.localStorage.setItem("excelDataDiv", "");
+                                                                                                                                                                                                                                                    //    window.localStorage.setItem("excelTitleDiv", "");
+                                                                                                                                                                                                                                                    //    window.close();
+                                                                                                                                                                                                                                                    //}, 3000)
+                                                                                                                                                                                                                                                    // window.excelDataDiv=null;
+                                                                                                                                                                                                                                                    // window.excelTitleDiv=null;
     </script>
 </body>
 </html>

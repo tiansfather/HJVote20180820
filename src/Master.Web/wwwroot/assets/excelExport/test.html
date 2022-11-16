@@ -1,213 +1,76 @@
 <!DOCTYPE html>
-<html style="display:none;">
+<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <body>
-    <script type="text/javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.core.min.js"></script>
+    <input id="fileUpload"
+           accept=".xlsx"
+           type="file"
+           onchange="loadFile(event)" />
+    <button id="importprojectbtn">import</button>
+    <script type="text/javascript" src="./xsu/xlsx.core.min.js"></script>
     <script type="text/javascript" src="./xsu/xlsxStyle.core.min.js"></script>
     <script type="text/javascript" src="./xsu/xlsxStyle.utils.js"></script>
     <script type="text/javascript" src="./xsu/FileSaver.js"></script>
     <script src="../js/dayjs.js"></script>
+    <script src="layui.all.js"></script>
     <script>
-        function doit(type, fn, dl) {
-            var elt = document.getElementById('data-table');
-            var wb = XLSX.utils.table_to_book(elt, { sheet: "Sheet JS" });
-            return dl ?
-                XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }) :
-                XLSX.writeFile(wb, fn || ('SheetJSTableExport.' + (type || 'xlsx')));
-        }
-        // 经过评论反馈优化
-        function getCellWidth(value) {
-            // 判断是否为null或undefined
-            if (value == null) {
-                return 10;
-            } else if (/.*[\u4e00-\u9fa5]+.*$/.test(value)) {
-                // 中文的长度
-                const chineseLength = value.match(/[\u4e00-\u9fa5]/g).length;
-                // 其他不是中文的长度
-                const otherLength = value.length - chineseLength;
-                return chineseLength * 2.1 + otherLength * 1.1;
-            } else {
-                return value.toString().length * 1.1;
-                /* 另一种方案
-                value = value.toString()
-                return value.replace(/[\u0391-\uFFE5]/g, 'aa').length
-                */
-            }
-        }
-        function renderRow(row) {
-            //数字列
-            currentSetting.numberFields.forEach(i => {
-                if (row[i]) {
-                    var val = row[i].replace(/,/ig, '');
-                    row[i] = Number(val);
-                }
-            });
-        }
-        function buildSummaryRow(data) {
-            var row = new Array(data[0].length);
-            row[0] = "合计:";
-            currentSetting.summaryFields.forEach(i => {
-                var summary = 0;
-                for (var j = 1; j < data.length; j++) {
-                    summary += data[j][i];
-                }
-                row[i] = summary;
-            });
-            return row;
-        }
-    </script>
-    <script type="text/javascript">
-        //获取数据
-        var data = JSON.parse(window.localStorage.getItem("excelDataDiv"))
-        //表格标题
-        var title = window.localStorage.getItem("excelTitleDiv");
-        //文件名
-        var fileName = `${title}_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`;
-        var exportSettings = {
-            "订货商品汇总": {
-                numberFields: [5, 6, 7, 8, 9],
-                summaryFields: [5, 6, 7]
-            },
-            "订货商品明细": {
-                numberFields: [6, 8, 9, 10],
-                summaryFields: [8, 9, 10]
-            },
-            "销售出库商品汇总": {
-                numberFields: [6, 7],
-                summaryFields: [7],
-                feeFields: [7]
-            },
-            "销售出库商品明细": {
-                numberFields: [6, 8, 9, 10, 11],
-                summaryFields: [8, 11]
-            },
-            "销售退货明细": {
-                numberFields: [6, 8, 9, 10, 11],
-                summaryFields: [8, 11]
-            },
-            "采购入库商品汇总": {
-                numberFields: [6, 7],
-                summaryFields: [7]
-            },
-            "采购入库商品明细": {
-                numberFields: [6, 8, 9, 10, 11],
-                summaryFields: [11]
-            },
-            "采购退货明细": {
-                numberFields: [6, 8, 9, 10, 11],
-                summaryFields: [11]
-            },
-            "资金往来明细": {
-                numberFields: [2, 5],
-                summaryFields: []
-            },
-            "往来单位结余明细": {
-                numberFields: [2, 3],
-                summaryFields: []
-            },
-        }
+        layui.upload.render({
+            elem: '#importprojectbtn'
+            , accept: 'file'
+            , exts: 'xlsx'
+            , url: '/api/upload/'
+            , auto: false //选择文件后不自动上传
+            , choose: function (obj) {
+                //将每次选择的文件追加到文件队列
+                var files = obj.pushFile();
 
-        var currentSetting = exportSettings[title];
+                //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
+                obj.preview(function (index, file, result) {
+                    console.log(index); //得到文件索引
+                    console.log(file); //得到文件对象
+                    console.log(result); //得到文件base64编码，比如图片
+                    var fileReader = new FileReader();
+                    fileReader.onload = (ev) => {
+                        console.log('ev', ev);
+                        var data = new Uint8Array(ev.target.result);
+                        const workbook = XLSX.read(data, {
+                            type: 'array'
+                        });
+                        console.log('workbook', workbook);
+                        const wsname = workbook.SheetNames[0]; //取第一张表
+                        const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); //生成json表格内容
+                        console.log(ws);
+                    }
+                    fileReader.readAsArrayBuffer(file);
+                    //obj.resetFile(index, file, '123.jpg'); //重命名文件名，layui 2.3.0 开始新增
 
-        /* initial table */
-        let localHref = decodeURIComponent(window.location.href);
+                    //这里还可以做一些 append 文件列表 DOM 的操作
 
-        var colWidths = [];
-        var colNames = data[0] // 所有列的名称数组
-
-        // 计算每一列的所有单元格宽度
-        // 先遍历行
-        data.forEach((row, index) => {
-            //存在设置且非第一行
-            if (currentSetting && index >= 1) {
-                renderRow(row);
-            }
-            // 列序号
-            for (let i = 0; i < row.length; i++) {
-                if (colWidths[i] == null) colWidths[i] = [];
-                if (row[i] == "null") row[i] = "";
-                switch (typeof row[i]) {
-                    case 'string':
-                    case 'number':
-                    case 'boolean':
-                        colWidths[i].push(getCellWidth(row[i]))
-                        break
-                    case 'object':
-                    case 'function':
-                        colWidths[i].push(0)
-                        break
-                }
+                    //obj.upload(index, file); //对上传失败的单个文件重新上传，一般在某个事件中使用
+                    //delete files[index]; //删除列表中对应的文件，一般在某个事件中使用
+                });
             }
         })
-        //汇总行
-        var mergeIndex = 0;
-        if (data.length > 1 && currentSetting && currentSetting.summaryFields.length > 0) {
-            mergeIndex = currentSetting.summaryFields[0];
-            data.push(buildSummaryRow(data));
-        }
-        //金额
-        if (currentSetting && currentSetting.feeFields) {
-            currentSetting.feeFields.forEach(i => {
-                for (var j = 1; j < data.length; j++) {
-                    data[j][i] = { t: "n", v: data[j][i], z: "#,##0.00" }
-                }
-            })
-        }
-        console.log(data);
 
-        var sheet = XLSX.utils.aoa_to_sheet(data, { raw: true });
-        sheet['!cols'] = []
-        // 每一列取最大值最为列宽
-        colWidths.forEach((widths, index) => {
-            // 计算列头的宽度
-            widths.push(getCellWidth(colNames[index]))
-            // 设置最大值为列宽
-            sheet['!cols'].push({ wch: Math.max(...widths) })
-        })
-
-        let wb = {
-            SheetNames: [title],
-            Sheets: {
-                [title]: sheet
+        function loadFile(e) {
+            var file = e.target.files[0];
+            console.log(file);
+            var fileReader = new FileReader();
+            fileReader.onload = (ev) => {
+                console.log('ev', ev);
+                var data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, {
+                    type: 'array'
+                });
+                console.log('workbook', workbook);
+                const wsname = workbook.SheetNames[0]; //取第一张表
+                const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); //生成json表格内容
+                console.log(ws);
             }
+            fileReader.readAsArrayBuffer(file);
         }
-
-        //样式设置
-        XSU.setBorderDefaultAll(wb, title);
-        if (mergeIndex > 0) {
-            XSU.mergeCellsByObj(wb, title, [{ s: { c: 0, r: data.length - 1 }, e: { c: mergeIndex - 1, r: data.length - 1 } }]);
-            XSU.setAlignmentHorizontal(wb, title, XLSX.utils.encode_cell({ r: data.length - 1, c: 0 }), "right");
-            currentSetting.summaryFields.forEach(i => {
-                XSU.setFontBold(wb, title, XLSX.utils.encode_cell({ r: data.length - 1, c: i }), true);
-            });
-
-        }
-
-        const wopts = {
-            bookType: 'xlsx',
-            bookSST: true,
-            type: 'binary',
-            cellStyles: true
-        };
-
-        //转换成二进制 使用xlsx-style（XS）进行转换才能得到带样式Excel
-        var wbout = xlsxStyle.write(wb, wopts);
-        //保存，使用FileSaver.js
-        saveAs(new Blob([XSU.s2ab(wbout)], { type: "" }), fileName);
-                                                                                                                                                                                                                            //XLSX.writeFile(workBook, fileName);
-
-                                                                                                                                                                                                                            //var html_string = XLSX.utils.sheet_to_html(ws, { id: "data-table", editable: true });
-                                                                                                                                                                                                                            //document.getElementById("container").innerHTML = html_string;
-                                                                                                                                                                                                                            //doit('biff8', titleName);
-                                                                                                                                                                                                                            //setTimeout(function () {
-                                                                                                                                                                                                                            //    window.localStorage.setItem("excelDataDiv", "");
-                                                                                                                                                                                                                            //    window.localStorage.setItem("excelTitleDiv", "");
-                                                                                                                                                                                                                            //    window.close();
-                                                                                                                                                                                                                            //}, 3000)
-                                                                                                                                                                                                                            // window.excelDataDiv=null;
-                                                                                                                                                                                                                            // window.excelTitleDiv=null;
     </script>
 </body>
 </html>
