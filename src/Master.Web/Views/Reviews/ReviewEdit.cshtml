@@ -32,6 +32,7 @@
 	<link href="~/lib/powerfloat/css/powerFloat.css" rel="stylesheet" />
 }
 <div>
+    <iframe id="_exportFrame" name="_exportFrame" style="display:none"></iframe>
 	<form class="layui-form layui-form-pane">
 		<div class="layui-form-item" style="margin-bottom:2px">
 			<label class="layui-form-label" style="padding:8px 5px">评选活动名称</label>
@@ -89,7 +90,14 @@
 		</div>
 	</div>
 </div>
-
+<div style="opacity: 0">
+    <input 
+           id="fileUpload"
+           accept=".xlsx"
+           style="width: 0px; height: 0px"
+           type="file"
+           onchange="loadFile" />
+</div>
 @section scripts{
     <script src="/lib/powerfloat/js/jquery-powerFloat.js"></script>
     <script src="~/xlsx-style/xlsx.full.min.js"></script>
@@ -118,7 +126,7 @@
 		<a class="layui-btn layui-btn-xs " onclick="selProjects()">选入项目</a>
 		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
         <a class="layui-btn layui-btn-xs layui-bg-blue" onclick="exportProjectForSort()">导出参选项目做排序</a>
-        <a class="layui-btn layui-btn-xs layui-bg-blue" id="importbtn">导回已排序项目</a>
+        <a class="layui-btn layui-btn-xs layui-bg-blue" onclick="$('#fileUpload').click()">导回已排序项目</a>
 	</script>
 	<script type="text/html" id="sortTpl">
 		<input type="text" class="layui-input" style="height:25px;text-align:center;padding:0;" value="{{d.sort==0?'':d.sort}}" onblur="reorderprojectitem({{d.id}},this.value)" />
@@ -363,20 +371,7 @@
                 reorderprojectitem(data.id, value);
                 //layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
             });
-            //监听导入
-            layui.upload.render({
-                elem: '#importbtn'
-                , url: '' //此处配置你自己的上传接口即可
-                , accept: 'file' //普通文件
-                , exts: 'xlsx' //只允许上传压缩文件
-                , auto: false
-                , before: function (obj) {
-                    //预读本地文件示例，不支持ie8
-                    obj.preview(function (index, file, result) {
-                        $('#demo2').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
-                    });
-                }
-            });
+            
             //一些回调
             func.bringBackFuncs["User"] = function (data) {
                 var tabledata = data;
@@ -560,112 +555,33 @@
 
         //导出项目
         function exportProjectForSort(){
-            var jsondata=projectdata.map(o=>{
-                return { "系统Id": o.id, "项目名称": o.projectName, "排序": o.sort}
-            })
-        }
-        function saveAs(obj, fileName) {
-            var tmpa = document.createElement("a");
-            tmpa.download = fileName || "下载";
-            tmpa.href = URL.createObjectURL(obj);
-            tmpa.click();
-            setTimeout(function () {
-                URL.revokeObjectURL(obj);
-            }, 100);
-        }
-        const wopts = {
-            bookType: 'xlsx',
-            bookSST: true,
-            type: 'binary',
-            cellStyles: true
-        };
-
-        /**
-         * 下载Excel
-         */
-        function downloadExl(json, type) {
-            var tmpdata = json[0];
-            json.unshift({});
-
-            var keyMap = []; // 获取keys
-            for (var k in tmpdata) {
-                keyMap.push(k);
-                json[0][k] = k;
-            }
-            console.log("keyMap", keyMap);
-            console.log("json1", json);
-
-            var tmpdata = []; // 用来保存转换好的json
-            json.map((v, i) => keyMap.map((k, j) => Object.assign({}, {
-                v: v[k],
-                position: (j > 25 ? getCharCol(j) : String.fromCharCode(65 + j)) + (i + 1)
-            }))).reduce((prev, next) => prev.concat(next)).forEach((v, i) => tmpdata[v.position] = {
-                v: v.v
+            var data=[];
+            localStorage.setItem("excelTitleDiv","@Model.ReviewName");
+            data.push(["系统id","项目名称","序号"]);
+            projectdata.forEach(o=>{
+                data.push([o.id,o.projectName,o.sort]);
             });
-            console.log("json2", json);
-
-            var outputPos = Object.keys(tmpdata); //设置区域,比如表格从A1到D10
-            // ["A1", "B1", "C1", "D1", "E1", "A2", "B2", "C2", "D2", "E2", "A3", "B3", "C3", "D3", "E3"]
-            console.log(outputPos)
-
-           
-            console.log("tmpdata", tmpdata);
-
-            var tmpWB = {
-                SheetNames: ['Sheet1'], // 保存的表标题
-                Sheets: {
-                    'Sheet1': Object.assign({}, tmpdata, {
-                        '!cols': [
-                            { wch: 20 }, // 第一列
-                            { wch: 100 }, // 第二列
-                            { wch: 20 }  // 第三列
-                        ],
-                        // 设置填充区域
-                        '!ref': outputPos[0] + ':' + outputPos[outputPos.length - 1]
-                    }
-                    )
-                }
-            };
-
-            tmpDown = new Blob([
-                s2ab(
-                    // 这里的数据是用来定义导出的格式类型
-                    XLSX.write(tmpWB, {
-                        bookType: (type == undefined ? 'xlsx' : type),
-                        bookSST: false,
-                        type: 'binary'
-                    })
-                )
-            ], {
-                type: ""
-            });
-            saveAs(tmpDown, "@Model.ReviewName" + '.' + (wopts.bookType == "biff2" ? "xls" : wopts.bookType));
+            localStorage.setItem("excelDataDiv", JSON.stringify(data);
+            _exportFrame.location.href="/assets/excelExport/export.html";
         }
-
-        function getCharCol(n) {
-            let temCol = '',
-                s = '',
-                m = 0
-            while (n > 0) {
-                m = n % 26 + 1
-                s = String.fromCharCode(m + 64) + s
-                n = (n - m) / 26
+        function loadFile(e){
+            var file = file.target.files[0];
+            console.log(file);
+            var fileReader = new FileReader();
+            fileReader.onload = (ev) => {
+                console.log('ev', ev);
+                var data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, {
+                    type: 'array'
+                });
+                console.log('workbook', workbook);
+                const wsname = workbook.SheetNames[0]; //取第一张表
+                const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); //生成json表格内容
+                console.log(ws);
             }
-            return s
+            fileReader.readAsArrayBuffer(file);
         }
 
-        function s2ab(s) {
-            console.log("s", s)
-            if (typeof ArrayBuffer !== 'undefined') {
-                var buf = new ArrayBuffer(s.length);
-                var view = new Uint8Array(buf);
-                for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-                return buf;
-            } else {
-                var buf = new Array(s.length);
-                for (var i = 0; i != s.length; ++i) buf[i] = s.charCodeAt(i) & 0xFF;
-                return buf;
-            }
-        }
+       
 	</script>
 }

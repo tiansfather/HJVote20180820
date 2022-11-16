@@ -20,6 +20,10 @@
     <None Include="app.config" />
     <None Include="Views\Shared\Components\SideBarNav\Default.cshtml" />
     <None Include="Views\Shared\Components\TopBarNav\Default.cshtml" />
+    <None Include="wwwroot\assets\excelExport\xsu\FileSaver.js" />
+    <None Include="wwwroot\assets\excelExport\xsu\xlsx.core.min.js" />
+    <None Include="wwwroot\assets\excelExport\xsu\xlsxStyle.core.min.js" />
+    <None Include="wwwroot\assets\excelExport\xsu\xlsxStyle.utils.js" />
     <None Include="wwwroot\assets\huajian\js\layui.all.js" />
     <None Include="wwwroot\lib\dropdowntree\js\dropDownTool.js" />
     <None Include="wwwroot\lib\dropdowntree\js\utils.js" />

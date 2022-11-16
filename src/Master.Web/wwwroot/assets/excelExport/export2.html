@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!-- saved from url=(0035)https://sheetjs.com/demo/table.html -->
+<html style="display:none;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+    <!--[if gt IE 9]-->
+    <script type="text/javascript" async="" src="js/ga.js"></script>
+    <script type="text/javascript" src="js/shim.min.js"></script>
+    <script type="text/javascript" src="js/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="js/Blob.js"></script>
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+    <!--[endif]-->
+
+    <script>
+        function doit(type, fn, dl) {
+            var elt = document.getElementById('data-table');
+            var wb = XLSX.utils.table_to_book(elt, { sheet: "Sheet JS" });
+            return dl ?
+                XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }) :
+                XLSX.writeFile(wb, fn || ('SheetJSTableExport.' + (type || 'xlsx')));
+        }
+    </script>
+    <script type="text/javascript">
+        // 经过评论反馈优化
+        function getCellWidth(value) {
+            // 判断是否为null或undefined
+            if (value == null) {
+                return 10;
+            } else if (/.*[\u4e00-\u9fa5]+.*$/.test(value)) {
+                // 中文的长度
+                const chineseLength = value.match(/[\u4e00-\u9fa5]/g).length;
+                // 其他不是中文的长度
+                const otherLength = value.length - chineseLength;
+                return chineseLength * 2.1 + otherLength * 1.1;
+            } else {
+                return value.toString().length * 1.1;
+                /* 另一种方案
+                value = value.toString()
+                return value.replace(/[\u0391-\uFFE5]/g, 'aa').length
+                */
+            }
+        }
+        /* initial table */
+        let localHref = decodeURIComponent(window.location.href);
+
+        var data = JSON.parse(window.localStorage.getItem("excelDataDiv"))
+        var title = window.localStorage.getItem("excelTitleDiv");
+        var fileName = title + '.xlsx';
+
+        var colWidths = [];
+        var colNames = data[0] // 所有列的名称数组
+
+        // 计算每一列的所有单元格宽度
+        // 先遍历行
+        data.forEach((row) => {
+            // 列序号
+            for (let i = 0; i < row.length; i++) {
+                if (colWidths[i] == null) colWidths[i] = [];
+                if (row[i] == "null") row[i] = "";
+                switch (typeof row[i]) {
+                    case 'string':
+                    case 'number':
+                    case 'boolean':
+                        colWidths[i].push(getCellWidth(row[i]))
+                        break
+                    case 'object':
+                    case 'function':
+                        colWidths[i].push(0)
+                        break
+                }
+            }
+        })
+
+        var sheet = XLSX.utils.aoa_to_sheet(data, { raw: true });
+        sheet['!cols'] = []
+        // 每一列取最大值最为列宽
+        colWidths.forEach((widths, index) => {
+            // 计算列头的宽度
+            widths.push(getCellWidth(colNames[index]))
+            // 设置最大值为列宽
+            sheet['!cols'].push({ wch: Math.max(...widths) })
+        })
+
+        let workBook = {
+            SheetNames: [title],
+            Sheets: {
+                [title]: sheet
+            }
+        }
+
+        XLSX.writeFile(workBook, fileName);
+
+        //var html_string = XLSX.utils.sheet_to_html(ws, { id: "data-table", editable: true });
+        //document.getElementById("container").innerHTML = html_string;
+        //doit('biff8', titleName);
+        setTimeout(function () {
+            window.localStorage.setItem("excelDataDiv", "");
+            window.localStorage.setItem("excelTitleDiv", "");
+            window.close();
+        }, 3000)
+                                                                                                                // window.excelDataDiv=null;
+                                                                                                                // window.excelTitleDiv=null;
+    </script>
+</body>
+</html>
