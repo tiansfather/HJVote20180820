@@ -95,6 +95,10 @@
 		</div>
 	</div>
 </div>
+<div style="position:absolute;">
+    <a class="layui-btn layui-btn-xs layui-bg-blue" id="importprojectbtn" style="float:right">导回已排序项目</a>
+        <a class="layui-btn layui-btn-xs layui-bg-blue" onclick="exportProjectForSort()" style="float:right">导出参选项目做排序</a>
+</div>
 @section scripts{
     <script src="/lib/powerfloat/js/jquery-powerFloat.js"></script><script src="~/assets/excelexport/xsu/xlsx.core.min.js"></script>
 	<script type="text/html" id="majorTpl">
@@ -121,8 +125,7 @@
 	<script type="text/html" id="projectToolBarTpl">        
 		<a class="layui-btn layui-btn-xs " onclick="selProjects()">选入项目</a>
 		<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="clear">清空所有</a>
-        <a class="layui-btn layui-btn-xs layui-bg-blue" id="importprojectbtn" style="float:right">导回已排序项目</a>
-        <a class="layui-btn layui-btn-xs layui-bg-blue" onclick="exportProjectForSort()" style="float:right">导出参选项目做排序</a>
+        
 	</script>
 	<script type="text/html" id="sortTpl">
 		<input type="text" class="layui-input" style="height:25px;text-align:center;padding:0;" value="{{d.sort==0?'':d.sort}}" onblur="reorderprojectitem({{d.id}},this.value)" />
@@ -227,58 +230,7 @@
                             hoverHold: true,
                             position: "6-8"
                         });
-                        $("td[data-field='Sort']").addClass("edit");
-                        var uploadInst = layui.upload.render({
-                            elem: '#importprojectbtn'
-                            , accept: 'file'
-                            , ext: 'xlsx'
-                            , auto: false //选择文件后不自动上传
-                            , choose: function (obj) {
-                                //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
-                                obj.preview(function (index, file, result) {
-                                    console.log(index); //得到文件索引
-                                    console.log(file); //得到文件对象
-                                    console.log(result); //得到文件base64编码，比如图片
-                                    var fileReader = new FileReader();
-                                    fileReader.onload = (ev) => {
-                                        console.log('ev', ev);
-                                        var data = new Uint8Array(ev.target.result);
-                                        const workbook = XLSX.read(data, {
-                                            type: 'array'
-                                        });
-                                        console.log('workbook', workbook);
-                                        var wsname = workbook.SheetNames[0]; //取第一张表
-                                        var ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); //生成json表格内容
-                                        console.log(ws);
-                                        //更新排序
-                                        if (ws.length == 0 || !ws[0]["系统id"] || !ws[0]["系统序号"]) {
-                                            abp.message.error("数据错误,请检查导入excel文件");
-                                            return;
-                                        }
-                                        ws.forEach(o => {
-                                            var id = o["系统id"];
-                                            var sort = o["序号"];
-                                            if (id && sort) {
-                                                var projects = projectdata.filter(p => p.id == id);
-                                                if (projects.length > 0) {
-                                                    projects[0].sort = sort;
-                                                }
-                                            }
-                                        });
-                                        loadProjectTable();
-                                        abp.message.success('序号导入成功');
-                                        uploadInst.reload({});
-                                    }
-                                    fileReader.readAsArrayBuffer(file);
-                                    //obj.resetFile(index, file, '123.jpg'); //重命名文件名，layui 2.3.0 开始新增
-
-                                    //这里还可以做一些 append 文件列表 DOM 的操作
-
-                                    //obj.upload(index, file); //对上传失败的单个文件重新上传，一般在某个事件中使用
-                                    //delete files[index]; //删除列表中对应的文件，一般在某个事件中使用
-                                });
-                            }
-                        })
+                        $("td[data-field='Sort']").addClass("edit");                       
                     }
                 });
             } else {
@@ -418,7 +370,56 @@
                 reorderprojectitem(data.id, value);
                 //layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
             });
+            var uploadInst = layui.upload.render({
+                elem: '#importprojectbtn'
+                , accept: 'file'
+                , ext: 'xlsx'
+                , auto: false //选择文件后不自动上传
+                , choose: function (obj) {
+                    //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
+                    obj.preview(function (index, file, result) {
+                        console.log(index); //得到文件索引
+                        console.log(file); //得到文件对象
+                        console.log(result); //得到文件base64编码，比如图片
+                        var fileReader = new FileReader();
+                        fileReader.onload = (ev) => {
+                            console.log('ev', ev);
+                            var data = new Uint8Array(ev.target.result);
+                            const workbook = XLSX.read(data, {
+                                type: 'array'
+                            });
+                            console.log('workbook', workbook);
+                            var wsname = workbook.SheetNames[0]; //取第一张表
+                            var ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); //生成json表格内容
+                            console.log(ws);
+                            //更新排序
+                            if (ws.length == 0 || !ws[0]["系统id"] || !ws[0]["系统序号"]) {
+                                abp.message.error("数据错误,请检查导入excel文件");
+                                return;
+                            }
+                            ws.forEach(o => {
+                                var id = o["系统id"];
+                                var sort = o["序号"];
+                                if (id && sort) {
+                                    var projects = projectdata.filter(p => p.id == id);
+                                    if (projects.length > 0) {
+                                        projects[0].sort = sort;
+                                    }
+                                }
+                            });
+                            loadProjectTable();
+                            abp.message.success('序号导入成功');
+                        }
+                        fileReader.readAsArrayBuffer(file);
+                        //obj.resetFile(index, file, '123.jpg'); //重命名文件名，layui 2.3.0 开始新增
 
+                        //这里还可以做一些 append 文件列表 DOM 的操作
+
+                        //obj.upload(index, file); //对上传失败的单个文件重新上传，一般在某个事件中使用
+                        //delete files[index]; //删除列表中对应的文件，一般在某个事件中使用
+                    });
+                }
+            })
             
             //一些回调
             func.bringBackFuncs["User"] = function (data) {
