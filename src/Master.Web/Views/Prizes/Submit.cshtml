@@ -28,9 +28,10 @@
             <label class="layui-form-label">奖项类型</label>
             <div class="layui-input-block">
                 <input type="radio" name="prizeType" lay-skin="primary" value="1" title="综合类" :checked="currentItem.prizeType==1" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
-                <input type="radio" name="prizeType" lay-skin="primary" value="2" title="专业类" :checked="currentItem.prizeType==2" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+                <input type="radio" name="prizeType" lay-skin="primary" value="2" title="专业类" :checked="currentItem.prizeType==2" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">                
                 <input type="radio" name="prizeType" lay-skin="primary" value="3" title="混排类" :checked="currentItem.prizeType==3" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
                 <input type="radio" name="prizeType" lay-skin="primary" value="4" title="基本类" :checked="currentItem.prizeType==4" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
+                <input type="radio" name="prizeType" lay-skin="primary" value="5" title="复选类" :checked="currentItem.prizeType==5" lay-filter="PrizeType" :disabled="currentItem.id && isInApply">
             </div>
         </div>
         <div class="layui-form-item">
@@ -52,7 +53,7 @@
                         <input type="text" style="height:20px" size="5" :disabled="!item.checked" v-model="item.ratio" lay-verify="" />
                     </div>
                 </tempalte>
-                <template v-if="currentItem.prizeType==2 || currentItem.prizeType==3">
+                <template v-if="currentItem.prizeType==2 || currentItem.prizeType==3|| currentItem.prizeType==5">
                     <div v-for="(item,index) in currentItem.subMajors">
                         <input type="checkbox" lay-skin="primary" :checked="item.checked" name="SubMajorId"  :value="item.id" :title="item.name" lay-filter="SubMajorId">
                     </div>
@@ -131,8 +132,8 @@
                         layer.msg('专业小类所占权重百分比之和必须为1', { icon: 5, anim: 6 });
                         return false;
                     }
-                } else if (app.currentItem.prizeType == 2 || app.currentItem.prizeType == 3) {
-                    //专业类混排类至少选择一个
+                } else if (app.currentItem.prizeType == 2 || app.currentItem.prizeType == 3 || app.currentItem.prizeType == 5) {
+                    //专业类混排类复选类至少选择一个
                     if (checkedSubMajors.length < 1) {
                         layer.msg('专业小类不能为空', { icon: 5, anim: 6 });
                         return false;

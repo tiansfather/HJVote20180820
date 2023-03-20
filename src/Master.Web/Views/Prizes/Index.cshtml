@@ -33,7 +33,7 @@
                         <input type="checkbox" name="prizeType" lay-skin="primary" value="2" title="专业类">
                         <input type="checkbox" name="prizeType" lay-skin="primary" value="3" title="混排类">
                         <input type="checkbox" name="prizeType" lay-skin="primary" value="4"title="基本类">
-
+                        <input type="checkbox" name="prizeType" lay-skin="primary" value="5" title="复选类">
                     </div>
                     <button style="position:absolute;top:0px;left:650px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
                 </div>
@@ -70,6 +70,8 @@
     <span class="layui-badge layui-bg-cyan">@L("混排类")</span>
     {{#}else if(d.prizeType==4){}}
     <span class="layui-badge layui-bg-black">@L("基本类")</span>
+    {{#}else if(d.prizeType==5){}}
+    <span class="layui-badge layui-bg-blue">@L("复选类")</span>
     {{#}}}
 </script>
 <script type="text/html" id="toolbar">
