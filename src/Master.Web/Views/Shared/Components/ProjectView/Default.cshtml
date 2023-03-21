@@ -7,14 +7,18 @@
 @{
     var allSubMajors = Model.PrizeSubMajors;
     var prizeSubMajors = allSubMajors.Where(o => o.Checked);
-    var subMajorId = ViewData["subMajorId"].ToString();
+    var subMajorIds = ViewData["subMajorIds"] as List<int>;
     int? prizeSubMajorId = null;
     var thirdLevelMajors = ViewData["ThirdLevelMajors"] as List<string>;//第三级专业
                                                                         //如果是专业类或混排类，只需要列出对应选中的专业
-    if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
+    if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed || Model.PrizeType == PrizeType.MultiCheck)
     {
-        prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == int.Parse(subMajorId));
-        prizeSubMajorId = prizeSubMajors.First().Id;
+        prizeSubMajors = prizeSubMajors.Where(o => subMajorIds.Contains(o.MajorId));
+        //专业类或混排类需要子专业Id
+        if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
+        {
+            prizeSubMajorId = prizeSubMajors.First().Id;
+        }
 
     }
     var matchResources = ViewData["matchResources"] as List<MatchResource>;
@@ -185,11 +189,18 @@
                                                     <label><input type="checkbox" @(subMajor.Checked ? "checked" : "") disabled />@subMajor.Major.BriefName</label>
                                                 }
                                             }
+                                            else if(Model.PrizeType == PrizeType.MultiCheck)
+                                        {
+                                            foreach (var subMajor in allSubMajors)
+                                            {
+                                                <label><input type="checkbox" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
+                                            }
+                                        }
                                             else
                                             {
                                                 foreach (var subMajor in allSubMajors)
                                                 {
-                                                    <label><input type="radio" disabled @(subMajor.MajorId == int.Parse(subMajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
+                                                    <label><input type="radio" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
                                                 }
 
                                             }

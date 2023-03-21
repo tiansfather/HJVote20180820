@@ -16,7 +16,12 @@
     if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed || Model.PrizeType==PrizeType.MultiCheck)
     {
         prizeSubMajors = prizeSubMajors.Where(o => subMajorIds.Contains(o.MajorId));
-        prizeSubMajorId = prizeSubMajors.First().Id;
+        //专业类或混排类需要子专业Id
+        if(Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
+        {
+            prizeSubMajorId = prizeSubMajors.First().Id;
+        }
+        
 
     }
     var matchResources = ViewData["matchResources"] as List<MatchResource>;
