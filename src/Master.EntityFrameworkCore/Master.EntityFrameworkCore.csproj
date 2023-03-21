@@ -24,6 +24,12 @@
     <Compile Remove="Migrations\20200828122809_ShowScope.Designer.cs" />
     <Compile Remove="Migrations\20200829104119_MatchAward.cs" />
     <Compile Remove="Migrations\20200829104119_MatchAward.Designer.cs" />
+    <Compile Remove="Migrations\20230321005525_Prize_Group.cs" />
+    <Compile Remove="Migrations\20230321005525_Prize_Group.Designer.cs" />
+    <Compile Remove="Migrations\20230321005732_Prize_Group.cs" />
+    <Compile Remove="Migrations\20230321005732_Prize_Group.Designer.cs" />
+    <Compile Remove="Migrations\20230321030242_Prize_Group.cs" />
+    <Compile Remove="Migrations\20230321030242_Prize_Group.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Master.Core\Master.Core.csproj" />

@@ -1,10 +1,14 @@
 ﻿@using Master.Web.Components
 @using Master.Matches
+@using Master.Prizes
 @model List<Master.Prizes.Prize>
 @{
     ViewData["Title"] = "Index";
     var matchInstance = ViewData["matchInstance"] as MatchInstance;
+    var prizeGroups = ViewData["prizeGroups"] as List<PrizeGroup>;
+    var prizeMapDic = ViewData["prizeMapDic"] as Dictionary<int, int>;
     var userid = AbpSession.UserId.Value;
+    var prizeIdsWithGroup = new List<int>();
 }
 @section styles{
     <style>
@@ -22,6 +26,25 @@
                 margin: 10px 20px 10px 0;
                 cursor: pointer;
             }
+
+            #prizeContainer .itemcontainer{
+                position:absolute;
+                z-index:1000000;
+                display:none;
+            }
+
+            #prizeContainer .itemcontainer li{
+                    width: 200px;
+                    height: 40px;
+                    line-height: 40px;
+                    text-align: center;
+                    border: 1px solid #000;
+                    cursor: pointer;
+                    background:#fff;
+            }
+            #prizeContainer .itemcontainer li:hover{
+                background:#ddd;
+            }
     </style>
 }
 <div class="layui-fluid" id="LAY-app-message">
@@ -29,10 +52,33 @@
         <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("申报奖项")</div>
         <div class="layui-card-body">
             <div id="prizeContainer">
-                @foreach (var item in Model)
+                @foreach(var prizeGroup in prizeGroups)
+                {
+                    <div class="item" onmouseover="$(this).find('.itemcontainer').show()" onmouseout="$(this).find('.itemcontainer').hide()">
+                        @prizeGroup.GroupName
+                        <ul class="itemcontainer">
+                            @foreach(var oriPrize in prizeGroup.Prizes)
+                            {
+                                if (prizeMapDic.ContainsKey(oriPrize.Id))
+                                {
+                                    var prize = Model.Where(o => o.Id == prizeMapDic[oriPrize.Id]).FirstOrDefault();
+                                    if (prize != null)
+                                    {
+                                        prizeIdsWithGroup.Add(prize.Id);
+                                        var subMajors = prize.PrizeSubMajors.Where(o => o.Checked).Select(o => new { o.MajorId, o.Major.BriefName });
+                                        <li class="subItem prizeItem" onclick="gotoReport(this)" prizeId="@prize.Id" prizeType="@Convert.ToInt32(prize.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
+                                            @prize.PrizeName
+                                        </li>
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                }
+                @foreach (var item in Model.Where(o=>!prizeIdsWithGroup.Contains(o.Id)))
                 {
                     var subMajors = item.PrizeSubMajors.Where(o => o.Checked).Select(o => new { o.MajorId, o.Major.BriefName });
-                    <div class="item" onclick="gotoReport(this)" prizeId="@item.Id" prizeType="@Convert.ToInt32(item.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
+                    <div class="item prizeItem" onclick="gotoReport(this)" prizeId="@item.Id" prizeType="@Convert.ToInt32(item.PrizeType)" majors="@(Newtonsoft.Json.JsonConvert.SerializeObject(subMajors))">
                         @item.PrizeName
                     </div>
                 }
@@ -86,7 +132,16 @@
             layui.form.on('radio(subMajorId)', function (data) {
                 $("input[name='subMajorId']").val(data.value);
             });
-
+            layui.form.on('checkbox(subMajorId)', function (data) {
+                var valStr = $("input[name='subMajorId']").val();
+                var oriVals = valStr ? valStr.split(','):[];
+                if(data.elem.checked){
+                    oriVals.push(data.value);
+                }else{
+                    oriVals.remove(data.value);
+                }
+                $("input[name='subMajorId']").val(oriVals.join(','));
+            });
             config.refresh();
 
 
@@ -103,12 +158,14 @@
                 prizeType = $(obj).attr("prizeType"),
                 subMajors = JSON.parse($(obj).attr("majors"));
 
-            //如果是专业类和混排类需要选择专业
-            if (prizeType == 2 || prizeType == 3) {
+            //如果是专业类和混排类及复选类需要选择专业
+            if (prizeType == 2 || prizeType == 3 || prizeType == 5) {
+                var subMajorIds=[];
                 $("input[name='subMajorId']").val('');
                 var html = '';
+                var inputType=prizeType==5?"checkbox":"radio";
                 $.each(subMajors, function (i, v) {
-                    html += '<input type="radio" title="' + v.BriefName + '" name="subMajor" value="'+v.MajorId+'" lay-filter="subMajorId"/>';
+                    html += '<input type="' + inputType + '" title="' + v.BriefName + '" name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId" lay-skin="primary"/>';
                 });
                 $("#radioContainer").html(html);
                 layui.form.render();
@@ -134,7 +191,7 @@
         }
         //打开申报窗口
         function showReport(prizeId, subMajorId, projectId) {
-            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + $(".item[prizeId='" + prizeId + "']").html();
+            var title = "@(matchInstance.Match.Name+"("+matchInstance.Identifier+")")--" + $(".prizeItem[prizeId='" + prizeId + "']").html();
             top.layer.open({
                 type: 2,
                 title: title,

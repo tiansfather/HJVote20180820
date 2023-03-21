@@ -29,6 +29,7 @@ namespace Master.EntityFrameworkCore
     public class MasterDbContext : AbpDbContext
     {
         #region Entities
+
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Role> Roles { get; set; }
         public virtual DbSet<Tenant> Tenants { get; set; }
@@ -51,19 +52,20 @@ namespace Master.EntityFrameworkCore
         public virtual DbSet<MajorCharger> MajorChargers { get; set; }
         public virtual DbSet<MatchResource> MatchResources { get; set; }
         public virtual DbSet<Prize> Prizes { get; set; }
-        public virtual DbSet<PrizeSubMajor> PrizeSubMajors  {get;set;}
+        public virtual DbSet<PrizeGroup> PrizeGroups { get; set; }
+        public virtual DbSet<PrizeSubMajor> PrizeSubMajors { get; set; }
         public virtual DbSet<Project> Projects { get; set; }
         public virtual DbSet<ProjectMajorInfo> ProjectMajorInfos { get; set; }
         public virtual DbSet<ProjectTraceLog> ProjectTraceLogs { get; set; }
         public virtual DbSet<Notice> Notices { get; set; }
         public virtual DbSet<Review> Reviews { get; set; }
         public virtual DbSet<ReviewRound> ReviewRounds { get; set; }
-        #endregion
 
-        public MasterDbContext(DbContextOptions<MasterDbContext> options) 
+        #endregion Entities
+
+        public MasterDbContext(DbContextOptions<MasterDbContext> options)
             : base(options)
         {
-
         }
 
         //#region DbFunction
@@ -103,8 +105,6 @@ namespace Master.EntityFrameworkCore
             }
 
             base.OnModelCreating(modelBuilder);
-
-            
         }
     }
 }

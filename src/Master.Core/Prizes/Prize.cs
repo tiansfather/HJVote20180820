@@ -20,6 +20,8 @@ namespace Master.Prizes
         public virtual Match Match { get; set; }
         public virtual int? MatchInstanceId { get; set; }
         public virtual MatchInstance MatchInstance { get; set; }
+        public virtual int? PrizeGroupId { get; set; }
+        public virtual PrizeGroup PrizeGroup { get; set; }
         public virtual string ExtensionData { get; set; }
         public virtual string Remarks { get; set; }
         public bool IsActive { get; set; }

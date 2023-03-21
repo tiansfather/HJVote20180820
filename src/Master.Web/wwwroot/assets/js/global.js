@@ -1,14 +1,13 @@
-﻿
-var config = {
+﻿var config = {
     layuiBase: '/assets/layuiadmin/',
     layuiIndex: 'lib/index',
     layuiExtends: {
         authtree: 'lib/extend/authtree',
         ztree: 'lib/extend/ztree/ztree',
         droptree: 'lib/extend/droptree',
-		formSelects: '../lib/extend/formselects/formSelects-v4'
+        formSelects: '../lib/extend/formselects/formSelects-v4'
     },
-    layuiModules: ['index', 'table', 'layer', 'form', 'element', 'laydate','tree','upload','colorpicker'],
+    layuiModules: ['index', 'table', 'layer', 'form', 'element', 'laydate', 'tree', 'upload', 'colorpicker'],
     //页面layui加载完后调用
     ready: function () {
         console.log("onready not implemented");
@@ -30,7 +29,7 @@ var config = {
         layer.open({
             type: 2,
             title: L('检索'),
-            closeBtn: 1, 
+            closeBtn: 1,
             shade: 0.1,
             shadeClose: true,
             area: ['600px', '100%'],
@@ -38,7 +37,6 @@ var config = {
             anim: 3,
             content: [url], //iframe的url，no代表不显示滚动条
             end: function () { //此处用于演示
-
             }
         });
     },
@@ -47,8 +45,8 @@ var config = {
             columnKey = option.columnKey,
             maxReferenceNumber = option.maxReferenceNumber || 1;
         //展示关联引用窗体
-        var url = "/ModuleData/RelativeSelect?moduleKey=" + moduleKey + "&columnKey=" + columnKey + "&maxReferenceNumber"+maxReferenceNumber;
-        window.referenceLayerIndex=layer.open({
+        var url = "/ModuleData/RelativeSelect?moduleKey=" + moduleKey + "&columnKey=" + columnKey + "&maxReferenceNumber" + maxReferenceNumber;
+        window.referenceLayerIndex = layer.open({
             type: 2,
             title: L('关联查询'),
             closeBtn: 1,
@@ -59,20 +57,17 @@ var config = {
             anim: 0,
             content: [url], //iframe的url，no代表不显示滚动条
             end: function () { //此处用于演示
-
             }
         });
     }
 };
 
-
 $(function () {
-    
     //全局事件
     //tip事件
     $("body").on("mouseenter", "*[tips]", function () {
         var e = $(this);
-        if (!e.attr("tips")) { return;}
+        if (!e.attr("tips")) { return; }
         var i = e.attr("tips"),
             t = e.attr("lay-offset"),
             n = e.attr("lay-direction"),
@@ -86,7 +81,7 @@ $(function () {
         e.data("index", s)
     }).on("mouseleave", "*[tips]", function () {
         layer.close($(this).data("index"))
-        });
+    });
     $("body").on("mouseenter", "*[formtips]", function () {
         var e = $(this);
         if (!e.attr("formtips")) { return; }
@@ -112,7 +107,7 @@ $(function () {
     func.initUI();
 
     //图片缩略放大事件 2018/5/24 13:55 lijianbo
-    $("body").on('click',"img.thumb", function () {
+    $("body").on('click', "img.thumb", function () {
         var img = $(this);
         var fileid = img.attr("FileID");
         top.layer.open({
@@ -120,9 +115,9 @@ $(function () {
             , skin: 'picturesshow'
             , area: ['80%', '80%']
             , content: '<img style=\'width:100%,height:100%\' src=\'/File/Thumb?fileid=' + fileid + '\' >'
-        });  
+        });
     });
-    
+
     //清空table的检索缓存
     $("table[module]").each(function () {
         var moduleKey = $(this).attr("module");
@@ -130,12 +125,10 @@ $(function () {
     })
 })
 
-
 var func = {
-    
     //获取模块的js名
     getModuleServiceName: function (name) {
-        return name?(name[0].toLowerCase() + name.substring(1)):"moduleData";
+        return name ? (name[0].toLowerCase() + name.substring(1)) : "moduleData";
     },
     //模块按钮事件
     callModuleButtonEvent: function (element) {
@@ -150,9 +143,9 @@ var func = {
             buttonactionparam = ele.attr("params"),
             buttonactionurl = ele.attr("buttonactionurl"),
             callback = ele.attr("callback"),
-            opentop=ele.attr("opentop"),            
-            fornonerow = ele.attr("fornonerow");            
-        
+            opentop = ele.attr("opentop"),
+            fornonerow = ele.attr("fornonerow");
+
         //提交的数据
         var data = [];
         if (dataid) { data.push(dataid); }
@@ -164,7 +157,7 @@ var func = {
             }
         }
         var url = buttonactionurl + (buttonactionurl.indexOf("?") > 0 ? "&" : "?") + "modulekey=" + moduleKey + "&data=" + data.join(','); //url
-        
+
         var funcProxyWrapper;//方法包装
         //异步提交方式
         if (buttonactiontype === "Ajax") {
@@ -188,7 +181,6 @@ var func = {
 
                 );
             }
-
         }
         //展示窗体
         else if (buttonactiontype === "Form") {
@@ -202,7 +194,7 @@ var func = {
                 btn: ['提交', '关闭'],
                 yes: function (index, layero) {
                     var iframeWin = window[layero.find('iframe')[0]['name']]; //得到iframe页的窗口对象，执行iframe页的方法：iframeWin.method();
-                    if (iframeWin.submit) { iframeWin.submit(); return false;}
+                    if (iframeWin.submit) { iframeWin.submit(); return false; }
                 },
                 btn2: function (index, layero) {
                     var iframeWin = window[layero.find('iframe')[0]['name']];
@@ -210,7 +202,7 @@ var func = {
                 },
                 btn3: function (index, layero) {
                     var iframeWin = window[layero.find('iframe')[0]['name']];
-                    if (iframeWin.submit3) { iframeWin.submit3(); return false;}
+                    if (iframeWin.submit3) { iframeWin.submit3(); return false; }
                 }
             };
             var param = buttonactionparam ? $.parseJSON(buttonactionparam) : {};
@@ -224,10 +216,9 @@ var func = {
                         $(layero).append("<button class='layui-btn layui-btn-sm layui-btn-danger closeBtn' style='position: absolute;top: 8px;right: 15px; width: 80px;'>返回</button>").find(".closeBtn").click(function () {
                             top.layer.close(index);
                         });
-
                     };
                 }
-                (opentop?top.layer:layer).open($.extend(defaultOption, param));
+                (opentop ? top.layer : layer).open($.extend(defaultOption, param));
             }
         }
         //打开Tab
@@ -245,8 +236,8 @@ var func = {
         }
     },
     //表格重载
-    reload: function (tableid,option) {
-        layui.table.reload(tableid,option);
+    reload: function (tableid, option) {
+        layui.table.reload(tableid, option);
     },
     //异步执行
     runAsync: function (fun) {
@@ -282,14 +273,14 @@ var func = {
             var h = top.$(".layui-body").height();
             //var h = $(document).height();
             h = h - parseInt(layouth);
-            $(this).css("overflow-y","auto");
-            $(this).css("height",  h + "px");
+            $(this).css("overflow-y", "auto");
+            $(this).css("height", h + "px");
         })
     },
     //构建查询条件
     buildSearchCondition: function (moduleKey) {
         var conditions = layui.sessionData(moduleKey).conditions;
-        if (!conditions || conditions=="") {
+        if (!conditions || conditions == "") {
             return "";
         } else {
             //var conditionStr = "";
@@ -301,7 +292,7 @@ var func = {
         }
     },
     //查找返回,子页面调用
-    bringBack: function (moduleKey,isReturn) {
+    bringBack: function (moduleKey, isReturn) {
         var checkStatus = layui.table.checkStatus(moduleKey);
         if (checkStatus.data.length == 0) {
             layer.msg(L('请至少选择一项'), { icon: 5, anim: 6 });
@@ -319,11 +310,11 @@ var func = {
                 layer.closeAll('iframe');
             }
         }
-        
+
         console.log(data);
     },
     bringBackFuncs: [],
-    referenceDatas:[]
+    referenceDatas: []
 };
 /*多语种*/
 abp.localization.defaultSourceName = "Master";
@@ -331,7 +322,7 @@ function L(name) {
     return abp.localization.localize(name);
 }
 
-function getEvent() { //同时兼容ie和ff的写法 
+function getEvent() { //同时兼容ie和ff的写法
     if (document.all) return window.event;
     var func = getEvent.caller;
     while (func !== null) {
@@ -345,15 +336,15 @@ function getEvent() { //同时兼容ie和ff的写法
         func = func.caller;
     }
     return null;
-} 
+}
 
 /*jquery扩展*/
 //获取url的参数值
-    $.getUrlParam = function (name) {
-        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-        var r = window.location.search.substr(1).match(reg);
-        if (r !== null) return unescape(r[2]); return null;
-    }
+$.getUrlParam = function (name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r !== null) return unescape(r[2]); return null;
+}
 
 //把name/value的数组转为obj对象
 $.arrayToObj = function (array) {
@@ -369,7 +360,7 @@ $.arrayToObj = function (array) {
     return result;
 }
 $.newid = function () {
-    return new Date().getTime() +''+ Math.round(Math.random()*1000);
+    return new Date().getTime() + '' + Math.round(Math.random() * 1000);
 }
 function getCheckboxValue(name) {
     var data = [];
@@ -408,23 +399,36 @@ function checkToken() {
     //var checkTokenInterval = window.setInterval(, 1000);
 }
 // 对Date的扩展，将 Date 转化为指定格式的String
-// 月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符， 
-// 年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字) 
-// 例子： 
-// (new Date()).Format("yyyy-MM-dd hh:mm:ss.S") ==> 2006-07-02 08:09:04.423 
-// (new Date()).Format("yyyy-M-d h:m:s.S")      ==> 2006-7-2 8:9:4.18 
-Date.prototype.Format = function (fmt) { //author: meizz 
-	var o = {
-		"M+": this.getMonth() + 1, //月份 
-		"d+": this.getDate(), //日 
-		"h+": this.getHours(), //小时 
-		"m+": this.getMinutes(), //分 
-		"s+": this.getSeconds(), //秒 
-		"q+": Math.floor((this.getMonth() + 3) / 3), //季度 
-		"S": this.getMilliseconds() //毫秒 
-	};
-	if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
-	for (var k in o)
-		if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
-	return fmt;
+// 月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
+// 年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
+// 例子：
+// (new Date()).Format("yyyy-MM-dd hh:mm:ss.S") ==> 2006-07-02 08:09:04.423
+// (new Date()).Format("yyyy-M-d h:m:s.S")      ==> 2006-7-2 8:9:4.18
+Date.prototype.Format = function (fmt) { //author: meizz
+    var o = {
+        "M+": this.getMonth() + 1, //月份
+        "d+": this.getDate(), //日
+        "h+": this.getHours(), //小时
+        "m+": this.getMinutes(), //分
+        "s+": this.getSeconds(), //秒
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+        "S": this.getMilliseconds() //毫秒
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
 }
+
+Array.prototype.indexOf = function (val) {
+    for (var i = 0; i < this.length; i++) {
+        if (this[i] == val) return i;
+    }
+    return -1;
+};
+Array.prototype.remove = function (val) {
+    var index = this.indexOf(val);
+    if (index > -1) {
+        this.splice(index, 1);
+    }
+};

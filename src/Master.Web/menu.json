@@ -68,6 +68,12 @@
         "url": "/Prizes"
       },
       {
+        "name": "matchmanager.prizegroup",
+        "displayName": "奖项分类管理",
+        "icon": "layui-icon layui-icon-zcontrol",
+        "url": "/Prizes/Groups"
+      },
+      {
         "name": "matchmanager.formdesign",
         "displayName": "表单设计器",
         "icon": "layui-icon layui-icon-layouts",

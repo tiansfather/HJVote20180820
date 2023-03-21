@@ -1,0 +1,160 @@
+﻿@using Master.Web.Components
+@using Master.Matches
+@using Master.Prizes
+@{
+    Layout = "~/Views/Shared/_LayoutDialog.cshtml";
+    ViewData["Title"] = "Add";
+
+    var matches = ViewData["matches"] as List<Match>;
+}
+
+<div>
+    <form class="layui-form layui-form-pane layui-hide" id="app">
+        <div class="layui-form-item">
+            <label class="layui-form-label">赛事</label>
+            <div class="layui-input-block">
+                <select name="MatchId" asp-items="@(new SelectList(matches,"Id","Name"))" lay-filter="MatchId" lay-verify="required" v-model="currentItem.matchId">
+                    <option value="">--请选择赛事--</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">分类名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="GroupName" lay-verify="required" autocomplete="off" class="layui-input" v-model="currentItem.groupName">
+            </div>
+        </div>        
+        <div class="layui-form-item" v-if="currentItem.prizeType!=4" pane>
+            <label class="layui-form-label" style="padding:8px 5px">对应奖项</label>
+            <div class="layui-input-block">                
+                <template >
+                    <div v-for="(item,index) in currentItem.subPrizes">
+                        <input type="checkbox" lay-skin="primary" :checked="item.checked" name="PrizeId" :value="item.id" :title="item.name" lay-filter="PrizeId">
+                    </div>
+                </template>
+            </div>
+        </div>
+        <div class="layui-form-item" pane>
+            <label class="layui-form-label">状态</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="IsActive" value="true" lay-skin="switch" lay-text="有效|无效" :checked="currentItem.isActive" lay-filter="IsActive" >
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea placeholder="" class="layui-textarea" name="Remarks" v-model="currentItem.remarks"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit="" lay-filter="PrizeGroupAddSubmit" id="PrizeGroupAddSubmit">@L("提交")</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section scripts{
+    <script>
+        var app;
+        config.ready = function () {
+            layui.form.on('select(MatchId)', function (data) {
+                var matchId = data.value;
+                app.currentItem.matchId = matchId;
+                app.currentItem.subPrizes = [];
+                app.loadPrizes(matchId);
+            });
+            layui.form.on('switch(IsActive)', function (data) {
+                app.currentItem.isActive = data.elem.checked;
+            });
+            layui.form.on('checkbox(PrizeId)', function (data) {
+                var prizeId = data.value;
+                var prize = app.currentItem.subPrizes.filter(function (o) { return o.id == prizeId })[0];
+                prize.checked = data.elem.checked;
+            });
+            layui.form.on('submit', function (data) {
+                var checkedPrizes = app.currentItem.subPrizes.filter(function (o) { return o.checked });
+                //数据有效性检测
+                if (checkedPrizes.length < 1) {
+                        layer.msg('请选择奖项', { icon: 5, anim: 6 });
+                        return false;
+                    }
+                func.runAsync(abp.services.app.prizeGroup.submitPrizeGroup(app.currentItem).done(function () {
+                    parent.layer.msg("@L("提交成功")");
+                    parent.layer.closeAll("iframe");
+                    parent.func.reload("PrizeGroup");
+                    parent.config.refresh();
+
+                }))
+            })
+            app = new Vue({
+                el: '#app',
+                data: {
+                    item: {},
+                    currentItem: {matchId:"",groupName:null,remarks:null,subPrizes:[]}
+                    
+                },
+                computed: {
+                    
+
+                },
+                methods: {
+                    loadItem: function (id) {
+                        if (id) {
+                            abp.services.app.prizeGroup.getPrizeGroup(id).done(function (data) {
+                                app.currentItem = data;
+                                app.loadPrizes(app.currentItem.matchId);
+                            })
+                        }
+
+                    },
+                    loadPrizes: function (matchId) {                        
+                        abp.services.app.prize.getMatchPrizes(matchId).done(function (data) {
+                            console.log(data);
+                            var nowcheckedPrizeIds = app.currentItem.subPrizes.map(function (o){ return o.id});
+                            app.currentItem.subPrizes = data.map(function(o){return {id:o.id,name:o.name,checked:nowcheckedPrizeIds.filter(p=>p==o.id).length>0}})
+                            //if (majorId) {
+                            //    app.loadSubMajors(majorId);
+                            //}
+                            config.refresh();
+                        })
+                    },
+                    //loadSubMajors: function (majorId) {
+                    //    var subMajors = app.majors.filter(function (o) { return o.parentId == majorId; })
+                    //        .map(function (o) { return { id: o.id, name: o.briefName, percent: null, checked: false } });
+                    //    for (var i = 0; i < subMajors.length; i++) {                             
+                    //        if (this.currentItem.subMajors.filter(function (o) { return o.id == subMajors[i].id; }).length == 0) {
+                    //            this.currentItem.subMajors.push(subMajors[i]);
+                    //        }
+                    //    }
+                        
+                    //    config.refresh();
+                    //}
+
+                },
+                mounted: function () {
+                    var id = $.getUrlParam("data");
+                    this.loadItem(id);
+                    layui.form.render();
+                    $("#app").removeClass("layui-hide");
+                }
+
+            });
+
+        }
+        config.refresh = function () {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
+
+        }
+        function submit() {
+            $("#PrizeGroupAddSubmit").click();
+
+        }
+    </script>
+}
+

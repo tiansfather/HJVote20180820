@@ -9,13 +9,13 @@
     var allSubMajors = Model.PrizeSubMajors.Where(o => o.Checked);
     var prizeSubMajors = allSubMajors;
     var organizations = ViewData["organizations"] as List<Organization>;
-    var subMajorId = ViewData["subMajorId"].ToString();
+    var subMajorIds = ViewData["subMajorIds"] as List<int>;
     var thirdLevelMajors = ViewData["ThirdLevelMajors"] as List<string>;//第三级专业
     int? prizeSubMajorId = null;
-    //如果是专业类或混排类，只需要列出对应选中的专业
-    if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed)
+    //如果是专业类或混排类或复选类，只需要列出对应选中的专业
+    if (Model.PrizeType == PrizeType.Major || Model.PrizeType == PrizeType.Mixed || Model.PrizeType==PrizeType.MultiCheck)
     {
-        prizeSubMajors = prizeSubMajors.Where(o => o.MajorId == int.Parse(subMajorId));
+        prizeSubMajors = prizeSubMajors.Where(o => subMajorIds.Contains(o.MajorId));
         prizeSubMajorId = prizeSubMajors.First().Id;
 
     }
@@ -186,11 +186,18 @@
                                                 <label><input type="checkbox" @(subMajor.Checked ? "checked" : "") disabled />@subMajor.Major.BriefName</label>
                                             }
                                         }
+                                        else if(Model.PrizeType == PrizeType.MultiCheck)
+                                        {
+                                            foreach (var subMajor in allSubMajors)
+                                            {
+                                                <label><input type="checkbox" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
+                                            }
+                                        }
                                         else
                                         {
                                             foreach (var subMajor in allSubMajors)
                                             {
-                                                <label><input type="radio" disabled @(subMajor.MajorId == int.Parse(subMajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
+                                                <label><input type="radio" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
                                             }
 
                                             <button type="button" class="layui-btn layui-btn-xs" onclick="changeSubMajor()" v-if="!project.id">修改</button>
