@@ -11,6 +11,7 @@ using Master.Organizations;
 using Master.Prizes;
 using Master.Projects;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 
 namespace Master.Web.Controllers
@@ -26,6 +27,7 @@ namespace Master.Web.Controllers
         public PrizeManager PrizeManager { get; set; }
         public PrizeGroupManager PrizeGroupManager { get; set; }
         public ProjectManager ProjectManager { get; set; }
+        public IRepository<ProjectMajorInfo, int> ProjectMajorInfoRepository { get; set; }
 
         /// <summary>
         /// 项目申报主页
@@ -84,6 +86,12 @@ namespace Master.Web.Controllers
                     childMajors.AddRange(await MajorManager.FindChildrenAsync(null, matchInstance.Id, singleMajorId));
                 }
                 ThirdLevelMajors = childMajors.OrderBy(o => o.Sort).Select(o => o.BriefName).ToList();
+            }
+            //如果有项目id,则查询subMajorId
+            if (projectId.HasValue)
+            {
+                //获取子专业id;
+                subMajorIds = await ProjectMajorInfoRepository.GetAll().Where(o => o.ProjectId == projectId && o.MajorId != null).Select(o => o.MajorId.Value).ToListAsync();
             }
             ViewData["ThirdLevelMajors"] = ThirdLevelMajors;
             //所有单位
