@@ -114,6 +114,10 @@
 			});
             table.on('toolbar(Project)',function(obj){
                 var data = table.checkStatus(obj.config.id).data;
+                if(data.length==0){
+                    layer.msg("请先选择项目再进行操作", { icon: 5, anim: 6 });
+                    return;
+                }
                 layer.confirm('确定对选中项目进行批量通过？', function (index) {
                     var ids=data.map(o=>o.id);
                     func.runAsync(abp.services.app.project.multiVerify(ids).done(function () {
