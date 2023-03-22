@@ -20,9 +20,9 @@
             <tr>
                 <th lay-data="{field:'realname', width:120}">专家姓名</th>
                 <th lay-data="{field:'company', width:150}">所属单位</th>
-                @if (reviewDetail.ReviewMethod == ReviewMethod.Vote)
+                @if (reviewDetail.ReviewMethod == ReviewMethod.Vote || reviewDetail.ReviewMethod == ReviewMethod.VetoSystem)
                 {
-                    <th lay-data="{field:'vote', width:100}">投票</th>
+                    <th lay-data="{field:'vote', width:100}">@(reviewDetail.ReviewMethod == ReviewMethod.Vote?"投票":"同意")</th>
                 }
                 else
                 {
@@ -59,7 +59,7 @@
                     }
                     else
                     {
-                        if (reviewDetail.ReviewMethod == ReviewMethod.Vote)
+                            if (reviewDetail.ReviewMethod == ReviewMethod.Vote || reviewDetail.ReviewMethod == ReviewMethod.VetoSystem)
                         {
                             if (detail.VoteFlag)
                             {

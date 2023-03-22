@@ -135,6 +135,10 @@
                     layer.msg("请正确设置参数", { icon: 5, anim: 6 })
                     return false;
                 }
+                if(app.currentItem.reviewMethod==4){
+                    //否决制的设置投票数量为0，以在专家打分时不做限制
+                    app.currentItem.reviewMethodSetting.voteNumber=0;
+                }
                 //提交
                 func.runAsync(abp.services.app.review.submitReviewRound(app.currentItem).done(function () {
                     parent.layer.msg("提交成功");

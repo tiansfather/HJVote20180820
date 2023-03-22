@@ -27,6 +27,8 @@
     var simpleMode = matchInstance.MatchInstanceType == MatchInstanceType.简单评选项目;
     //是否只显示项目名称
     var showProjectNameOnly = matchInstance.MatchInstanceDisplayMode==MatchInstanceDisplayMode.仅显示名称;
+    //是否是专家
+    var isExpert = AbpSession.IsExpert();
 }
 <style>
     .layui-collapse {
@@ -125,49 +127,52 @@
 
                                     </div>
                                 </div>*@
-                                <div class="layout layui-col-md12 layout-height3" style="border-right:0">
-                                    <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
-                                        <label>申报单位<font color="red">*</font>:</label>
+                                @if(!isExpert){
+                                    <div class="layout layui-col-md12 layout-height3" style="border-right:0">
+                                        <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
+                                            <label>申报单位<font color="red">*</font>:</label>
+                                        </div>
+                                        <div class="layout layui-col-md10 layout-height3" style="border-right:0">
+                                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>单位名称<font color="red">*</font>:</label>
+                                                </div>
+                                                <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
+                                                    {{project.designOrganizationBriefName}}
+                                                </div>
+                                            </div>
+                                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>联系人<font color="red">*</font>:</label>
+                                                </div>
+                                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                                    <input type="text" v-model="project.designOrganizationContact" />
+                                                </div>
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>电话<font color="red">*</font>:</label>
+                                                </div>
+                                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                                    <input type="text" v-model="project.designOrganizationPhone" />
+                                                </div>
+                                            </div>
+                                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>手机<font color="red">*</font>:</label>
+                                                </div>
+                                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                                    <input type="text" v-model="project.designOrganizationMobile" />
+                                                </div>
+                                                <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
+                                                    <label>邮箱<font color="red">*</font>:</label>
+                                                </div>
+                                                <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
+                                                    <input type="text" v-model="project.designOrganizationEmail" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="layout layui-col-md10 layout-height3" style="border-right:0">
-                                        <div class="layout layui-col-md12 layout-height1" style="border-right:0">
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>单位名称<font color="red">*</font>:</label>
-                                            </div>
-                                            <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                {{project.designOrganizationBriefName}}
-                                            </div>
-                                        </div>
-                                        <div class="layout layui-col-md12 layout-height1" style="border-right:0">
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>联系人<font color="red">*</font>:</label>
-                                            </div>
-                                            <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                                <input type="text" v-model="project.designOrganizationContact" />
-                                            </div>
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>电话<font color="red">*</font>:</label>
-                                            </div>
-                                            <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                                <input type="text" v-model="project.designOrganizationPhone" />
-                                            </div>
-                                        </div>
-                                        <div class="layout layui-col-md12 layout-height1" style="border-right:0">
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>手机<font color="red">*</font>:</label>
-                                            </div>
-                                            <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                                <input type="text" v-model="project.designOrganizationMobile" />
-                                            </div>
-                                            <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                <label>邮箱<font color="red">*</font>:</label>
-                                            </div>
-                                            <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                                <input type="text" v-model="project.designOrganizationEmail" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                }
+                               
                                 <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                     <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
                                         <label>申报奖项:</label>
@@ -277,7 +282,7 @@
                                             市<input type="text" v-model="project.buildingCity" style="width:50px;margin-left:10px" />
                                         </div>
                                     </div>
-                                    @if (prizeSubMajors.Count() > 0)
+                                    @if (prizeSubMajors.Count() > 0 && !isExpert)
                                     {
                                         <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
                                             <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">

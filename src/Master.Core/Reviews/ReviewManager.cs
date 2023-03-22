@@ -519,7 +519,7 @@ namespace Master.Reviews
                 obj.Sort = reviewProject.Sort;//排序
                 obj.NeedConfirm = false;//同分标记
                 //得分
-                if (mainReviewDetail.ReviewMethod == ReviewMethod.Vote)
+                if (mainReviewDetail.ReviewMethod == ReviewMethod.Vote || mainReviewDetail.ReviewMethod == ReviewMethod.VetoSystem)
                 {
                     obj.Score = projectDetails.Where(p => p.ProjectId == o.Id).Sum(p =>
                     {

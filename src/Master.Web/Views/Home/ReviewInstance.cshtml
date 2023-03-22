@@ -56,62 +56,62 @@
     <link rel="stylesheet" href="/assets/huajian/css/main_huajian.css">
     <style>
         .none a {
-            text-decoration: none;
-            color: #bbb !important;
+        text-decoration: none;
+        color: #bbb !important;
         }
         .layui-form-switch {
-            position: relative;
-            height: 36px;
-            line-height: 36px;
-            width: 56px;
-            padding: 0 5px;
-            margin-top: 0px;
-            border: 1px solid #d2d2d2;
-            border-radius: 40px;
-            cursor: pointer;
-            background-color: #fff;
-            -webkit-transition: .1s linear;
-            transition: .1s linear;
+        position: relative;
+        height: 36px;
+        line-height: 36px;
+        width: 56px;
+        padding: 0 5px;
+        margin-top: 0px;
+        border: 1px solid #d2d2d2;
+        border-radius: 40px;
+        cursor: pointer;
+        background-color: #fff;
+        -webkit-transition: .1s linear;
+        transition: .1s linear;
         }
 
         .layui-form-onswitch {
-            border-color: #D83F44;
-            background-color: #D83F44;
+        border-color: #D83F44;
+        background-color: #D83F44;
         }
 
         .layui-form-switch i {
-            position: absolute;
-            left: 5px;
-            top: 3px;
-            width: 30px;
-            height: 30px;
-            border-radius: 40px;
-            background-color: #d2d2d2;
-            -webkit-transition: .1s linear;
-            transition: .1s linear;
+        position: absolute;
+        left: 5px;
+        top: 3px;
+        width: 30px;
+        height: 30px;
+        border-radius: 40px;
+        background-color: #d2d2d2;
+        -webkit-transition: .1s linear;
+        transition: .1s linear;
         }
 
         .layui-form-onswitch em {
-            left: 5px;
-            right: auto;
-            color: #fff !important;
+        left: 5px;
+        right: auto;
+        color: #fff !important;
         }
 
         .layui-form-onswitch i {
-            left: 52px;
-            background-color: #fff;
+        left: 52px;
+        background-color: #fff;
         }
 
         .layui-form-switch em {
-            position: absolute;
-            right: 5px;
-            top: 0;
-            width: 25px;
-            padding: 0 !important;
-            text-align: center !important;
-            color: #999 !important;
-            font-style: normal !important;
-            font-size: 12px;
+        position: absolute;
+        right: 5px;
+        top: 0;
+        width: 25px;
+        padding: 0 !important;
+        text-align: center !important;
+        color: #999 !important;
+        font-style: normal !important;
+        font-size: 12px;
         }
     </style>
 </head>
@@ -123,7 +123,13 @@
         <vc:top-bar-nav2 login-information-dto="Model"></vc:top-bar-nav2>
         <header-wr>
             <div>
-                <h2 style="font-size:24px;text-align:center;">@(review.ReviewName)--第@(currentRound.RoundC)轮第@(currentRound.Turn)次</h2>
+                <h2 style="font-size:24px;text-align:center;">@(
+                    review.ReviewName
+                    )--第@(
+                    currentRound.RoundC
+                    )轮第@(
+                     currentRound.Turn
+                     )次</h2>
                 <hr />
             </div>
             <div class="wrap_tj">
@@ -133,11 +139,21 @@
                     <li class="fheader-wrleft">
                         @if (currentRound.ReviewMethod == ReviewMethod.Vote)
                         {
-                            <span>每人投@(reviewMethodSetting.VoteNumber)票</span>
+                            <span>每人投@(
+                                                       reviewMethodSetting.VoteNumber
+                                                       )票</span>
+                        }
+                        else if (currentRound.ReviewMethod == ReviewMethod.VetoSystem)
+                        {
+                            <span>否决制投票</span>
                         }
                         else
                         {
-                            <i class="huadongjz fa-thumbs-o-down"></i><span>最低分@(reviewMethodSetting.MinScore)</span> <i class="huadongjz fa-thumbs-o-up upfen"></i><span class="upfen">最高分@(reviewMethodSetting.MaxScore)</span> <i class="huadongjz fa-angle-double-right gofen"></i>
+                            <i class="huadongjz fa-thumbs-o-down"></i><span>最低分@(
+                            reviewMethodSetting.MinScore
+                            )</span> <i class="huadongjz fa-thumbs-o-up upfen"></i><span class="upfen">最高分@(
+                            reviewMethodSetting.MaxScore
+                            )</span> <i class="huadongjz fa-angle-double-right gofen"></i>
                         }
 
                     </li>
@@ -151,7 +167,7 @@
                 <div class="wrap_table layui-hide" id="app">
                     <table class="layui-table" lay-size="lg">
                         <colgroup>
-                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                             {
                                 <col width="110">
                             }
@@ -164,29 +180,31 @@
                             <col width="200">
                             <col width="150">
                             <col width="150">
-                            @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                            @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                             {
                                 <col width="88">
                             }
                         </colgroup>
                         <thead>
                             <tr>
-                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                                 {
                                     <th style="cursor:pointer" onclick="app.sortby('score')"><div align="center">得分
-<i class="layui-icon layui-icon-down" v-if="sortfield=='score'"></i></div></th>
+                                            <i class="layui-icon layui-icon-down" v-if="sortfield=='score'"></i></div></th>
                                 }
                                 else
                                 {
-                                    <th><div align="center">投票</div></th>
+                                    <th><div align="center">@(
+                                                                currentRound.ReviewMethod == ReviewMethod.Vote ? "投票" : "同意"
+                                                                )</div></th>
                                 }
                                 <th style="cursor:pointer" onclick="app.sortby('sort')"><div align="center">序号
-                                    <i class="layui-icon layui-icon-up" v-if="sortfield=='sort'"></i></div></th>
+                                        <i class="layui-icon layui-icon-up" v-if="sortfield=='sort'"></i></div></th>
                                 <th><div align="center">项目名称</div></th>
                                 <th><div align="center">奖项</div></th>
                                 <th><div align="center">专业</div></th>
                                 @*<th><div align="center">申报单位</div></th>*@
-                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                                 {
                                     <th><div align="center">回 避</div></th>
                                 }
@@ -195,7 +213,7 @@
                         </thead>
                         <tbody>
                             <tr v-for="(project,index) in reviewProjectDtos" :projectid="project.id" :class="{'on':ifScored(project.id),'none':ifAvoid(project.id)}">
-                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                                 {
                                     <td name="score" align="center">{{getProjectDetail(project.id).score}}</td>
                                 }
@@ -210,7 +228,7 @@
                                 <td align="center">{{project.prizeName}}</td>
                                 <td align="center">{{project.subMajorName}}</td>
                                 @*<td align="center">{{project.designOrganizationName}}</td>*@
-                                @if (currentRound.ReviewMethod != ReviewMethod.Vote)
+                                @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                                 {
                                     <td>
                                         <input type="checkbox" name="isavoid" lay-skin="switch" lay-filter="avoidSwitch" v-model="getProjectDetail(project.id).isAvoid">
@@ -270,7 +288,9 @@
     <script src="~/assets/js/index.js" asp-append-version="true"></script>
     <script>
         //var projectdetails =@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(projectReviewDetails,settings));
-        var method ="@(currentRound.ReviewMethod==ReviewMethod.Vote?"vote":"score")";
+        var method ="@(
+        currentRound.ReviewMethod == ReviewMethod.Vote || currentRound.ReviewMethod == ReviewMethod.VetoSystem ? "vote" : "score"
+        )";
         var requirevotenumber=@currentRound.ReviewMethodSetting.VoteNumber;
         var app;
 
@@ -388,7 +408,7 @@
                 if (data.elem.checked) {
                     //判断是否超出投票数量
                     var votecount = $("tr.on").size();
-                    if (votecount >= requirevotenumber) {
+                    if (requirevotenumber>0 && votecount >= requirevotenumber) {
                         layer.alert("最多只能投" + requirevotenumber + "票");
                         projectDetail.voteFlag = false;
                         refresh();
@@ -433,7 +453,7 @@
                 //发布的需要进行数据验证
                 var votenumber = $("tr.on").size();
                 if (method == "vote") {
-                    if (votenumber != requirevotenumber) {
+                    if (requirevotenumber>0 &&votenumber != requirevotenumber) {
                         if (votenumber + $("[name='isavoid']:checked").size() != $("[projectid]").size()) {
                             abp.message.info("请投" + requirevotenumber + "票再提交");
                             return false;
