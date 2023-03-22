@@ -81,7 +81,9 @@
             console.log(where);
             layui.table.reload('Project', {
                 where: where
-
+                 ,page: {
+                    curr: 1 //重新从第 1 页开始
+                  }
             })
 
             return false;

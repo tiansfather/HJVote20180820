@@ -140,7 +140,9 @@
 			where.searchKeys = JSON.stringify(searchKeys);
 			layui.table.reload('User', {
 				where: where
-
+				,page: {
+					curr: 1 //重新从第 1 页开始
+				  }
 			})
 
 			return false;
