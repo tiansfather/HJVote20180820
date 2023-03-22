@@ -95,9 +95,10 @@
                                 </div>
                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                     <input type="text" v-model="project.projectName" style="width:200px" />
+                                    <label><input type="checkbox" :checked="project.isOriginal" v-model="project.isOriginal" />原创</label>
                                 </div>
                             </div>
-                            <div class="layout layui-col-md12 layout-height1" style="border-right:0">
+                           @* <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
                                     <label>归档编号<font color="red">*</font>:</label>
                                 </div>
@@ -114,7 +115,7 @@
 
 
                                 </div>
-                            </div>
+                            </div>*@
                             <div class="layout layui-col-md12 layout-height3" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
                                     <label>申报单位<font color="red">*</font>:</label>
@@ -808,7 +809,7 @@
             //表单必填验证
             var requiredField = [
                 { field: 'projectName', msg: '项目名称' },
-                { field: 'projectSN', msg: '归档编号' },
+                //{ field: 'projectSN', msg: '归档编号' },
                 { field: 'designOrganizationId', msg: '申报单位名称' },
                 { field: 'designOrganizationContact', msg: '申报单位联系人' },
                 { field: 'designOrganizationPhone', msg: '申报单位电话' },
