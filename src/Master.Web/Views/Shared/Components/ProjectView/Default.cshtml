@@ -192,7 +192,7 @@
                                             }
                                             else if(Model.PrizeType == PrizeType.MultiCheck)
                                         {
-                                            foreach (var subMajor in allSubMajors)
+                                            foreach (var subMajor in allSubMajors.Where(o=>o.Checked))
                                             {
                                                 <label><input type="checkbox" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
                                             }

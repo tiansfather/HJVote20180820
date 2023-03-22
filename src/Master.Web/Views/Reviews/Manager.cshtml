@@ -67,13 +67,15 @@
     {{#}}}
 </script>
 <script type="text/html" id="reviewTypeTpl">
-    {{#if(d.reviewType==1){}}
-    初评
-    {{#}else if(d.reviewType==2){}}
-    终评
-    {{#}else{}}
-    决赛
-    {{#}}}
+    {{#if(d.reviewType==0){}}
+    预审
+        {{#}else if(d.reviewType==1){}}
+        初评
+        {{#}else if(d.reviewType==2){}}
+        终评
+        {{#}else{}}
+        决赛
+        {{#}}}
 </script>
 
 @section scripts{

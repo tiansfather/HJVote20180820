@@ -16,34 +16,42 @@ namespace Master.Reviews
         public virtual string ExtensionData { get; set; }
         public int ReviewId { get; set; }
         public virtual Review Review { get; set; }
+
         /// <summary>
         /// 轮
         /// </summary>
         public int Round { get; set; }
+
         /// <summary>
         /// 次
         /// </summary>
         public int Turn { get; set; }
+
         /// <summary>
         /// 目标数量
         /// </summary>
         public int TargetNumber { get; set; }
+
         /// <summary>
         /// 评审方式
         /// </summary>
         public ReviewMethod ReviewMethod { get; set; }
+
         /// <summary>
         /// 评审状态
         /// </summary>
         public ReviewStatus ReviewStatus { get; set; }
+
         /// <summary>
         /// 参选项目
         /// </summary>
         public string SourceProjectIDs { get; set; }
+
         /// <summary>
         /// 评选结果项目
         /// </summary>
         public string ResultProjectIDs { get; set; }
+
         /// <summary>
         /// 评审参数设定
         /// </summary>
@@ -59,6 +67,7 @@ namespace Master.Reviews
                 this.SetData("ReviewMethodSetting", value);
             }
         }
+
         /// <summary>
         /// 专家打分明细
         /// </summary>
@@ -67,10 +76,10 @@ namespace Master.Reviews
         {
             get
             {
-                var result= this.GetData<List<ExpertReviewDetail>>("ExpertReviewDetails");
+                var result = this.GetData<List<ExpertReviewDetail>>("ExpertReviewDetails");
                 if (result == null)
                 {
-                    result= new List<ExpertReviewDetail>();
+                    result = new List<ExpertReviewDetail>();
                 }
                 return result;
             }
@@ -79,6 +88,7 @@ namespace Master.Reviews
                 this.SetData("ExpertReviewDetails", value);
             }
         }
+
         /// <summary>
         /// 轮的中文显示
         /// </summary>
@@ -102,55 +112,69 @@ namespace Master.Reviews
         /// </summary>
         [Description("本轮平均")]
         Average = 1,
+
         /// <summary>
         /// 与上轮加权
         /// </summary>
         [Description("与上轮加权")]
         Weighting = 2,
+
         /// <summary>
         /// 投票
         /// </summary>
         [Description("投票")]
-        Vote = 3
+        Vote = 3,
+
+        /// <summary>
+        /// 否决制
+        /// </summary>
+        [Description("否决制")]
+        VetoSystem = 4,
     }
+
     public enum RateType
     {
         /// <summary>
         /// 直接打分
         /// </summary>
-        Score=0,
+        Score = 0,
+
         /// <summary>
         /// 评分表
         /// </summary>
-        RateTable=1
+        RateTable = 1
     }
+
     /// <summary>
     /// 评审参数设置
     /// </summary>
     public class ReviewMethodSetting
     {
-
         public int MaxScore { get; set; }
         public int MinScore { get; set; }
         public decimal ScoreStep { get; set; }
+
         /// <summary>
         /// 上轮权重
         /// </summary>
         public decimal WeightLast { get; set; }
+
         /// <summary>
         /// 本轮权重
         /// </summary>
         public decimal WeightNow { get; set; }
+
         /// <summary>
         /// 票数
         /// </summary>
         public int VoteNumber { get; set; }
+
         /// <summary>
         /// 去掉最高最低分后的平均
         /// </summary>
         public Boolean CutOff { get; set; }
+
         public RateType RateType { get; set; }
-        
     }
 
     /// <summary>
@@ -160,14 +184,17 @@ namespace Master.Reviews
     {
         public long ExpertId { get; set; }
         public int ProjectId { get; set; }
+
         /// <summary>
         /// 打分
         /// </summary>
         public decimal? Score { get; set; }
+
         /// <summary>
         /// 投票标记
         /// </summary>
         public Boolean VoteFlag { get; set; } = false;
+
         /// <summary>
         /// 回避标记
         /// </summary>
@@ -181,16 +208,19 @@ namespace Master.Reviews
         public int Sort { get; set; }
         public decimal Score { get; set; }
     }
+
     /// <summary>
     /// 专家投票明细
     /// </summary>
     public class ExpertReviewDetail
     {
         public long ExpertID { get; set; }
+
         /// <summary>
         /// 投票时间
         /// </summary>
         public DateTime? FinishTime { get; set; }
+
         public List<ProjectReviewDetail> ProjectReviewDetails { get; set; }
     }
 }

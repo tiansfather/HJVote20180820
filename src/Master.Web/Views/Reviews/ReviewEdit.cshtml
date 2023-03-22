@@ -17,6 +17,9 @@
     var reviewTypeName = "";
     switch (Model.ReviewType)
     {
+        case ReviewType.Pre:
+            reviewTypeName = "预审";
+            break;
         case ReviewType.Initial:
             reviewTypeName = "初评";
             break;

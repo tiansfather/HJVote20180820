@@ -48,37 +48,43 @@
         </div>
         <div class="layui-form-item" style="margin-bottom:2px" pane>
             <label class="layui-form-label" style="padding:8px 5px">评审方法</label>
-            <div class="layui-input-block">
+            <div class="layui-input-block" v-if="currentItem.reviewType!=0">
                 <input type="radio" value="1" title="本轮平均分" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" v-if="currentItem.turn==1"/>
                 <input type="radio" value="2" title="与上轮加权平均分" v-if="currentItem.round>1 && currentItem.turn==1" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
                 <input type="radio" value="3" title="投票" v-if="currentItem.turn>1||true" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
             </div>
-        </div>
-        <div class="layui-form-item" style="margin-bottom:2px" pane>
-            <label class="layui-form-label" style="padding:8px 5px">参数设定</label>
-            <div class="layui-input-block reviewmethodsetting" style="padding-left:5px;">
-                <label id="methodsetting1" v-if="(currentItem.reviewMethod==1||currentItem.reviewMethod==2) && currentItem.reviewMethodSetting.rateType==0">
-                    分制<input type="text" v-model="currentItem.reviewMethodSetting.maxScore" lay-verify="number" style="width:40px" />
-                    最低<input type="text" v-model="currentItem.reviewMethodSetting.minScore" lay-verify="number" style="width:40px" />
-                    @*步进<input type="text" v-model="currentItem.reviewMethodSetting.scoreStep" lay-verify="number" style="width:40px" />*@
-                </label>
-                <label v-if="currentItem.reviewMethod==1||currentItem.reviewMethod==2"><input type="checkbox" name="cutoff" v-model="currentItem.reviewMethodSetting.cutOff" lay-ignore />去掉最高分最低分</label>
-                <label id="methodsetting2" v-if="currentItem.reviewMethod==2">
-                    上轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightLast" style="width:40px" lay-verify="number" />%
-                    本轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightNow" style="width:40px" lay-verify="number" />%
-                </label>
-                <label id="methodsetting3" v-if="currentItem.reviewMethod==3">
-                    每位评委投满<input type="text" v-model="currentItem.reviewMethodSetting.voteNumber" style="width:40px" lay-verify="number" />票
-                </label>
+            <div class="layui-input-block" v-if="currentItem.reviewType==0">
+                <input type="radio" value="4" title="否决制" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
             </div>
         </div>
-        <div class="layui-form-item" style="margin-bottom:2px" pane v-if="currentItem.reviewMethod!=3">
-            <label class="layui-form-label" style="padding:8px 5px">打分方式</label>
-            <div class="layui-input-block">
-                <input type="radio" value="0" title="直接打分" v-model="currentItem.reviewMethodSetting.rateType"  lay-filter="rateType" name="rateType"/>
-                <input type="radio" value="1" title="按评分表打分" :disabled="!currentItem.hasRateTable" v-model="currentItem.reviewMethodSetting.rateType" lay-filter="rateType" name="rateType"/>
+        <template v-if="currentItem.reviewType!=0">
+            <div class="layui-form-item" style="margin-bottom:2px" pane>
+                <label class="layui-form-label" style="padding:8px 5px">参数设定</label>
+                <div class="layui-input-block reviewmethodsetting" style="padding-left:5px;">
+                    <label id="methodsetting1" v-if="(currentItem.reviewMethod==1||currentItem.reviewMethod==2) && currentItem.reviewMethodSetting.rateType==0">
+                        分制<input type="text" v-model="currentItem.reviewMethodSetting.maxScore" lay-verify="number" style="width:40px" />
+                        最低<input type="text" v-model="currentItem.reviewMethodSetting.minScore" lay-verify="number" style="width:40px" />
+                        @*步进<input type="text" v-model="currentItem.reviewMethodSetting.scoreStep" lay-verify="number" style="width:40px" />*@
+                    </label>
+                    <label v-if="currentItem.reviewMethod==1||currentItem.reviewMethod==2"><input type="checkbox" name="cutoff" v-model="currentItem.reviewMethodSetting.cutOff" lay-ignore />去掉最高分最低分</label>
+                    <label id="methodsetting2" v-if="currentItem.reviewMethod==2">
+                        上轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightLast" style="width:40px" lay-verify="number" />%
+                        本轮权重<input type="text" v-model="currentItem.reviewMethodSetting.weightNow" style="width:40px" lay-verify="number" />%
+                    </label>
+                    <label id="methodsetting3" v-if="currentItem.reviewMethod==3">
+                        每位评委投满<input type="text" v-model="currentItem.reviewMethodSetting.voteNumber" style="width:40px" lay-verify="number" />票
+                    </label>
+                </div>
             </div>
-        </div>
+            <div class="layui-form-item" style="margin-bottom:2px" pane v-if="currentItem.reviewMethod!=3">
+                <label class="layui-form-label" style="padding:8px 5px">打分方式</label>
+                <div class="layui-input-block">
+                    <input type="radio" value="0" title="直接打分" v-model="currentItem.reviewMethodSetting.rateType" lay-filter="rateType" name="rateType" />
+                    <input type="radio" value="1" title="按评分表打分" :disabled="!currentItem.hasRateTable" v-model="currentItem.reviewMethodSetting.rateType" lay-filter="rateType" name="rateType" />
+                </div>
+            </div>
+        </template>
+        
         <div class="layui-form-item" style="display:none">
             <div class="layui-input-block">
                 <button class="layui-btn" type="button" lay-submit="" lay-filter="submit" id="btnsubmit">提交</button>
@@ -139,6 +145,7 @@
             layui.form.on('select(reviewId)', function (data) {
                 //重新加载项目数据
                 app.currentItem.reviewId = data.value;
+                app.loadReview();
                 app.loadProject();
             });
             layui.form.on("radio(reviewMethod)", function (data) {
@@ -152,7 +159,7 @@
                 el: '#app',
                 data: {
                     currentItem: {
-                        reviewId: '',reviewName:'',id:0,reviewStatus:0, round: 1, turn: 1, targetNumber: null, reviewMethod: 1, reviewMethodSetting: { maxScore: 10, minScore: 5, scoreStep: 1, cutOff: false, weightLast: 50, weightNow: 50, voteNumber: 5,rateType:0 },hasRateTable:false
+                        reviewId: '',reviewType:1,reviewName:'',id:0,reviewStatus:0, round: 1, turn: 1, targetNumber: null, reviewMethod: 1, reviewMethodSetting: { maxScore: 10, minScore: 5, scoreStep: 1, cutOff: false, weightLast: 50, weightNow: 50, voteNumber: 5,rateType:0 },hasRateTable:false
                     }
 
                 },
@@ -173,6 +180,16 @@
                             refresh();
                         }
                         
+                    },
+                    loadReview:function(){
+                        if(this.currentItem.reviewId){
+                            abp.services.app.review.getById(this.currentItem.reviewId).done(function (data) {
+                                app.currentItem.reviewType = data.reviewType;
+                                //预审使用否决制
+                                app.currentItem.reviewMethod = app.currentItem.reviewType==0?4:1;
+                                refresh();
+                            })
+                        }
                     },
                     loadProject: function () {
                         if (this.currentItem.reviewId) {

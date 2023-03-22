@@ -70,7 +70,9 @@
         <a dataid="{{d.id}}"  modulekey="Review" class="layui-btn layui-btn-xs layui-btn-danger"  lay-event="Delete" confirmmsg="确认删除此评选活动?" buttonactiontype="Ajax" buttonactionurl="abp.services.app.review.deleteEntity" onclick="func.callModuleButtonEvent()">@L("删除")</a>
     </script>
     <script type="text/html" id="reviewTypeTpl">
-        {{#if(d.reviewType==1){}}
+    {{#if(d.reviewType==0){}}
+    预审
+        {{#}else if(d.reviewType==1){}}
         初评
         {{#}else if(d.reviewType==2){}}
         终评

@@ -23,19 +23,27 @@ namespace Master.Reviews
     {
         public ProjectManager ProjectManager { get; set; }
         private object _lockObj = new object();
-        public IRepository<ReviewRound,int> ReviewRoundRepository { get; set; }
-        public IRepository<ProjectTraceLog,int> ProjectTraceLogRepository { get; set; }
-        public IRepository<Major,int> MajorRepository { get; set; }
-        public IRepository<Review,int> ReviewRepository { get; set; }
+        public IRepository<ReviewRound, int> ReviewRoundRepository { get; set; }
+        public IRepository<ProjectTraceLog, int> ProjectTraceLogRepository { get; set; }
+        public IRepository<Major, int> MajorRepository { get; set; }
+        public IRepository<Review, int> ReviewRepository { get; set; }
         public MatchInstanceManager MatchInstanceManager { get; set; }
-        [DontWrapResult]
 
-        #region 评选活动
+        #region 评审活动
+
+        [DontWrapResult]
+        public async Task<ReviewDto> GetById(int id)
+        {
+            var review = await Repository.GetAsync(id);
+            return review.MapTo<ReviewDto>();
+        }
+
         public override async Task<ResultPageDto> GetPageResult(RequestPageDto request)
         {
             var pageResult = await GetPageResultQueryable(request);
-            var data = (await pageResult.Queryable.Include(o=>o.ReviewRounds).ToListAsync())
-                .Select(o => new {
+            var data = (await pageResult.Queryable.Include(o => o.ReviewRounds).ToListAsync())
+                .Select(o => new
+                {
                     o.Id,
                     o.ReviewMajorName,
                     o.ReviewName,
@@ -44,8 +52,8 @@ namespace Master.Reviews
                     o.ProjectCount,
                     o.ExpertCount,
                     o.ReviewStatus,
-                    StartTime=o.StartTime==null?"":o.StartTime.Value.ToString("yyyy-MM-dd HH:mm"),
-                    CurrentRound=Common.Fun.NumberToChinese( o.CurrentRound),
+                    StartTime = o.StartTime == null ? "" : o.StartTime.Value.ToString("yyyy-MM-dd HH:mm"),
+                    CurrentRound = Common.Fun.NumberToChinese(o.CurrentRound),
                     o.CurrentTurn
                 }).ToList();
 
@@ -71,6 +79,7 @@ namespace Master.Reviews
 
             await manager.InsertAsync(review);
         }
+
         /// <summary>
         /// 调整评选活动的专业
         /// </summary>
@@ -111,16 +120,17 @@ namespace Master.Reviews
             //更新评审中的来源项目值
             if (review.ReviewRounds.Count > 0)
             {
-                review.ReviewRounds.First().SourceProjectIDs= string.Join(',', review.ReviewProjects.Select(o => o.Id));
+                review.ReviewRounds.First().SourceProjectIDs = string.Join(',', review.ReviewProjects.Select(o => o.Id));
             }
             //add 20191206 将排序保存至项目
             var projects = await ProjectManager.GetListByIdsAsync(review.ReviewProjects.Select(o => o.Id));
-            foreach(var project in projects)
+            foreach (var project in projects)
             {
                 project.ReviewSort = review.ReviewProjects.Single(o => o.Id == project.Id).Sort;
             }
             await manager.UpdateAsync(review);
         }
+
         /// <summary>
         /// 删除评选活动
         /// </summary>
@@ -128,7 +138,7 @@ namespace Master.Reviews
         /// <returns></returns>
         public override async Task DeleteEntity(IEnumerable<int> ids)
         {
-            if(await Repository.CountAsync(o=>ids.Contains(o.Id) && o.ReviewRounds.Count > 0) > 0)
+            if (await Repository.CountAsync(o => ids.Contains(o.Id) && o.ReviewRounds.Count > 0) > 0)
             {
                 throw new UserFriendlyException("已建立评审活动的评选不能删除");
             }
@@ -137,15 +147,16 @@ namespace Master.Reviews
 
         public virtual async Task UpdateReviewScore(int[] reviewIds)
         {
-            foreach(var reviewId in reviewIds)
+            foreach (var reviewId in reviewIds)
             {
                 await (Manager as ReviewManager).UpdateReviewProjectScore(reviewId);
             }
-            
         }
-        #endregion
+
+        #endregion 评审活动
 
         #region 评审轮次
+
         public virtual async Task<bool> GetIfHasRateTable(int reviewId)
         {
             var manager = Manager as ReviewManager;
@@ -154,6 +165,7 @@ namespace Master.Reviews
 
             return rateTable != null;
         }
+
         /// <summary>
         /// 提交评审活动
         /// </summary>
@@ -167,7 +179,7 @@ namespace Master.Reviews
             if (reviewRoundDto.Id == 0)
             {
                 //新的评审
-                if(review.ReviewRounds.Count(o=>o.Round==reviewRoundDto.Round && o.Turn == reviewRoundDto.Turn) > 0)
+                if (review.ReviewRounds.Count(o => o.Round == reviewRoundDto.Round && o.Turn == reviewRoundDto.Turn) > 0)
                 {
                     throw new UserFriendlyException("相同轮次的评审已存在");
                 }
@@ -188,15 +200,16 @@ namespace Master.Reviews
                     review.ReviewRounds.Add(reviewRound);
                     //如果有专家回避了所有项目,则直接设置此专家为已提交状态
                     var reviewProjects = review.ReviewProjects.Where(o => reviewRound.SourceProjectIDs.Split(',').Contains(o.Id.ToString()));
-                    var excludeExpertIdsAll = reviewProjects.SelectMany(o => {
+                    var excludeExpertIdsAll = reviewProjects.SelectMany(o =>
+                    {
                         var excludeExpertIdsStr = string.IsNullOrEmpty(o.ExcludeExpertIDs) ? "" : o.ExcludeExpertIDs;
                         return excludeExpertIdsStr.Split(',');
                     }).ToList();
-                    foreach(var expert in review.ReviewExperts)
+                    foreach (var expert in review.ReviewExperts)
                     {
                         if (excludeExpertIdsAll.Count(o => o == expert.Id.ToString()) == reviewProjects.Count())
                         {
-                            reviewRound.ExpertReviewDetails=new List<ExpertReviewDetail>(){
+                            reviewRound.ExpertReviewDetails = new List<ExpertReviewDetail>(){
                                 new ExpertReviewDetail()
                             {
                                 ExpertID=expert.Id,
@@ -223,11 +236,12 @@ namespace Master.Reviews
             }
             //根据评审轮次的状态更新评选活动的状态
             review.ReviewStatus = reviewRoundDto.ReviewStatus;
-            if (review.ReviewStatus==ReviewStatus.Reviewing)
+            if (review.ReviewStatus == ReviewStatus.Reviewing)
             {
                 review.StartTime = DateTime.Now;
             }
         }
+
         /// <summary>
         /// 获取评审轮次数据
         /// </summary>
@@ -236,15 +250,17 @@ namespace Master.Reviews
         public virtual async Task<ReviewRoundDto> GetReviewRound(int id)
         {
             var manager = Manager as ReviewManager;
-            var reviewRound = await ReviewRoundRepository.GetAsync(id);
+            var reviewRound = await ReviewRoundRepository.GetAllIncluding(o => o.Review).Where(o => o.Id == id).FirstOrDefaultAsync();
             var reviewRoundDto = reviewRound.MapTo<ReviewRoundDto>();
             reviewRoundDto.ReviewName = reviewRound.Review.ReviewName;
+            reviewRoundDto.ReviewType = reviewRound.Review.ReviewType;
             //获取对应打分
-            var rateTable =await manager.GetRateTable(reviewRound.Review);
+            var rateTable = await manager.GetRateTable(reviewRound.Review);
             reviewRoundDto.HasRateTable = rateTable != null;
             reviewRoundDto.HasRateTable = false;
             return reviewRoundDto;
         }
+
         /// <summary>
         /// 撤回评审轮次
         /// </summary>
@@ -256,14 +272,16 @@ namespace Master.Reviews
             var reviewdetail = await ReviewRoundRepository.GetAsync(id);
             if (reviewdetail.ReviewStatus == ReviewStatus.Reviewed)
             {
-               throw new UserFriendlyException("此次评审已经全部结束,无法撤回");
+                throw new UserFriendlyException("此次评审已经全部结束,无法撤回");
             }
             //撤回
             await manager.WithDraw(reviewdetail);
         }
-        #endregion
+
+        #endregion 评审轮次
 
         #region 专家评审相关
+
         /// <summary>
         /// 获取专家可用评审
         /// </summary>
@@ -275,10 +293,10 @@ namespace Master.Reviews
 
             var expertId = AbpSession.UserId.Value;
             var reviewDtos = new List<ReviewDto>();
-            foreach(var review in reviews)
+            foreach (var review in reviews)
             {
                 //已选入该专家的评审
-                if (review.ReviewExperts.Count(o => o.Id==expertId) > 0)
+                if (review.ReviewExperts.Count(o => o.Id == expertId) > 0)
                 {
                     var reviewDto = review.MapTo<ReviewDto>();
                     reviewDto.CurrentRoundC = Common.Fun.NumberToChinese(reviewDto.CurrentRound);
@@ -288,6 +306,7 @@ namespace Master.Reviews
 
             return reviewDtos;
         }
+
         /// <summary>
         /// 评审活动是否当前专家可以操作
         /// </summary>
@@ -300,7 +319,7 @@ namespace Master.Reviews
 
             if (currentReviewRound == null)
             {
-                throw new UserFriendlyException("不存在对应进行中评审"); 
+                throw new UserFriendlyException("不存在对应进行中评审");
             }
             if (currentReviewRound.ExpertReviewDetails.Exists(o => o.ExpertID == AbpSession.UserId.Value && o.FinishTime != null))
             {
@@ -312,7 +331,6 @@ namespace Master.Reviews
 
         public virtual async Task SubmitExpertReview(int reviewId, List<ProjectReviewDetail> projectReviewDetails, bool isPublish)
         {
-            
             lock (_lockObj)
             {
                 var review = Repository.Get(reviewId);
@@ -363,11 +381,12 @@ namespace Master.Reviews
             //    //更新评选项目的分数
             //    await manager.UpdateReviewProjectScore(reviewId);
             //}
-            
         }
-        #endregion
+
+        #endregion 专家评审相关
 
         #region 评审数据获取
+
         /// <summary>
         /// 获取评审轮次数据
         /// </summary>
@@ -379,7 +398,7 @@ namespace Master.Reviews
             var manager = Manager as ReviewManager;
             var reviewdetail = await ReviewRoundRepository.GetAsync(reviewRoundId);
             var sourceprojectids = reviewdetail.SourceProjectIDs;
-            var data =(await manager.GetProjectRanks(reviewdetail)).Where(o => reviewdetail.SourceProjectIDs.Split(',').ToList().Contains(o.Id.ToString())).ToList();
+            var data = (await manager.GetProjectRanks(reviewdetail)).Where(o => reviewdetail.SourceProjectIDs.Split(',').ToList().Contains(o.Id.ToString())).ToList();
             //进行同分判定
             var linescore = data[reviewdetail.TargetNumber - 1].TotalScore;//界限分
 
@@ -390,7 +409,7 @@ namespace Master.Reviews
             }
             if (data.Count(o => o.TotalScore == linescore) > 1 && data.Count(o => o.TotalScore >= linescore) > reviewdetail.TargetNumber)
             {
-                foreach(var obj in data.Where(o => o.TotalScore == linescore))
+                foreach (var obj in data.Where(o => o.TotalScore == linescore))
                 {
                     obj.NeedConfirm = true;
                 }
@@ -405,19 +424,20 @@ namespace Master.Reviews
 
             return result;
         }
+
         /// <summary>
         /// 获取项目的每轮次打分明细
         /// </summary>
         /// <param name="projectId"></param>
         /// <returns></returns>
-        public virtual async Task<List<ProjectMajorScoreDto>> GetProjectMajorScores(int projectId,ReviewType reviewType)
+        public virtual async Task<List<ProjectMajorScoreDto>> GetProjectMajorScores(int projectId, ReviewType reviewType)
         {
             Logger.Error("0:" + DateTime.Now.ToString("HH:mm:ss:fff"));
             var manager = Manager as ReviewManager;
             var result = new List<ProjectMajorScoreDto>();
 
             var project = await ProjectRepository.GetAsync(projectId);
-            var reviewQuery = Repository.GetAll().Where(o => o.MatchInstanceId == project.MatchInstanceId && o.ReviewType == reviewType );
+            var reviewQuery = Repository.GetAll().Where(o => o.MatchInstanceId == project.MatchInstanceId && o.ReviewType == reviewType);
             if (reviewType != ReviewType.Champion)
             {
                 reviewQuery = reviewQuery.Where(o => o.MajorId == project.Prize.MajorId);
@@ -438,8 +458,7 @@ namespace Master.Reviews
                     reviewQuery = reviewQuery.Where(o => o.SubMajorId != null && projectSubMajorIds.Contains(o.SubMajorId.Value));
                 }
             }
-            
-            //
+
             Logger.Error("1:" + DateTime.Now.ToString("HH:mm:ss:fff"));
             foreach (var review in await reviewQuery.ToListAsync())
             {
@@ -448,7 +467,7 @@ namespace Master.Reviews
                 string tip = "";
                 decimal subMajorScore = 0;
                 //混排类也只显示专业大类
-                if (review.SubMajorId != null && project.Prize.PrizeType!=Prizes.PrizeType.Mixed)
+                if (review.SubMajorId != null && project.Prize.PrizeType != Prizes.PrizeType.Mixed)
                 {
                     subMajorName = (await MajorRepository.GetAsync(review.SubMajorId.Value)).BriefName;
                 }
@@ -456,24 +475,24 @@ namespace Master.Reviews
                 {
                     subMajorName = review.Major?.BriefName;
                 }
-                if (project.Prize.PrizeType == Prizes.PrizeType.Multiple && reviewType==ReviewType.Initial)
+                if (project.Prize.PrizeType == Prizes.PrizeType.Multiple && reviewType == ReviewType.Initial)
                 {
                     var projectMajor = project.ProjectMajorInfos.Where(o => o.MajorId == review.SubMajorId.Value).SingleOrDefault();
                     var prizeSubMajor = project.Prize.PrizeSubMajors.Where(o => o.MajorId == review.SubMajorId.Value).SingleOrDefault();
-                    if (projectMajor != null && prizeSubMajor!=null)
+                    if (projectMajor != null && prizeSubMajor != null)
                     {
                         //计算综合奖项每个专业分经过权重加成的分数
                         tempScore = (reviewType == ReviewType.Initial ? projectMajor.ScoreInitial : projectMajor.ScoreFinal);
                         tip = $"权重{prizeSubMajor.Percent}%";
-                        if (project.IsOriginal) {
+                        if (project.IsOriginal)
+                        {
                             tip += $",加成系数{(prizeSubMajor.Ratio == null ? 1 : prizeSubMajor.Ratio.Value)}";
                         }
                         if (tempScore.HasValue)
                         {
                             subMajorScore = tempScore.Value;
-                            subMajorScore *= prizeSubMajor.Percent.Value * ((prizeSubMajor.Ratio == null||!project.IsOriginal) ? 1 : prizeSubMajor.Ratio.Value)/100;
+                            subMajorScore *= prizeSubMajor.Percent.Value * ((prizeSubMajor.Ratio == null || !project.IsOriginal) ? 1 : prizeSubMajor.Ratio.Value) / 100;
                         }
-                        
                     }
                 }
                 else
@@ -482,25 +501,25 @@ namespace Master.Reviews
                     tempScore = project.GetScoreForReviewType(reviewType);
                     if (tempScore.HasValue)
                     {
-                        subMajorScore= tempScore.Value;
+                        subMajorScore = tempScore.Value;
                     }
                 }
                 var projectMajorScoreDto = new ProjectMajorScoreDto()
                 {
                     SubMajorName = subMajorName,
-                    SubMajorScore =Math.Round( subMajorScore,2),
+                    SubMajorScore = Math.Round(subMajorScore, 2),
                     Tip = tip
                 };
                 projectMajorScoreDto.ProjectMajorRoundScoreDtos = new List<ProjectMajorRoundScoreDto>();
                 Logger.Error("2:" + DateTime.Now.ToString("HH:mm:ss:fff"));
                 var projectreviewSummaries = await manager.GetAllProjectRanks(review);
                 Logger.Error("3:" + DateTime.Now.ToString("HH:mm:ss:fff"));
-                foreach (var reviewRound in review.ReviewRounds.Where(o=>o.Turn==1))
+                foreach (var reviewRound in review.ReviewRounds.Where(o => o.Turn == 1))
                 {
                     //是否存在某轮的打分
-                    var roundScores = projectreviewSummaries.Where(o => o.Id == project.Id && o.Round == reviewRound.Round);                    
-                    
-                    if (roundScores.Count()>0)
+                    var roundScores = projectreviewSummaries.Where(o => o.Id == project.Id && o.Round == reviewRound.Round);
+
+                    if (roundScores.Count() > 0)
                     {
                         var voteTurns = review.ReviewRounds.Where(o => o.Round == reviewRound.Round && o.Turn > 1);//补充评审
                         ////需要加入补充评审
@@ -513,24 +532,26 @@ namespace Master.Reviews
                         var roundScore = roundScores.First();
                         var projectMajorRoundScoreDto = new ProjectMajorRoundScoreDto()
                         {
-                            ReviewRoundId=reviewRound.Id,
+                            ReviewRoundId = reviewRound.Id,
                             Round = reviewRound.Round,
                             Score = roundScore.Score,
-                            HasRateTable=reviewRound.ReviewMethodSetting.RateType==RateType.RateTable,
-                            IsVote= reviewRound.ReviewMethod==ReviewMethod.Vote
+                            HasRateTable = reviewRound.ReviewMethodSetting.RateType == RateType.RateTable,
+                            IsVote = reviewRound.ReviewMethod == ReviewMethod.Vote
                         };
                         //专家打分明细
-                        projectMajorRoundScoreDto.ProjectMajorRoundExpertScoreDtos = reviewRound.ExpertReviewDetails.Where(o=>o.FinishTime!=null).SelectMany(o => o.ProjectReviewDetails)
-                            .Where(o => o.ProjectId == project.Id )
-                            .Select(o => new ProjectMajorRoundExpertScoreDto() {
+                        projectMajorRoundScoreDto.ProjectMajorRoundExpertScoreDtos = reviewRound.ExpertReviewDetails.Where(o => o.FinishTime != null).SelectMany(o => o.ProjectReviewDetails)
+                            .Where(o => o.ProjectId == project.Id)
+                            .Select(o => new ProjectMajorRoundExpertScoreDto()
+                            {
                                 ExpertId = o.ExpertId,
-                                VoteFlag=o.VoteFlag,
-                                Score =  o.Score.HasValue?o.Score.Value:0,
+                                VoteFlag = o.VoteFlag,
+                                Score = o.Score.HasValue ? o.Score.Value : 0,
                                 IsAvoid = o.IsAvoid,
                                 ExpertName = UserManager.GetByIdAsync(o.ExpertId).Result.Name,
-                                SubVotes = voteTurns.Select(v => {
+                                SubVotes = voteTurns.Select(v =>
+                                {
                                     bool? voteResult;
-                                    var details = v.ExpertReviewDetails.Where(d=>d.FinishTime!=null).SelectMany(a => a.ProjectReviewDetails)
+                                    var details = v.ExpertReviewDetails.Where(d => d.FinishTime != null).SelectMany(a => a.ProjectReviewDetails)
                                         .Where(a => a.ProjectId == project.Id && a.ExpertId == o.ExpertId);
                                     if (details.Count() == 0)
                                     {
@@ -544,14 +565,13 @@ namespace Master.Reviews
                                     //return v.ExpertReviewDetails.SelectMany(a => a.ProjectReviewDetails)
                                     //    .Where(a => a.ProjectId == project.Id)
                                     //    .Count(a => a.ExpertId == o.ExpertId && a.VoteFlag == true) > 0;
-                                        }
-                                ).ToList() 
+                                }
+                                ).ToList()
                             })
                             .ToList();
 
                         projectMajorScoreDto.ProjectMajorRoundScoreDtos.Add(projectMajorRoundScoreDto);
                     }
-                    
                 }
                 Logger.Error("4:" + DateTime.Now.ToString("HH:mm:ss:fff"));
                 result.Add(projectMajorScoreDto);
@@ -559,9 +579,11 @@ namespace Master.Reviews
             Logger.Error("5:" + DateTime.Now.ToString("HH:mm:ss:fff"));
             return result;
         }
-        #endregion
+
+        #endregion 评审数据获取
 
         #region 移入移出终评
+
         /// <summary>
         /// 进入终评
         /// </summary>
@@ -570,11 +592,12 @@ namespace Master.Reviews
         /// <returns></returns>
         public virtual async Task BringInFinalReview(int[] projectIds)
         {
-            if(await ProjectRepository.CountAsync(o=> projectIds.Contains(o.Id) && o.IsInFinalReview)>0){
+            if (await ProjectRepository.CountAsync(o => projectIds.Contains(o.Id) && o.IsInFinalReview) > 0)
+            {
                 throw new UserFriendlyException("项目已经被选入终评");
             }
             var projects = await ProjectRepository.GetAll().Where(o => projectIds.Contains(o.Id)).ToListAsync();
-            foreach(var project in projects)
+            foreach (var project in projects)
             {
                 project.IsInFinalReview = true;
                 project.ProjectStatus = ProjectStatus.FinalReviewing;
@@ -615,13 +638,15 @@ namespace Master.Reviews
                     //更改项目状态
                     await ProjectManager.TraceLog(project.Id, "移出终评", project.ProjectStatus);
                 }
-                
+
                 await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
             }
         }
-        #endregion
+
+        #endregion 移入移出终评
 
         #region 移入移出决赛
+
         /// <summary>
         /// 进入终评
         /// </summary>
@@ -676,9 +701,11 @@ namespace Master.Reviews
                 await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
             }
         }
-        #endregion
+
+        #endregion 移入移出决赛
 
         #region 导出
+
         /// <summary>
         /// 导出评审
         /// </summary>
@@ -700,6 +727,7 @@ namespace Master.Reviews
                 System.IO.File.Copy(sourceFile, System.IO.Path.Combine(reviewFolder, fileName));
             }
         }
+
         /// <summary>
         /// 导出评审详情
         /// </summary>
@@ -731,6 +759,7 @@ namespace Master.Reviews
             Common.ExcelHelper.DataTableToExcel(dt, filePath, filename, true);
             return new { filePath = $"/files/{now.ToString("yyyyMMdd")}/{filename}", fileName = filename };
         }
+
         /// <summary>
         /// 构建表格结构
         /// </summary>
@@ -770,7 +799,8 @@ namespace Master.Reviews
             //专家打分列
             for (var i = 1; i <= maxshowturn; i++)
             {
-                experts.ForEach(o => {
+                experts.ForEach(o =>
+                {
                     dt.Columns.Add(o.Name + i).Prefix = "c" + (c + i - 1).ToString();
                 });
             }
@@ -819,15 +849,16 @@ namespace Master.Reviews
                         {
                             row[o.Name + i] = projectdetail.IsAvoid ? "" : (allreviewdetails[i - 1].ReviewMethod == ReviewMethod.Vote ? (projectdetail.VoteFlag ? "Y" : "") : projectdetail.Score.ToString());
                         }
-
                     });
                 }
                 dt.Rows.Add(row);
             }
         }
-        #endregion
+
+        #endregion 导出
 
         #region 评审结果
+
         /// <summary>
         /// 恢复评审结果
         /// </summary>
@@ -839,14 +870,15 @@ namespace Master.Reviews
             var matchInstance = await MatchInstanceManager.GetByIdAsync(matchInstanceId);
             matchInstance.SetData("Manual", false);
         }
+
         public virtual async Task SubmitResult(dynamic data)
         {
             int matchInstanceId = 0;
-            foreach(var item in data)
+            foreach (var item in data)
             {
                 var projectId = (int)item.id;
                 var project = await ProjectManager.GetByIdAsync(projectId);
-                if(int.TryParse((string)item.rankManual,out var rankManual))
+                if (int.TryParse((string)item.rankManual, out var rankManual))
                 {
                     project.RankManual = rankManual;
                 }
@@ -877,6 +909,7 @@ namespace Master.Reviews
             var matchInstance = await MatchInstanceManager.GetByIdAsync(matchInstanceId);
             matchInstance.SetData("Manual", true);
         }
-        #endregion
+
+        #endregion 评审结果
     }
 }

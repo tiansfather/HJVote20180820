@@ -22,27 +22,33 @@ namespace Master.Reviews
         public int MatchInstanceId { get; set; }
         public virtual MatchInstance MatchInstance { get; set; }
         public int? MajorId { get; set; }
-        public virtual Major Major{get;set;}
+        public virtual Major Major { get; set; }
         public int? SubMajorId { get; set; }
         public virtual ICollection<ReviewRound> ReviewRounds { get; set; }
+
         /// <summary>
         /// 评选专业名称
         /// </summary>
         public string ReviewMajorName { get; set; }
+
         /// <summary>
         /// 评选活动名称
         /// </summary>
         public string ReviewName { get; set; }
+
         public string Remarks { get; set; }
         public ReviewType ReviewType { get; set; } = ReviewType.Initial;
+
         /// <summary>
         /// 评审状态
         /// </summary>
         public ReviewStatus ReviewStatus { get; set; } = ReviewStatus.BeforePublish;
+
         /// <summary>
         /// 开始时间
         /// </summary>
         public DateTime? StartTime { get; set; }
+
         /// <summary>
         /// 专家数量
         /// </summary>
@@ -51,9 +57,10 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewExpert>>("Experts")?.Count??0;
+                return this.GetData<List<ReviewExpert>>("Experts")?.Count ?? 0;
             }
         }
+
         /// <summary>
         /// 项目数量
         /// </summary>
@@ -62,9 +69,10 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewProject>>("Projects")?.Count??0;
+                return this.GetData<List<ReviewProject>>("Projects")?.Count ?? 0;
             }
         }
+
         /// <summary>
         /// 待评审项目
         /// </summary>
@@ -73,13 +81,14 @@ namespace Master.Reviews
         {
             get
             {
-                return this.GetData<List<ReviewProject>>("Projects")??new List<ReviewProject>();
+                return this.GetData<List<ReviewProject>>("Projects") ?? new List<ReviewProject>();
             }
             set
             {
                 this.SetData("Projects", value);
             }
         }
+
         /// <summary>
         /// 参选专家
         /// </summary>
@@ -95,6 +104,7 @@ namespace Master.Reviews
                 this.SetData("Experts", value);
             }
         }
+
         /// <summary>
         /// 当前评审轮次
         /// </summary>
@@ -106,6 +116,7 @@ namespace Master.Reviews
                 return ReviewRounds.OrderBy(o => o.Id).LastOrDefault();
             }
         }
+
         /// <summary>
         /// 当前评审轮
         /// </summary>
@@ -118,6 +129,7 @@ namespace Master.Reviews
                 return currentReviewRound == null ? 0 : currentReviewRound.Round;
             }
         }
+
         /// <summary>
         /// 当前评审次
         /// </summary>
@@ -130,6 +142,7 @@ namespace Master.Reviews
                 return currentReviewRound == null ? 0 : currentReviewRound.Turn;
             }
         }
+
         /// <summary>
         /// 获取评审中项目的回避专家数
         /// </summary>
@@ -145,24 +158,33 @@ namespace Master.Reviews
             return 0;
         }
     }
+
     /// <summary>
     /// 评审类型
     /// </summary>
     public enum ReviewType
     {
         /// <summary>
+        /// 预审
+        /// </summary>
+        Pre = 0,
+
+        /// <summary>
         /// 初评
         /// </summary>
-        Initial=1,
+        Initial = 1,
+
         /// <summary>
         /// 终评
         /// </summary>
-        Finish=2,
+        Finish = 2,
+
         /// <summary>
         /// 决赛
         /// </summary>
-        Champion=3
+        Champion = 3
     }
+
     /// <summary>
     /// 评审状态
     /// </summary>
@@ -173,35 +195,42 @@ namespace Master.Reviews
         /// </summary>
         [Description("未发布")]
         BeforePublish = 0,
+
         /// <summary>
         /// 评审中
         /// </summary>
         [Description("评审中")]
         Reviewing = 1,
+
         /// <summary>
         /// 已评审
         /// </summary>
         [Description("已评审")]
         Reviewed = 2
     }
+
     /// <summary>
     /// 评审活动中的项目
     /// </summary>
     public class ReviewProject
     {
         public int Id { get; set; }
+
         /// <summary>
         /// 回避专家ids
         /// </summary>
         public string ExcludeExpertIDs { get; set; }
+
         /// <summary>
         /// 排序
         /// </summary>
         public int Sort { get; set; }
+
         /// <summary>
         /// 基础分
         /// </summary>
         public int? BaseScore { get; set; }
+
         /// <summary>
         /// 是否被某个专家回避
         /// </summary>
@@ -218,9 +247,9 @@ namespace Master.Reviews
                 var excludeIdsArr = ExcludeExpertIDs.Split(',').Select(o => Convert.ToInt64(o));
                 return excludeIdsArr.Contains(expertId);
             }
-            
         }
     }
+
     public class ReviewExpert
     {
         public long Id { get; set; }

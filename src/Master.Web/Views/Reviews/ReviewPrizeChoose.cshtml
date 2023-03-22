@@ -10,6 +10,7 @@
         <div class="layui-form-item" pane>
             <label class="layui-form-label">评选类型</label>
             <div class="layui-input-block">
+                <input type="radio" name="reviewType" autocomplete="off" value="0" title="预审" v-model="currentItem.reviewType">
                 <input type="radio" name="reviewType" autocomplete="off" value="1" title="初评" v-model="currentItem.reviewType">
                 <input type="radio" name="reviewType" autocomplete="off" value="2" title="终评" v-model="currentItem.reviewType">
                 <input type="radio" name="reviewType" autocomplete="off" value="3" title="决赛" v-model="currentItem.reviewType">
@@ -61,7 +62,7 @@
                 el: '#app',
                 data: {
                     item: {},
-                    currentItem: { matchInstanceId: matchInstanceId, majorId: "", subMajorId: "", reviewType: 1 },
+                    currentItem: { matchInstanceId: matchInstanceId, majorId: "", subMajorId: "", reviewType: 0 },
                     allMajors: [],
                     mainMajors: [],
                     subMajors: []
