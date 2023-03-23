@@ -30,6 +30,7 @@
 
                         </div>
                         <button style="position:absolute;top:0px;left:820px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    <button style="position:absolute;top:0px;right:20px;" class="layui-btn" type="button" onclick="doExport()">@L("打包导出")</button>
                     </div>
                 </form>
 
@@ -112,6 +113,52 @@
             })
 
         }
+
+        var projectIds = [];//待导出项目
+        var exportedProjectIds = [];//已导出项目
+        function doExport() {
+            layer.confirm('确认导出本公司所有项目数据?', async function (index) {
+                layer.close(index);
+                loadmsg('正在初始化导出');
+                projectIds = await abp.services.app.project.initProjectExport('matchInstanceId=@matchInstance.Id  and creatoruser.organizationId=@organizationIdStr and projectstatus!=0 and projectsource=1');
+                if (projectIds.length > 0) {
+                    exportProject(projectIds[0]);
+                } else {
+                    abp.message.error("没有项目可以导出");
+                }
+
+            });
+            //abp.message.confirm("确认导出赛事所有数据?", function () {
+            //    loadmsg('正在初始化导出');
+            //    //var projectIds = await abp.services.app.matchInstance.initExport(matchInstanceId);
+            //})
+        }
+        function exportProject(projectId) {
+            loadmsg('正在导出项目,' + (exportedProjectIds.length + 1) + '/' + projectIds.length);
+            _hidden.location.href = '/ProjectReport/View?projectId=' + projectId + "&mode=export";
+        }
+        async function onExportProject(projectId) {
+            exportedProjectIds.push(projectId);
+            if (exportedProjectIds.length == projectIds.length) {
+                //全部项目已导出，则进行下一步                
+                //文件压缩
+                loadmsg('正在压缩数据');
+                await abp.services.app.matchInstance.compress(matchInstanceId);
+                loadmsg('导出成功', 3);
+                refreshExport();
+
+            } else {
+                exportProject(projectIds[exportedProjectIds.length]);
+            }
+        }
+        function loadmsg(msg, time) {
+            time = time || 0;
+            layer.msg(msg, {
+                icon: 16
+                , shade: 0.01, time: time
+            })
+        }
+        
     </script>
     }
 

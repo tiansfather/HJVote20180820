@@ -1104,6 +1104,17 @@ namespace Master.Projects
 
         #region 整体导出相关
 
+        public virtual async Task<object> InitProjectExport(string where)
+        {
+            System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
+            //将样式文件复制
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/layui.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/default.css"));
+            //获取赛事下的所有项目Id
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus != Projects.ProjectStatus.Draft && o.ProjectStatus != Projects.ProjectStatus.Reject).Select(o => o.Id).ToListAsync();
+            return projectIds;
+        }
+
         public virtual async Task ExportAll(int projectId, IEnumerable<SubmitHtmlDto> submitHtmlDtos, string matchInstanceName = "")
         {
             var project = await Manager.GetAll()
