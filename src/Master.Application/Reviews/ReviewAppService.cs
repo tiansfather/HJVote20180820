@@ -438,7 +438,7 @@ namespace Master.Reviews
 
             var project = await ProjectRepository.GetAsync(projectId);
             var reviewQuery = Repository.GetAll().Where(o => o.MatchInstanceId == project.MatchInstanceId && o.ReviewType == reviewType);
-            if (reviewType != ReviewType.Champion)
+            if (reviewType != ReviewType.Champion && reviewType != ReviewType.Pre)
             {
                 reviewQuery = reviewQuery.Where(o => o.MajorId == project.Prize.MajorId);
                 //不同的奖项类型获取对应的评选条件不同
@@ -536,7 +536,7 @@ namespace Master.Reviews
                             Round = reviewRound.Round,
                             Score = roundScore.Score,
                             HasRateTable = reviewRound.ReviewMethodSetting.RateType == RateType.RateTable,
-                            IsVote = reviewRound.ReviewMethod == ReviewMethod.Vote
+                            IsVote = reviewRound.ReviewMethod == ReviewMethod.Vote || reviewRound.ReviewMethod == ReviewMethod.VetoSystem
                         };
                         //专家打分明细
                         projectMajorRoundScoreDto.ProjectMajorRoundExpertScoreDtos = reviewRound.ExpertReviewDetails.Where(o => o.FinishTime != null).SelectMany(o => o.ProjectReviewDetails)
@@ -581,6 +581,69 @@ namespace Master.Reviews
         }
 
         #endregion 评审数据获取
+
+        #region 移入移出初评
+
+        /// <summary>
+        /// 进入初评
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task BringInInitialReview(int[] projectIds)
+        {
+            if (await ProjectRepository.CountAsync(o => projectIds.Contains(o.Id) && o.IsInInitialReview) > 0)
+            {
+                throw new UserFriendlyException("项目已经被选入初评");
+            }
+            var projects = await ProjectRepository.GetAll().Where(o => projectIds.Contains(o.Id)).ToListAsync();
+            foreach (var project in projects)
+            {
+                project.IsInInitialReview = true;
+                project.ProjectStatus = ProjectStatus.Reviewing;
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
+            }
+        }
+
+        public virtual async Task BringOutInitialReview(int[] projectIds)
+        {
+            if (await ProjectRepository.CountAsync(o => projectIds.Contains(o.Id) && !o.IsInInitialReview) > 0)
+            {
+                throw new UserFriendlyException("项目已经被移出初评");
+            }
+            //所有初评中的项目
+            var reviews = await ReviewRepository.GetAll().Where(o => o.ReviewType == ReviewType.Initial)
+                .ToListAsync();
+            var initialReviewProjects = reviews.SelectMany(o => o.ReviewProjects).Select(o => o.Id).Distinct();
+            if (projectIds.Count(o => initialReviewProjects.Contains(o)) > 0)
+            {
+                throw new UserFriendlyException("无法将初评中的项目移出初评");
+            }
+            //已经是终评中的项目无法取消终评
+            //if(await ProjectRepository.CountAsync(o=>projectIds.Contains(o.Id) && o.ProjectStatus == ProjectStatus.FinalReviewing) > 0)
+            //{
+            //    throw new UserFriendlyException("无法将终评中的项目移出终评");
+            //}
+            var projects = await ProjectRepository.GetAll().Where(o => projectIds.Contains(o.Id)).ToListAsync();
+            foreach (var project in projects)
+            {
+                project.IsInInitialReview = false;
+                //获取项目之前的项目状态
+                //var traceLogs = await ProjectTraceLogRepository.GetAll().Where(o => o.ProjectId == project.Id).ToListAsync();
+                //if (traceLogs.Count > 2)
+                //{
+                //    //最后一项记录保存的是项目的当前状态,故再往上取一个记录
+                //    var lastTraceLog = traceLogs[traceLogs.Count - 2];
+                //    project.ProjectStatus = lastTraceLog.TargetStatus;
+                //    //更改项目状态
+                //    await ProjectManager.TraceLog(project.Id, "移出初评", project.ProjectStatus);
+                //}
+                project.ProjectStatus = ProjectStatus.UnderReview;
+                //更改项目状态
+                await ProjectManager.TraceLog(project.Id, "移出初评", project.ProjectStatus);
+                await CacheManager.GetCache<int, object>("ProjectResultCache").RemoveAsync(project.Id);
+            }
+        }
+
+        #endregion 移入移出初评
 
         #region 移入移出终评
 

@@ -359,8 +359,8 @@ namespace Master.Projects
 
             if (review.ReviewType == ReviewType.Initial)
             {
-                //初评选择项目条件为待评选项目或者初评中项目
-                projectQuery = projectQuery.Where(o => (o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing));
+                //初评选择项目条件为进入初评项目
+                projectQuery = projectQuery.Where(o => o.IsInInitialReview);
             }
             else if (review.ReviewType == ReviewType.Finish)
             {
@@ -919,6 +919,7 @@ namespace Master.Projects
                             SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
                             SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
                             DesignOrganizationName = o.DesignOrganization != null ? o.DesignOrganization.DisplayName : "",
+                            o.IsPreRejected,
                             o.IsInInitialReview,
                             o.IsInFinalReview,
                             o.IsInChampionReview,

@@ -163,7 +163,7 @@
 
         };
         function getWhere() {
-            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and PrizeId=' + currentPrizeId, orderField: 'rankInitial asc' };
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and IsInInitialReview=true and PrizeId=' + currentPrizeId, orderField: 'rankInitial asc' };
             var organizationId = $("input[name='OrganizationId']").val();
             if (organizationId) {
                 where.where += " and designOrganizationId=" + organizationId;

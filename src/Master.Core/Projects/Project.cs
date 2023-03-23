@@ -99,6 +99,11 @@ namespace Master.Projects
         public bool IsInChampionReview { get; set; } = false;
 
         /// <summary>
+        /// 是否预审被否决
+        /// </summary>
+        public bool IsPreRejected { get; set; }
+
+        /// <summary>
         /// 预审分数
         /// </summary>
         public decimal? ScorePre { get; set; }

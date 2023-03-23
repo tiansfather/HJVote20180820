@@ -27,6 +27,10 @@
                 margin: 10px 20px 10px 0;
                 cursor: pointer;
             }
+
+        tr.highlight, .layui-table tbody tr.highlight:hover {
+            background-color: rgb(255,206,206) !important;
+        }
     </style>
 }
 <div class="layui-fluid" id="LAY-app-message">
@@ -103,6 +107,9 @@
 </script>
 <iframe style="display:none" id="_hidden" name="_hidden"></iframe>
 @section scripts{
+    <script type="text/html" id="scorePreTpl">
+        <span class="{{d.isPreRejected?'reject':''}}">{{d.scorePre}}</span>
+    </script>
     <script>
         var currentPrizeId;
         var app
@@ -160,7 +167,7 @@
 
         };
         function getWhere() {
-            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and PrizeId=' + currentPrizeId, orderField: 'rankInitial asc' };
+            var where = { where: 'matchInstanceId=@matchInstance.Id and projectStatus>=4 and PrizeId=' + currentPrizeId, orderField: 'scorePre desc' };
             var organizationId = $("input[name='OrganizationId']").val();
             if (organizationId) {
                 where.where += " and designOrganizationId=" + organizationId;
@@ -209,9 +216,11 @@
                 skin: 'row',
                 even: true,
                 done: config.onTableDone,
-                initSort: { field: 'ScoreInitial', type: 'desc' },
+                initSort: { field: 'ScorePre', type: 'desc' },
                 cols: [columns]
-
+                , done: function (res, curr, count) {
+                    $(".reject").closest("tr").addClass("highlight");
+                }
             });
 
             return false;
@@ -222,17 +231,17 @@
                 //{ align: 'center', type: 'numbers', title: '序号' },
                 { align: 'center', field:'reviewSort', title: '序号' },
 				{ align: 'left', field: 'projectName', templet: '#projectNameTpl', minWidth: '180', title: '项目名称' },
-				{ align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创' },
+				{ align: 'left', field: 'isOriginal', templet: '#isOriginalTpl2', title: '原创',width:'60' },
                 { align: 'center', field: 'prizeName', minWidth: '150', title: '奖项大类' },
                 { align: 'center', field: 'subMajorName', title: '奖项子类' },
                 { align: 'center', field: 'designOrganizationName', title: '申报单位' },
-                { align: 'center', field: 'scorePre', title: '总分' },   
+                { align: 'center', field: 'scorePre', title: '总分',templet:'#scorePreTpl' },   
             ];
             
             columns=columns.concat([
             { align: 'center', field: 'expertCountAllPre', title: '专家' },
                 { align: 'center', field: 'isInInitialReview', templet: '#isInInitialReviewTpl', title: '进入初评' },
-            { align: 'center', toolbar: '#toolbar', fixed: 'right', title: '操作' }]);
+            { align: 'center', toolbar: '#toolbar', fixed:'right', title: '操作' }]);
             return columns;
         }
         function setPrizeId(prizeId) {

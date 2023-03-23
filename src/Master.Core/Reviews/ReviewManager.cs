@@ -313,6 +313,8 @@ namespace Master.Reviews
                     //非综合类项目或者终评的综合类奖项直接设置分数
                     if (review.ReviewType == ReviewType.Pre)
                     {
+                        //如果分数小于专家数，设置项目预审否决
+                        project.IsPreRejected = review.ExpertCount > score;
                         project.ScorePre = score;
                     }
                     else if (review.ReviewType == ReviewType.Initial)
