@@ -43,7 +43,7 @@
     <script type="text/html" id="toolbarTpl">
         <div class="layui-btn-container">
             本轮评选结果：
-            @if (!review.ReviewRounds.ToList().Exists(o => o.ReviewStatus != ReviewStatus.Reviewed))
+            @if (review.ReviewType!=ReviewType.Pre && !review.ReviewRounds.ToList().Exists(o => o.ReviewStatus != ReviewStatus.Reviewed))
             {
                 @*第一轮次出现创建一轮评审*@
                 if (Model.Turn == 1 && Model.Round == review.ReviewRounds.Max(o => o.Round))

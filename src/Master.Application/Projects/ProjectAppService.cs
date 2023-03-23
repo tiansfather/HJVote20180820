@@ -897,6 +897,7 @@ namespace Master.Projects
                 {
                     return CacheManager.GetCache<int, object>("ProjectResultCache").Get(o.Id, id =>
                     {
+                        var preExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Pre);
                         var initialExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Initial);
                         var finalExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Finish);
                         var championExpertCount = ProjectManager.GetProjectExpertCount(o, ReviewType.Champion);
@@ -918,8 +919,10 @@ namespace Master.Projects
                             SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
                             SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
                             DesignOrganizationName = o.DesignOrganization != null ? o.DesignOrganization.DisplayName : "",
+                            o.IsInInitialReview,
                             o.IsInFinalReview,
                             o.IsInChampionReview,
+                            o.ScorePre,
                             o.ScoreInitial,
                             o.ScoreFinal,
                             o.ScoreChampion,
@@ -931,6 +934,7 @@ namespace Master.Projects
                             o.MaxReviewType,
                             o.MatchAwardId,
                             o.MatchAward?.AwardName,
+                            ExpertCountAllPre = preExpertCount.allCount,
                             ExpertCountAllInitial = initialExpertCount.allCount,
                             ExpertCountRankedInitial = initialExpertCount.rankedCount,
                             ExpertCountAllFinal = finalExpertCount.allCount,

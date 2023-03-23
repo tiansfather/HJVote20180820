@@ -137,10 +137,15 @@ namespace Master.Reviews
             //modi20181031去除混排类项目
             projectQuery = projectQuery.Where(o => o.Prize.PrizeType != Prizes.PrizeType.Mixed);
             //&& (o.ProjectStatus==ProjectStatus.UnderReview || (o.ProjectStatus==ProjectStatus.Reviewing && o.Prize.PrizeType==Prizes.PrizeType.Multiple))
-            if (review.ReviewType == ReviewType.Initial)
+            if (review.ReviewType == ReviewType.Pre)
             {
-                //初评选择待评选和初评中的项目
-                projectQuery = projectQuery.Where(o => o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing);
+                //预审选择待评选的项目
+                projectQuery = projectQuery.Where(o => o.ProjectStatus == ProjectStatus.UnderReview);
+            }
+            else if (review.ReviewType == ReviewType.Initial)
+            {
+                //初评选择有初评标识的项目
+                projectQuery = projectQuery.Where(o => o.IsInInitialReview);
             }
             else
             {
@@ -166,13 +171,18 @@ namespace Master.Reviews
                     Id = projects[i].Id,
                     Sort = 0
                 };
-                //设置项目状态为初评中
+                //设置项目状态
+                if (review.ReviewType == ReviewType.Pre && projects[i].ProjectStatus != ProjectStatus.Preing)
+                {
+                    projects[i].ProjectStatus = ProjectStatus.Preing;
+                    await ProjectManager.TraceLog(projects[i].Id, "进入预审", ProjectStatus.Preing);
+                }
                 if (review.ReviewType == ReviewType.Initial && projects[i].ProjectStatus != ProjectStatus.Reviewing)
                 {
                     projects[i].ProjectStatus = ProjectStatus.Reviewing;
                     await ProjectManager.TraceLog(projects[i].Id, "进入初评", ProjectStatus.Reviewing);
                 }
-                else if (review.ReviewType == ReviewType.Finish && projects[i].ProjectStatus != ProjectStatus.FinalReviewing)
+                if (review.ReviewType == ReviewType.Finish && projects[i].ProjectStatus != ProjectStatus.FinalReviewing)
                 {
                     projects[i].ProjectStatus = ProjectStatus.FinalReviewing;
                     //更改项目状态
@@ -301,7 +311,11 @@ namespace Master.Reviews
                     (review.ReviewType == ReviewType.Finish && project.Prize.PrizeType == Prizes.PrizeType.Multiple))
                 {
                     //非综合类项目或者终评的综合类奖项直接设置分数
-                    if (review.ReviewType == ReviewType.Initial)
+                    if (review.ReviewType == ReviewType.Pre)
+                    {
+                        project.ScorePre = score;
+                    }
+                    else if (review.ReviewType == ReviewType.Initial)
                     {
                         project.ScoreInitial = score;
                     }

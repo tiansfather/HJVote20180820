@@ -214,6 +214,12 @@
         "url": "/Reviews/Manager"
       },
       {
+        "name": "groupmanager.prereview",
+        "displayName": "预审情况管理",
+        "icon": "layui-icon layui-icon-table",
+        "url": "/Reviews/PreReview"
+      },
+      {
         "name": "groupmanager.initialreview",
         "displayName": "初评情况管理",
         "icon": "layui-icon layui-icon-table",
