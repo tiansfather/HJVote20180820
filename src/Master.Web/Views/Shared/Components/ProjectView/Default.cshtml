@@ -464,7 +464,7 @@
                 html = '<meta charset="UTF-8"/><link href = "../../../default.css" rel = "stylesheet" /><link href="../../../layui.css" rel="stylesheet" /><style>.formPreview input{border:none}</style><div class="formPreview">' + html + '</div>';
                 obj.push({ content: html, formType: $(this).attr("formType") })
             });
-            abp.services.app.project.exportAll(@ViewData["OriProjectId"], obj).done(function () {
+        abp.services.app.project.exportAll(@ViewData["OriProjectId"], obj,"", $.getUrlParam("exporttype")).done(function () {
                 parent&&parent.onExportProject(@ViewData["OriProjectId"]);
             });
         }

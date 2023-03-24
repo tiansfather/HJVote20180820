@@ -1,7 +1,10 @@
 ﻿using Abp.AutoMapper;
+using Abp.Collections.Extensions;
+using Abp.Dependency;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Abp.UI;
+using Master.Authentication;
 using Master.Domain;
 using Master.Majors;
 using Master.Prizes;
@@ -19,6 +22,7 @@ namespace Master.Matches
     public class MatchManager : DomainServiceBase<Match, int>
     {
     }
+
     public class MatchInstanceManager : DomainServiceBase<MatchInstance, int>
     {
         private readonly IRepository<Major, int> _majorRepository;
@@ -27,6 +31,7 @@ namespace Master.Matches
         private readonly IRepository<MatchResource, int> _matchResourceRepository;
         private readonly IRepository<Project, int> _projectRepository;
         private readonly IRepository<Review, int> _reviewRepository;
+
         public MatchInstanceManager(
             IRepository<Major, int> majorRepository,
             IRepository<Prize, int> prizeRepository,
@@ -43,6 +48,7 @@ namespace Master.Matches
             _projectRepository = projectRepository;
             _reviewRepository = reviewRepository;
         }
+
         /// <summary>
         /// 赛事实例的状态变化
         /// </summary>
@@ -53,13 +59,13 @@ namespace Master.Matches
         {
             if (matchInstance.MatchInstanceStatus == oriStatus)
             {
-                return ;
+                return;
             }
-            //草稿状态 
+            //草稿状态
             if (matchInstance.MatchInstanceStatus == MatchInstanceStatus.Draft)
             {
                 //如果有项目申报过,则不允许切换回草稿状态
-                if(await _projectRepository.CountAsync(o => o.MatchInstanceId == matchInstance.Id) > 0)
+                if (await _projectRepository.CountAsync(o => o.MatchInstanceId == matchInstance.Id) > 0)
                 {
                     throw new UserFriendlyException("赛事已发布，不可再修改");
                 }
@@ -75,7 +81,7 @@ namespace Master.Matches
                     //需要检测专业分类和奖项是否有录入
                     var majorCount = await _majorRepository.CountAsync(o => o.MatchId == matchInstance.MatchId && o.IsActive);
                     var prizeCount = await _prizeRepository.CountAsync(o => o.MatchId == matchInstance.MatchId && o.IsActive);
-                    if(majorCount==0 || prizeCount == 0)
+                    if (majorCount == 0 || prizeCount == 0)
                     {
                         throw new UserFriendlyException("赛事必须有有效的专业分类及奖项才能发布");
                     }
@@ -103,6 +109,7 @@ namespace Master.Matches
             //    }
             //}
         }
+
         /// <summary>
         /// 重置赛事实例，清空所有赛事实例相关数据
         /// </summary>
@@ -117,7 +124,7 @@ namespace Master.Matches
             //评审信息
             await _reviewRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);
             //专业分类
-            await _majorRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);            
+            await _majorRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);
             //赛事资源
             await _matchResourceRepository.DeleteAsync(o => o.MatchInstanceId == matchInstance.Id);
             //清空赛事所有申报项目信息
@@ -136,7 +143,7 @@ namespace Master.Matches
             //专业分类;
             var majorMapDic = new Dictionary<int, int>();//专业分类新老id配对
             var majors = await _majorRepository.GetAll().Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
-            foreach(var major in majors.Where(o=>o.ParentId==null))
+            foreach (var major in majors.Where(o => o.ParentId == null))
             {
                 var newMajor = new Major(major);
                 newMajor.MatchId = null;
@@ -145,7 +152,7 @@ namespace Master.Matches
                 await CurrentUnitOfWork.SaveChangesAsync();
                 majorMapDic[major.Id] = newMajor.Id;
                 //子级
-                foreach(var subMajor in majors.Where(o => o.ParentId == major.Id))
+                foreach (var subMajor in majors.Where(o => o.ParentId == major.Id))
                 {
                     var newSubMajor = new Major(subMajor);
                     newSubMajor.MatchId = null;
@@ -155,7 +162,7 @@ namespace Master.Matches
                     await CurrentUnitOfWork.SaveChangesAsync();
                     majorMapDic[subMajor.Id] = newSubMajor.Id;
                     //三级
-                    foreach(var thirdMajor in majors.Where(o => o.ParentId == subMajor.Id))
+                    foreach (var thirdMajor in majors.Where(o => o.ParentId == subMajor.Id))
                     {
                         var newThirdMajor = new Major(thirdMajor);
                         newThirdMajor.MatchId = null;
@@ -169,32 +176,32 @@ namespace Master.Matches
             }
             //奖项
             var prizeMapDic = new Dictionary<int, int>();
-            var prizes = await _prizeRepository.GetAll().Include(o=>o.PrizeSubMajors).Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
-            foreach(var prize in prizes)
+            var prizes = await _prizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
+            foreach (var prize in prizes)
             {
                 var newPrize = new Prize()
                 {
-                    PrizeName=prize.PrizeName,
-                    PrizeType=prize.PrizeType,
-                    ExtensionData=prize.ExtensionData,
-                    Remarks=prize.Remarks,
-                    IsActive=prize.IsActive,
-                    MatchInstanceId=matchInstance.Id,
-                    MajorId=majorMapDic[prize.MajorId]
+                    PrizeName = prize.PrizeName,
+                    PrizeType = prize.PrizeType,
+                    ExtensionData = prize.ExtensionData,
+                    Remarks = prize.Remarks,
+                    IsActive = prize.IsActive,
+                    MatchInstanceId = matchInstance.Id,
+                    MajorId = majorMapDic[prize.MajorId]
                 };
                 await _prizeRepository.InsertAsync(newPrize);
                 await CurrentUnitOfWork.SaveChangesAsync();
                 prizeMapDic[prize.Id] = newPrize.Id;
 
-                foreach(var prizeSubMajor in prize.PrizeSubMajors)
+                foreach (var prizeSubMajor in prize.PrizeSubMajors)
                 {
                     var newPrizeSubMajor = new PrizeSubMajor()
                     {
-                        PrizeId=newPrize.Id,
-                        MajorId=majorMapDic[prizeSubMajor.MajorId],
-                        Percent=prizeSubMajor.Percent,
-                        Checked=prizeSubMajor.Checked,
-                        Ratio=prizeSubMajor.Ratio
+                        PrizeId = newPrize.Id,
+                        MajorId = majorMapDic[prizeSubMajor.MajorId],
+                        Percent = prizeSubMajor.Percent,
+                        Checked = prizeSubMajor.Checked,
+                        Ratio = prizeSubMajor.Ratio
                     };
                     await _prizeSubMajorRepository.InsertAsync(newPrizeSubMajor);
                 }
@@ -204,19 +211,19 @@ namespace Master.Matches
             //评分表
             //表单设计
             var matchResources = await _matchResourceRepository.GetAll().Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
-            foreach(var matchResource in matchResources)
+            foreach (var matchResource in matchResources)
             {
                 var newMatchResource = new MatchResource()
                 {
-                    MatchInstanceId=matchInstance.Id,
-                    MajorId=majorMapDic[matchResource.MajorId],
-                    MatchResourceStatus=matchResource.MatchResourceStatus,
-                    MatchResourceType=matchResource.MatchResourceType,
-                    ExtensionData= matchResource.ExtensionData,
+                    MatchInstanceId = matchInstance.Id,
+                    MajorId = majorMapDic[matchResource.MajorId],
+                    MatchResourceStatus = matchResource.MatchResourceStatus,
+                    MatchResourceType = matchResource.MatchResourceType,
+                    ExtensionData = matchResource.ExtensionData,
                 };
                 if (matchResource.SubMajorId != null)
                 {
-                    newMatchResource.SubMajorId = majorMapDic[matchResource.SubMajorId.Value];                    
+                    newMatchResource.SubMajorId = majorMapDic[matchResource.SubMajorId.Value];
                 }
                 await _matchResourceRepository.InsertAsync(newMatchResource);
             }
@@ -235,7 +242,7 @@ namespace Master.Matches
         public async Task ReSyncMatchInstanceResource(MatchInstance matchInstance)
         {
             //专业分类;
-            var majorMapDic = matchInstance.GetData<Dictionary<int,int>>("MajorMapDic");//专业分类新老id配对
+            var majorMapDic = matchInstance.GetData<Dictionary<int, int>>("MajorMapDic");//专业分类新老id配对
             var majors = await _majorRepository.GetAll().Where(o => o.MatchId == matchInstance.MatchId).ToListAsync();
             foreach (var major in majors.Where(o => o.ParentId == null))
             {
@@ -257,7 +264,7 @@ namespace Master.Matches
                     newMajor.MatchId = null;
                     newMajor.MatchInstanceId = matchInstance.Id;
                     await _majorRepository.InsertAsync(newMajor);
-                }                
+                }
                 await CurrentUnitOfWork.SaveChangesAsync();
                 majorMapDic[major.Id] = newMajor.Id;
                 //子级
@@ -372,7 +379,6 @@ namespace Master.Matches
                         newPrizeSubMajor.Ratio = prizeSubMajor.Ratio;
                         await _prizeSubMajorRepository.UpdateAsync(newPrizeSubMajor);
                     }
-                    
                 }
             }
             //上传清单
@@ -404,6 +410,35 @@ namespace Master.Matches
             matchInstance.SetData("PrizeMapDic", prizeMapDic);
 
             return;
+        }
+
+        /// <summary>
+        /// 根据导出类型获取导出根相对路径
+        /// </summary>
+        /// <param name="matchInstanceName"></param>
+        /// <param name="exportType"></param>
+        /// <returns></returns>
+        public async Task<string> GetExportRootVirtualPath(MatchInstance matchInstance, string exportType = "")
+        {
+            string result = $"/MatchInstance/{matchInstance.Name}/项目";
+            switch (exportType)
+            {
+                case "org":
+                    //子公司导出
+                    var user = await IocManager.Instance.Resolve<UserManager>().GetAll().Include(o => o.Organization).Where(o => o.Id == AbpSession.UserId.Value).FirstAsync();
+                    result = $"/MatchInstance/{matchInstance.Name}/{user.Organization.BriefName}";
+                    break;
+
+                case "major":
+                    //大专业导出
+                    var majors = await IocManager.Instance.Resolve<MajorManager>().GetChargerMajors(AbpSession.UserId.Value, matchInstance.Id);
+                    result = $"/MatchInstance/{matchInstance.Name}/{majors.Select(o => o.BriefName).JoinAsString("-")}";
+                    break;
+
+                default:
+                    break;
+            }
+            return result;
         }
     }
 }

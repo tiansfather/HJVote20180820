@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Master.Authentication;
 using Master.Dto;
+using Master.Majors;
+using Master.Projects;
 using Master.Reviews;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +18,7 @@ namespace Master.Matches
     public class MatchInstanceAppService : MasterAppServiceBase<MatchInstance, int>
     {
         public IRepository<Review, int> ReviewRepository { get; set; }
+
         public override async Task FormSubmit(FormSubmitRequestDto request)
         {
             switch (request.Action)
@@ -22,6 +26,7 @@ namespace Master.Matches
                 case "Add":
                     await DoAdd(request);
                     break;
+
                 case "Edit":
                     await DoEdit(request);
                     break;
@@ -40,7 +45,6 @@ namespace Master.Matches
             await manager.ChangeMatchInstanceStatus(matchInstance, oriStatus);
 
             await Manager.UpdateAsync(matchInstance);
-            
         }
 
         private async Task DoAdd(FormSubmitRequestDto request)
@@ -48,7 +52,6 @@ namespace Master.Matches
             var matchInstance = await Manager.LoadEntityFromDatas(request.Datas);
 
             await Manager.InsertAsync(matchInstance);
-            
         }
 
         public override async Task<ResultPageDto> GetPageResult(RequestPageDto request)
@@ -56,10 +59,10 @@ namespace Master.Matches
             var pageResult = await GetPageResultQueryable(request);
 
             var data = (await pageResult.Queryable.Include(o => o.Match).ToListAsync())
-                .Select(o => {
-                    return new { o.Id, MatchName=o.Match.Name, o.Identifier,o.Year,o.Remarks,o.MatchInstanceStatus,o.DataProjectPath ,o.DataReviewPath,o.MatchInstanceDisplayMode};
+                .Select(o =>
+                {
+                    return new { o.Id, MatchName = o.Match.Name, o.Identifier, o.Year, o.Remarks, o.MatchInstanceStatus, o.DataProjectPath, o.DataReviewPath, o.MatchInstanceDisplayMode };
                 });
-
 
             var result = new ResultPageDto()
             {
@@ -70,6 +73,7 @@ namespace Master.Matches
 
             return result;
         }
+
         /// <summary>
         /// 获取所有可用的赛事实例
         /// </summary>
@@ -80,7 +84,7 @@ namespace Master.Matches
             //add 20200828 过滤不显示的
             query = query.Where(o => o.Match.IsDisplay);
             //申报者和分公司科管及专业负责人列出所有申报中的赛事实例
-            if (AbpSession.IsReporter()||AbpSession.IsSubManager()||AbpSession.IsMajorManager())
+            if (AbpSession.IsReporter() || AbpSession.IsSubManager() || AbpSession.IsMajorManager())
             {
                 query = query.Where(o => o.MatchInstanceStatus == MatchInstanceStatus.Applying);
             }
@@ -91,14 +95,15 @@ namespace Master.Matches
             }
 
             return (await query.ToListAsync())
-                .Select(o => new {o.Id,MatchName=o.Match.Name,o.Identifier,o.DisplayGroup });
+                .Select(o => new { o.Id, MatchName = o.Match.Name, o.Identifier, o.DisplayGroup });
         }
+
         public virtual async Task<bool> GetIfMatchInstanceAvailable(int matchInstanceId)
-        {            
+        {
             var matchInstance = await Repository.GetAsync(matchInstanceId);
 
             //申报者和分公司科管及专业负责人列出所有申报中的赛事实例
-            if (AbpSession.IsReporter() || AbpSession.IsSubManager()||AbpSession.IsMajorManager())
+            if (AbpSession.IsReporter() || AbpSession.IsSubManager() || AbpSession.IsMajorManager())
             {
                 return matchInstance.MatchInstanceStatus == MatchInstanceStatus.Applying;
             }
@@ -110,6 +115,7 @@ namespace Master.Matches
 
             return false;
         }
+
         /// <summary>
         /// 清空赛事
         /// </summary>
@@ -121,6 +127,7 @@ namespace Master.Matches
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
             await manager.ResetMatchInstance(matchInstance);
         }
+
         /// <summary>
         /// 重新发布赛事
         /// </summary>
@@ -132,13 +139,14 @@ namespace Master.Matches
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
             await manager.ReSyncMatchInstanceResource(matchInstance);
         }
+
         /// <summary>
         /// 设置赛事的项目展示方式
         /// </summary>
         /// <param name="matchInstanceId"></param>
         /// <param name="mode"></param>
         /// <returns></returns>
-        public virtual async Task SetMatchInstanceDisplayMode(int matchInstanceId,MatchInstanceDisplayMode mode)
+        public virtual async Task SetMatchInstanceDisplayMode(int matchInstanceId, MatchInstanceDisplayMode mode)
         {
             var manager = Manager as MatchInstanceManager;
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
@@ -146,8 +154,75 @@ namespace Master.Matches
         }
 
         #region 赛事导出
+
         /// <summary>
-        /// 初始化项目导出
+        /// 初始化子公司项目导出
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        public virtual async Task<object> InitOrgProjectExport(int matchInstanceId)
+        {
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            var user = await UserManager.GetAll().Include(o => o.Organization).Where(o => o.Id == AbpSession.UserId.Value).FirstAsync();
+            if (user.OrganizationId == null)
+            {
+                throw new UserFriendlyException("用户组织不能为空");
+            }
+            var projectFolderVirtual = await (Manager as MatchInstanceManager).GetExportRootVirtualPath(matchInstance, "org");
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath(projectFolderVirtual);
+            try
+            {
+                //先删除原有文件夹
+                System.IO.Directory.Delete(projectFolder, true);
+            }
+            catch (Exception ex)
+            {
+            }
+            System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
+            //将样式文件复制
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/layui.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/default.css"));
+            //获取赛事下的所有项目Id
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus != ProjectStatus.Draft && o.ProjectSource == ProjectSource.Apply && o.CreatorUser.OrganizationId == user.OrganizationId).Select(o => o.Id).ToListAsync();
+            return projectIds;
+        }
+
+        /// <summary>
+        /// 初始化专业项目导出
+        /// </summary>
+        /// <param name="matchInstanceId"></param>
+        /// <returns></returns>
+        /// <exception cref="UserFriendlyException"></exception>
+        public virtual async Task<object> InitMajorProjectExport(int matchInstanceId)
+        {
+            var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
+            //获取当前用户绑定的大专业
+            var majors = await IocManager.Instance.Resolve<MajorManager>().GetChargerMajors(AbpSession.UserId.Value, matchInstance.Id);
+            if (majors.Count == 0)
+            {
+                throw new UserFriendlyException("用户未绑定大专业");
+            }
+            var projectFolderVirtual = await (Manager as MatchInstanceManager).GetExportRootVirtualPath(matchInstance, "major");
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath(projectFolderVirtual);
+            try
+            {
+                //先删除原有文件夹
+                System.IO.Directory.Delete(projectFolder, true);
+            }
+            catch (Exception ex)
+            {
+            }
+            System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
+            //将样式文件复制
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/layui.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/default.css"));
+            //获取赛事下的所有项目Id
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus != ProjectStatus.Draft && o.ProjectSource == ProjectSource.Apply && majors.Select(m => m.Id).Contains(o.Prize.MajorId)).Select(o => o.Id).ToListAsync();
+            return projectIds;
+        }
+
+        /// <summary>
+        /// 初始化赛事项目导出
         /// </summary>
         /// <param name="matchInstanceId"></param>
         /// <returns></returns>
@@ -158,7 +233,8 @@ namespace Master.Matches
             {
                 throw new UserFriendlyException("无法导出草稿中的赛事");
             }
-            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目");
+            var projectFolderVirtual = await (Manager as MatchInstanceManager).GetExportRootVirtualPath(matchInstance);
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath(projectFolderVirtual);
             //删除原有项目导出文件
             var dataProjectPath = matchInstance.DataProjectPath;
             if (!string.IsNullOrEmpty(dataProjectPath) && System.IO.File.Exists(Common.PathHelper.VirtualPathToAbsolutePath(dataProjectPath)))
@@ -169,26 +245,25 @@ namespace Master.Matches
                 }
                 catch (Exception ex)
                 {
-
                 }
             }
             try
             {
                 //先删除原有文件夹
-                System.IO.Directory.Delete(projectFolder, true);                
-                
-            }catch(Exception ex)
+                System.IO.Directory.Delete(projectFolder, true);
+            }
+            catch (Exception ex)
             {
-
-            }            
+            }
             System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
             //将样式文件复制
-            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/layui.css"));
-            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/default.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/layui.css"));
+            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"{projectFolderVirtual}/default.css"));
             //获取赛事下的所有项目Id
-            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus!=Projects.ProjectStatus.Draft && o.ProjectStatus!=Projects.ProjectStatus.Reject).Select(o => o.Id).ToListAsync();
+            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus != Projects.ProjectStatus.Draft && o.ProjectStatus != Projects.ProjectStatus.Reject).Select(o => o.Id).ToListAsync();
             return projectIds;
         }
+
         /// <summary>
         /// 初始化评审导出
         /// </summary>
@@ -205,32 +280,48 @@ namespace Master.Matches
             }
             catch (Exception ex)
             {
-
             }
             System.IO.Directory.CreateDirectory(reviewFolder);//建立评审文件夹
             //将样式文件复制
             //System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/评审数据/layui.css"));
             //System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/评审数据/default.css"));
             //赛事所有评审
-            var reviewIds = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ReviewStatus==ReviewStatus.Reviewed).Select(o => o.Id).ToListAsync();
+            var reviewIds = await ReviewRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ReviewStatus == ReviewStatus.Reviewed).Select(o => o.Id).ToListAsync();
             return reviewIds;
         }
+
         /// <summary>
         /// 压缩
         /// </summary>
         /// <param name="matchInstanceId"></param>
-        public virtual async Task Compress(int matchInstanceId)
+        public virtual async Task<string> Compress(int matchInstanceId, string exportType = "")
         {
             var matchInstance = await Manager.GetByIdAsync(matchInstanceId);
-            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目");
-            var reviewFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/评审数据");
-            var dataProjectPath = $"/MatchInstance/{matchInstance.Name}_项目_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
-            var dataReviewPath = $"/MatchInstance/{matchInstance.Name}_评审数据_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
-            Common.ZipHelper.Zips(projectFolder, Common.PathHelper.VirtualPathToAbsolutePath(dataProjectPath));
-            Common.ZipHelper.Zips(reviewFolder, Common.PathHelper.VirtualPathToAbsolutePath(dataReviewPath));
-            matchInstance.DataProjectPath = dataProjectPath;
-            matchInstance.DataReviewPath = dataReviewPath;
+            if (string.IsNullOrEmpty(exportType))
+            {
+                //赛事导出
+                var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目");
+                var reviewFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/评审数据");
+                var dataProjectPath = $"/MatchInstance/{matchInstance.Name}_项目_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
+                var dataReviewPath = $"/MatchInstance/{matchInstance.Name}_评审数据_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
+                Common.ZipHelper.Zips(projectFolder, Common.PathHelper.VirtualPathToAbsolutePath(dataProjectPath));
+                Common.ZipHelper.Zips(reviewFolder, Common.PathHelper.VirtualPathToAbsolutePath(dataReviewPath));
+                matchInstance.DataProjectPath = dataProjectPath;
+                matchInstance.DataReviewPath = dataReviewPath;
+                return dataProjectPath;
+            }
+            else
+            {
+                var projectVirtualPath = await (Manager as MatchInstanceManager).GetExportRootVirtualPath(matchInstance, exportType);
+                var subName = projectVirtualPath.Split('/').Last();//获取最后一个文件夹，即公司名或专业名
+
+                var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath(projectVirtualPath);
+                var dataProjectPath = $"/MatchInstance/{matchInstance.Name}_{subName}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.zip";
+                Common.ZipHelper.Zips(projectFolder, Common.PathHelper.VirtualPathToAbsolutePath(dataProjectPath));
+                return dataProjectPath;
+            }
         }
-        #endregion
+
+        #endregion 赛事导出
     }
 }

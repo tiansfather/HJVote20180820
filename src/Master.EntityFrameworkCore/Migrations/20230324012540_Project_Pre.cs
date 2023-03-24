@@ -12,6 +12,12 @@ namespace Master.Migrations
                 nullable: false,
                 defaultValue: false);
 
+            migrationBuilder.AddColumn<bool>(
+                name: "IsPreRejected",
+                table: "Projects",
+                nullable: false,
+                defaultValue: false);
+
             migrationBuilder.AddColumn<decimal>(
                 name: "ScorePre",
                 table: "Projects",
@@ -27,6 +33,10 @@ namespace Master.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "IsInInitialReview",
+                table: "Projects");
+
+            migrationBuilder.DropColumn(
+                name: "IsPreRejected",
                 table: "Projects");
 
             migrationBuilder.DropColumn(

@@ -1104,18 +1104,35 @@ namespace Master.Projects
 
         #region 整体导出相关
 
-        public virtual async Task<object> InitProjectExport(string where)
+        /// <summary>
+        /// 获取导出项目文件夹
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="exportType"></param>
+        /// <returns></returns>
+        private async Task<string> GetExportProjectFolder(Project project, string exportType)
         {
-            System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
-            //将样式文件复制
-            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/layuiadmin/layui/css/layui.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/layui.css"));
-            System.IO.File.Copy(Common.PathHelper.VirtualPathToAbsolutePath("/assets/css/default.css"), Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstance.Name}/项目/default.css"));
-            //获取赛事下的所有项目Id
-            var projectIds = await ProjectRepository.GetAll().Where(o => o.MatchInstanceId == matchInstanceId && o.ProjectStatus != Projects.ProjectStatus.Draft && o.ProjectStatus != Projects.ProjectStatus.Reject).Select(o => o.Id).ToListAsync();
-            return projectIds;
+            var matchInstance = await MatchInstanceManager.GetByIdAsync(project.MatchInstanceId);
+            string rootPath = await MatchInstanceManager.GetExportRootVirtualPath(matchInstance, exportType);
+            string result = $"{rootPath}/{project.Prize?.PrizeName}/{project.DesignOrganization?.DisplayName}-{project.ProjectName}"; ;
+            switch (exportType)
+            {
+                case "org":
+                    //子公司导出
+                    break;
+
+                case "major":
+                    //大专业导出
+                    result = $"{rootPath}/{project.DesignOrganization?.DisplayName ?? "未知组织"}/{project.DesignOrganization?.DisplayName}-{project.ProjectName}"; ;
+                    break;
+
+                default:
+                    break;
+            }
+            return result;
         }
 
-        public virtual async Task ExportAll(int projectId, IEnumerable<SubmitHtmlDto> submitHtmlDtos, string matchInstanceName = "")
+        public virtual async Task ExportAll(int projectId, IEnumerable<SubmitHtmlDto> submitHtmlDtos, string matchInstanceName = "", string exportType = "")
         {
             var project = await Manager.GetAll()
                 .Include(o => o.Prize)
@@ -1140,8 +1157,9 @@ namespace Master.Projects
             var projectName = project.ProjectName;
             if (string.IsNullOrEmpty(projectName)) { projectName = project.Id.ToString(); }
             projectName = projectName.Replace("\\", "").Trim();
-
-            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath($"/MatchInstance/{matchInstanceName}/项目/{project.Prize?.PrizeName}/{project.DesignOrganization?.DisplayName}-{projectName}");
+            //获取路径
+            var projectFolderVirtual = await GetExportProjectFolder(project, exportType);
+            var projectFolder = Common.PathHelper.VirtualPathToAbsolutePath(projectFolderVirtual);
             System.IO.Directory.CreateDirectory(projectFolder);//建立项目文件夹
             System.IO.Directory.CreateDirectory(projectFolder + "\\基本信息");//基本文件夹
 

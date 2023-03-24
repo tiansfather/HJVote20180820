@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Master.Migrations
 {
     [DbContext(typeof(MasterDbContext))]
-    [Migration("20230323115858_Project_IsPreRejected")]
-    partial class Project_IsPreRejected
+    [Migration("20230324012540_Project_Pre")]
+    partial class Project_Pre
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -32,6 +32,10 @@
     <Compile Remove="Migrations\20230321030242_Prize_Group.Designer.cs" />
     <Compile Remove="Migrations\20230323074751_Project_IsInReview.cs" />
     <Compile Remove="Migrations\20230323074751_Project_IsInReview.Designer.cs" />
+    <Compile Remove="Migrations\20230323083022_Project_Pre.cs" />
+    <Compile Remove="Migrations\20230323083022_Project_Pre.Designer.cs" />
+    <Compile Remove="Migrations\20230323115858_Project_IsPreRejected.cs" />
+    <Compile Remove="Migrations\20230323115858_Project_IsPreRejected.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Master.Core\Master.Core.csproj" />
