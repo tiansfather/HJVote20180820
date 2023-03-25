@@ -108,7 +108,7 @@
 <iframe style="display:none" id="_hidden" name="_hidden"></iframe>
 @section scripts{
     <script type="text/html" id="scorePreTpl">
-        <span class="{{d.isPreRejected?'reject':''}}">{{d.scorePre}}</span>
+        <span class="{{d.isPreRejected?'reject':''}}">{{d.scorePre||''}}</span>
     </script>
     <script>
         var currentPrizeId;
