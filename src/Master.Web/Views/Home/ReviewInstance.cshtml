@@ -22,6 +22,12 @@
     List<Project> projects = ViewData["Projects"] as List<Project>;
     List<ProjectReviewDetail> projectReviewDetails = ViewData["ProjectReviewDetails"] as List<ProjectReviewDetail>;
 
+    //预审默认同意
+    if (currentRound.ReviewMethod == ReviewMethod.VetoSystem)
+    {
+        projectReviewDetails.ForEach(o => o.VoteFlag = true);
+    }
+
     JsonSerializerSettings settings = new JsonSerializerSettings();
     settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 }

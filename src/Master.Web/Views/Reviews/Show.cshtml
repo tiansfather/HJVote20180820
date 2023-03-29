@@ -45,7 +45,7 @@
             position: relative;
             height: 36px;
             line-height: 36px;
-            width: 56px;
+            width: 66px;
             padding: 0 5px;
             margin-top: 0px;
             border: 1px solid #d2d2d2;
@@ -58,6 +58,21 @@
         .layui-form-onswitch {
             border-color: #D83F44;
             background-color: #D83F44;
+        }
+
+       
+        .veto .layui-form-switch {
+            border-color: #D83F44;
+            background-color: #D83F44;
+        }
+
+        .veto .layui-form-onswitch {
+            border-color: #5FB878;
+            background-color: #5FB878;
+        }
+
+        .layui-form-switch em{
+            color:white !important;
         }
             .layui-form-switch i {
                 position: absolute;
@@ -76,7 +91,7 @@
             color: #fff !important;
         }
         .layui-form-onswitch i {
-            left: 52px;
+            left: 62px;
             background-color: #fff;
         }
         .layui-form-switch em {
@@ -86,7 +101,7 @@
             width: 25px;
             padding: 0 !important;
             text-align: center !important;
-            color: #999 !important;
+            /*color: #999 !important;*/
             font-style: normal !important;
             font-size: 12px;
         }
@@ -127,10 +142,21 @@
                         <div v-if="rateType=='score'" class="layui-form-mid layui-word-aux">满分@(reviewMethodSetting.MaxScore),最低@(reviewMethodSetting.MinScore)</div>
                         <button class="layui-btn layui-btn-warm" :class="{'layui-btn-disabled':currentProject.score===0 || currentProject.isAvoid}" style="font-size:16px" type="button" v-if="rateType=='ratetable'" :disabled="currentProject.score===0 || currentProject.isAvoid " fornonerow="1" buttonname="@L("评分表")" params="{&quot;area&quot;: [&quot;80%&quot;, &quot;80%&quot;],&quot;btn&quot;:[&quot;确定&quot;,&quot;关闭&quot;]}" buttonactiontype="Form" buttonactionurl="/Reviews/RateTable?reviewId=@review.Id&projectId=@ViewBag.ProjectId" onclick="func.callModuleButtonEvent()">打分</button>
                     </div>
-                </div>
+            </div>
 
-            }
-            else
+        }
+        else if (ViewBag.ReviewMethod == ReviewMethod.VetoSystem)
+        {
+            <div class="layui-form-item">
+                    <div class="layui-inline">
+                    <label class="layui-form-label" style="font-size:20px;font-weight:bold;"></label>
+                        <div class="layui-input-inline veto" style="width:100px">
+                        <input type="checkbox" name="voteFlag" lay-skin="switch" lay-text="同意|否决" lay-filter="voteFlag" title="@voteTitle" v-model="currentProject.voteFlag">
+                        </div>
+                    </div>
+                </div>
+        }
+        else
             {
                 <div class="layui-form-item">
                     <div class="layui-inline">
@@ -180,6 +206,10 @@
                 } else {
                     reviewApp.currentProject.score = null;
                 }
+                refreshForm();
+            })
+            layui.form.on("switch(voteFlag)", function (data) {
+                reviewApp.currentProject.voteFlag = data.elem.checked;
                 refreshForm();
             })
             layui.form.on("checkbox(voteFlag)", function (data) {
