@@ -322,7 +322,7 @@
                     getProjectDetail: function (projectId) {
                         var projectDetail = this.projectDetails.filter(function (o) { return o.projectId == projectId; })[0];
                         if (!projectDetail) {
-                            projectDetail = { projectId: projectId, score: null, isAvoid: false, voteFlag: false };
+                            projectDetail = { projectId: projectId, score: null, isAvoid: false, voteFlag: requirevotenumber==0?true:false };
                             this.projectDetails.push(projectDetail);
                         }
                         return projectDetail;
