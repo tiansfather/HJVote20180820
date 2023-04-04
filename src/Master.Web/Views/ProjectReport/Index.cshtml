@@ -171,6 +171,11 @@
 
             //如果是专业类和混排类及复选类需要选择专业
             if (prizeType == 2 || prizeType == 3 || prizeType == 5) {
+                //如果子专业只有一个则直接不需要出现弹窗
+                if(subMajors.length==1){
+                    showReport(prizeId, subMajors[0].MajorId, '');
+                    return;
+                }
                 var subMajorIds=[];
                 $("input[name='subMajorId']").val('');
                 var html = '';

@@ -205,8 +205,11 @@
                                             {
                                                 <label><input type="radio" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
                                             }
-
-                                            <button type="button" class="layui-btn layui-btn-xs" onclick="changeSubMajor()" v-if="!project.id">修改</button>
+                                            if (allSubMajors.Count() > 1)
+                                            {
+                                                <button type="button" class="layui-btn layui-btn-xs" onclick="changeSubMajor()" v-if="!project.id">修改</button>
+                                            }
+                                            
                                         }
 
                                     </div>
