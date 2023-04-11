@@ -765,7 +765,7 @@
         //专业类和混排类重新选择子专业
         function changeSubMajor() {
             var subMajorIds = [];
-            var prizeType=@Model.PrizeType;
+            var prizeType=@((int)Model.PrizeType);
             $("input[name='subMajorId']").val('');
             var html = '';
             var inputType = prizeType == 5 ? "checkbox" : "radio";
@@ -845,16 +845,16 @@
                     return false;
                 }
             });
-            if (flag && app.project.hasCoorparation && !app.project.coorparation) {
-                layer.msg("请填写合作单位" , { icon: 5, anim: 6 });
-                flag = false;
-                return false;
-            }
-            if (flag && !simpleMode && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
-                layer.msg("请填写建设地点", { icon: 5, anim: 6 });
-                flag = false;
-                return false;
-            }
+            //if (flag && app.project.hasCoorparation && !app.project.coorparation) {
+            //    layer.msg("请填写合作单位" , { icon: 5, anim: 6 });
+            //    flag = false;
+            //    return false;
+            //}
+            //if (flag && !simpleMode && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
+            //    layer.msg("请填写建设地点", { icon: 5, anim: 6 });
+            //    flag = false;
+            //    return false;
+            //}
             if (flag) {
                 app.loadFormData();//同步自定义表单数据
                 //自定义表单验证
