@@ -118,12 +118,12 @@
                             </div>*@
                             <div class="layout layui-col-md12 layout-height3" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
-                                    <label>申报单位<font color="red">*</font>:</label>
+                                    <label>申报单位:</label>
                                 </div>
                                 <div class="layout layui-col-md10 layout-height3" style="border-right:0">
                                     <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>单位名称<font color="red">*</font>:</label>
+                                            <label>单位名称:</label>
                                         </div>
                                         <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                             <select v-model="project.designOrganizationId">
@@ -142,13 +142,13 @@
                                     </div>
                                     <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>联系人<font color="red">*</font>:</label>
+                                            <label>联系人:</label>
                                         </div>
                                         <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                             <input type="text" v-model="project.designOrganizationContact" />
                                         </div>
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>电话<font color="red">*</font>:</label>
+                                            <label>电话:</label>
                                         </div>
                                         <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                             <input type="text" v-model="project.designOrganizationPhone" />
@@ -156,13 +156,13 @@
                                     </div>
                                     <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>手机<font color="red">*</font>:</label>
+                                            <label>手机:</label>
                                         </div>
                                         <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                             <input type="text" v-model="project.designOrganizationMobile" />
                                         </div>
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>邮箱<font color="red">*</font>:</label>
+                                            <label>邮箱:</label>
                                         </div>
                                         <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                             <input type="text" v-model="project.designOrganizationEmail" />
@@ -182,7 +182,7 @@
                             {
                                 <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                     <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                        <label>专业类别:</label>
+                                        <label>专业类别/设计内容:</label>
                                     </div>
                                     <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                         @if (Model.PrizeType == PrizeType.Multiple)
@@ -198,6 +198,7 @@
                                             {
                                                 <label><input type="checkbox" disabled @(subMajorIds.Contains(subMajor.MajorId) ? "checked" : "") />@subMajor.Major.BriefName</label>
                                             }
+                                            <button type="button" class="layui-btn layui-btn-xs" onclick="changeSubMajor()" v-if="!project.id">修改</button>
                                         }
                                         else
                                         {
@@ -229,7 +230,7 @@
 
                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                    <label>是否有合作单位<font color="red">*</font>:</label>
+                                    <label>是否有合作单位:</label>
                                 </div>
                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                     <label><input type="radio" v-model="project.hasCoorparation" :value="true" />有</label>
@@ -243,7 +244,7 @@
                                 {
                                     <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
-                                            <label>我方承担合作内容:</label>
+                                            <label>我方承担工作内容:</label>
                                         </div>
                                         <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
                                             @foreach (var subMajor in prizeSubMajors)
@@ -272,7 +273,7 @@
                                         <input type="text" v-model="project.buildingCompany" />
                                     </div>
                                     <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                        <label>建设地点<font color="red">*</font>:</label>
+                                        <label>建设地点:</label>
                                     </div>
                                     <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                         国<input type="text" v-model="project.buildingCountry" style="width:50px;margin-left:10px" />
@@ -286,17 +287,18 @@
                                         <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
                                             <label>参与人员:</label>
                                         </div>
-                                        <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
+                                        <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">                                           
                                             @foreach (var subMajor in prizeSubMajors)
                                             {
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
                                                     <label>@subMajor.Major.BriefName:</label>
                                                 </div>
                                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                    @for (var i = 1; i <= 10; i++)
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person1" style="width:600px;margin-left:5px;" />
+                                                    @*@for (var i = 1; i <= 10; i++)
                                                     {
                                                         <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />
-                                                    }
+                                                    }*@
                                                 </div>
                                             }
                                         </div>
@@ -473,6 +475,16 @@
         config.ready = function () {
             layui.form.on('radio(subMajorId)', function (data) {
                 $("input[name='subMajorId']").val(data.value);
+            });
+            layui.form.on('checkbox(subMajorId)', function (data) {
+                var valStr = $("input[name='subMajorId']").val();
+                var oriVals = valStr ? valStr.split(','):[];
+                if(data.elem.checked){
+                    oriVals.push(data.value);
+                }else{
+                    oriVals.remove(data.value);
+                }
+                $("input[name='subMajorId']").val(oriVals.join(','));
             });
             app = new Vue({
                 el: '#app',
@@ -749,9 +761,13 @@
         }
         //专业类和混排类重新选择子专业
         function changeSubMajor() {
+            var subMajorIds = [];
+            var prizeType=@Model.PrizeType;
+            $("input[name='subMajorId']").val('');
             var html = '';
+            var inputType = prizeType == 5 ? "checkbox" : "radio";
             $.each(allSubMajors, function (i, v) {
-                html += '<input type="radio" title="' + v.BriefName + '" name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId"/>';
+                html += '<input type="' + inputType + '" title="' + v.BriefName + '" name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId" lay-skin="primary"/>';
             });
             $("#radioContainer").html(html);
             layui.form.render();
@@ -810,11 +826,11 @@
             var requiredField = [
                 { field: 'projectName', msg: '项目名称' },
                 //{ field: 'projectSN', msg: '归档编号' },
-                { field: 'designOrganizationId', msg: '申报单位名称' },
-                { field: 'designOrganizationContact', msg: '申报单位联系人' },
-                { field: 'designOrganizationPhone', msg: '申报单位电话' },
-                { field: 'designOrganizationMobile', msg: '申报单位手机' },
-                { field: 'designOrganizationEmail', msg: '申报单位电邮' },
+                //{ field: 'designOrganizationId', msg: '申报单位名称' },
+                //{ field: 'designOrganizationContact', msg: '申报单位联系人' },
+                //{ field: 'designOrganizationPhone', msg: '申报单位电话' },
+                //{ field: 'designOrganizationMobile', msg: '申报单位手机' },
+                //{ field: 'designOrganizationEmail', msg: '申报单位电邮' },
                 //{ field: 'buildingCountry', msg: '建造国家' },
                 //{ field: 'buildingProvince', msg: '建造省份' },
                 //{ field: 'buildingCity', msg: '建造城市' },

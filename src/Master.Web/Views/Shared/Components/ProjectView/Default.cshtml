@@ -130,12 +130,12 @@
                                 @if(!isExpert){
                                     <div class="layout layui-col-md12 layout-height3" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height3 layout-padding-left20">
-                                            <label>申报单位<font color="red">*</font>:</label>
+                                            <label>申报单位:</label>
                                         </div>
                                         <div class="layout layui-col-md10 layout-height3" style="border-right:0">
                                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                    <label>单位名称<font color="red">*</font>:</label>
+                                                    <label>单位名称:</label>
                                                 </div>
                                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                                     {{project.designOrganizationBriefName}}
@@ -143,13 +143,13 @@
                                             </div>
                                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                    <label>联系人<font color="red">*</font>:</label>
+                                                    <label>联系人:</label>
                                                 </div>
                                                 <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                                     <input type="text" v-model="project.designOrganizationContact" />
                                                 </div>
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                    <label>电话<font color="red">*</font>:</label>
+                                                    <label>电话:</label>
                                                 </div>
                                                 <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                                     <input type="text" v-model="project.designOrganizationPhone" />
@@ -157,13 +157,13 @@
                                             </div>
                                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                    <label>手机<font color="red">*</font>:</label>
+                                                    <label>手机:</label>
                                                 </div>
                                                 <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                                     <input type="text" v-model="project.designOrganizationMobile" />
                                                 </div>
                                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                                    <label>邮箱<font color="red">*</font>:</label>
+                                                    <label>邮箱:</label>
                                                 </div>
                                                 <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                                     <input type="text" v-model="project.designOrganizationEmail" />
@@ -185,7 +185,7 @@
                                 {
                                     <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>专业类别:</label>
+                                            <label>专业类别/设计内容:</label>
                                         </div>
                                         <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                             @if (Model.PrizeType == PrizeType.Multiple)
@@ -231,7 +231,7 @@
 
                                 <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                     <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                        <label>是否有合作单位<font color="red">*</font>:</label>
+                                        <label>是否有合作单位:</label>
                                     </div>
                                     <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                         <label><input type="radio" v-model="project.hasCoorparation" :value="true" />有</label>
@@ -245,7 +245,7 @@
                                     {
                                         <div class="layout layui-col-md12 layout-height@(prizeSubMajors.Count())" style="border-right:0">
                                             <div class="layout layui-col-md2 layout-height@(prizeSubMajors.Count()) layout-padding-left20">
-                                                <label>我方承担合作内容:</label>
+                                                <label>我方承担工作内容:</label>
                                             </div>
                                             <div class="layout layui-col-md10 layout-height@(prizeSubMajors.Count()) " style="border-right:0">
                                                 @foreach (var subMajor in prizeSubMajors)
@@ -274,7 +274,7 @@
                                             <input type="text" v-model="project.buildingCompany" />
                                         </div>
                                         <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                            <label>建设地点<font color="red">*</font>:</label>
+                                            <label>建设地点:</label>
                                         </div>
                                         <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
                                             国<input type="text" v-model="project.buildingCountry" style="width:50px;margin-left:10px" />
@@ -295,10 +295,11 @@
                                                         <label>@subMajor.Major.BriefName:</label>
                                                     </div>
                                                     <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                        @for (var i = 1; i <= 10; i++)
+                                                        <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person1" style="width:600px;margin-left:5px;" />
+                                                        @*@for (var i = 1; i <= 10; i++)
                                                         {
                                                             <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />
-                                                        }
+                                                        }*@
                                                     </div>
                                                 }
                                             </div>
