@@ -27,7 +27,6 @@
                 margin: 10px 20px 10px 0;
                 cursor: pointer;
                 position:relative;
-                z-index: 1000000;
             }
 
             #prizeContainer .itemcontainer{
@@ -96,7 +95,7 @@
                 }
             </div>
 
-
+            <div style="clear:both"></div>
             草稿箱：
             <hr />
             <table autoevent="1" id="Project" lay-filter="Project" class="layui-table " lay-data="{cellMinWidth:'80',height:'full-210',toolbar:'<div></div>', url:'/api/services/app/Project/GetPageResult',where:{where:'matchInstanceId=@matchInstance.Id and projectStatus=0 and creatoruserid=@userid and projectsource=1'}, page:true,limit:30, id:'Project', skin: 'row', even: true,done:config.onTableDone,initSort:{field:'Id',type:'desc'}}">
@@ -172,6 +171,11 @@
 
             //如果是专业类和混排类及复选类需要选择专业
             if (prizeType == 2 || prizeType == 3 || prizeType == 5) {
+                //如果子专业只有一个则直接不需要出现弹窗
+                if(subMajors.length==1){
+                    showReport(prizeId, subMajors[0].MajorId, '');
+                    return;
+                }
                 var subMajorIds=[];
                 $("input[name='subMajorId']").val('');
                 var html = '';
