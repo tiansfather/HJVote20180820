@@ -126,9 +126,9 @@ namespace Master.Reviews
         Vote = 3,
 
         /// <summary>
-        /// 否决制
+        /// 预评
         /// </summary>
-        [Description("否决制")]
+        [Description("预评")]
         VetoSystem = 4,
     }
 

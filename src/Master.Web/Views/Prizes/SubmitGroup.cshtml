@@ -30,6 +30,7 @@
                 <template >
                     <div v-for="(item,index) in currentItem.subPrizes">
                         <input type="checkbox" lay-skin="primary" :checked="item.checked" name="PrizeId" :value="item.id" :title="item.name" lay-filter="PrizeId">
+                        <input type="number" style="height:20px;width:30px;text-align:right" size="5" v-model="item.sort" />
                     </div>
                 </template>
             </div>
@@ -112,7 +113,7 @@
                         abp.services.app.prize.getMatchPrizes(matchId).done(function (data) {
                             console.log(data);
                             var nowcheckedPrizeIds = app.currentItem.subPrizes.map(function (o){ return o.id});
-                            app.currentItem.subPrizes = data.map(function(o){return {id:o.id,name:o.name,checked:nowcheckedPrizeIds.filter(p=>p==o.id).length>0}})
+                            app.currentItem.subPrizes = data.map(function(o){return {id:o.id,name:o.name,sort:o.sort,checked:nowcheckedPrizeIds.filter(p=>p==o.id).length>0}})
                             //if (majorId) {
                             //    app.loadSubMajors(majorId);
                             //}

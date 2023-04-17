@@ -68,7 +68,7 @@
                     <div class="item" onmouseover="$(this).find('.itemcontainer').show()" onmouseout="$(this).find('.itemcontainer').hide()">
                         <span class="group">@prizeGroup.GroupName</span>
                         <ul class="itemcontainer">
-                            @foreach(var oriPrize in prizeGroup.Prizes)
+                            @foreach(var oriPrize in prizeGroup.Prizes.OrderBy(o=>o.Sort))
                             {
                                 if (prizeMapDic.ContainsKey(oriPrize.Id))
                                 {

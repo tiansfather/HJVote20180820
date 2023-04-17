@@ -135,6 +135,7 @@ namespace Master.Prizes
                 {
                     o.Id,
                     Name = o.PrizeName,
+                    Sort = o.Sort,
                     o.PrizeGroupId
                 };
             });

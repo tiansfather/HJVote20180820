@@ -94,7 +94,7 @@
                                     <label>项目名称<font color="red">*</font>:</label>
                                 </div>
                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                    <input type="text" v-model="project.projectName" style="width:200px" />
+                                    <input type="text" v-model="project.projectName" style="width:600px" />
                                     <label><input type="checkbox" :checked="project.isOriginal" v-model="project.isOriginal" />原创</label>
                                 </div>
                             </div>
@@ -262,7 +262,7 @@
                                                     <label><input type="checkbox" v-model="getSubMajorInfo('@subMajor.MajorId').hasOther" />其它</label>
                                                     <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').other" />
                                                     <label style="margin-left:10px;">合作单位</label>
-                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').coorperation" />
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').coorperation" style="width:360px" />
                                                 </div>
                                             }
                                         </div>
@@ -273,7 +273,7 @@
                                         <label>建设单位:</label>
                                     </div>
                                     <div class="layout layui-col-md4 layout-height1 layout-padding-left20">
-                                        <input type="text" v-model="project.buildingCompany" />
+                                        <input type="text" v-model="project.buildingCompany" style="width:360px" />
                                     </div>
                                     <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
                                         <label>建设地点:</label>
@@ -297,7 +297,7 @@
                                                     <label>@subMajor.Major.BriefName:</label>
                                                 </div>
                                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
-                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person1" style="width:600px;margin-left:5px;" />
+                                                    <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person1" style="width:750px;margin-left:5px;" />
                                                     @*@for (var i = 1; i <= 10; i++)
                                                     {
                                                         <input type="text" v-model="getSubMajorInfo('@subMajor.MajorId').person@(i)" style="width:60px;margin-left:5px;" />

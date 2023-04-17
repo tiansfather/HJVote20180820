@@ -54,7 +54,7 @@
                 <input type="radio" value="3" title="投票" v-if="currentItem.turn>1||true" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
             </div>
             <div class="layui-input-block" v-if="currentItem.reviewType==0">
-                <input type="radio" value="4" title="否决制" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
+                <input type="radio" value="4" title="预评" v-model="currentItem.reviewMethod" name="reviewMethod" lay-filter="reviewMethod" />
             </div>
         </div>
         <template v-if="currentItem.reviewType!=0">
@@ -136,7 +136,7 @@
                     return false;
                 }
                 if(app.currentItem.reviewMethod==4){
-                    //否决制的设置投票数量为0，以在专家打分时不做限制
+                    //预评的设置投票数量为0，以在专家打分时不做限制
                     app.currentItem.reviewMethodSetting.voteNumber=0;
                 }
                 //提交
@@ -189,7 +189,7 @@
                         if(this.currentItem.reviewId){
                             abp.services.app.review.getById(this.currentItem.reviewId).done(function (data) {
                                 app.currentItem.reviewType = data.reviewType;
-                                //预审使用否决制
+                                //预审使用预评
                                 app.currentItem.reviewMethod = app.currentItem.reviewType==0?4:1;
                                 refresh();
                             })

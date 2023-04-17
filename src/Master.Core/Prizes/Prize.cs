@@ -25,6 +25,7 @@ namespace Master.Prizes
         public virtual string ExtensionData { get; set; }
         public virtual string Remarks { get; set; }
         public bool IsActive { get; set; }
+        public int? Sort { get; set; }
 
         /// <summary>
         /// 奖项名称

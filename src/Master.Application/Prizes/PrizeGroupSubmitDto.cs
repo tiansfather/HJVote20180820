@@ -1,6 +1,7 @@
 ﻿using Abp.AutoMapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Master.Prizes
@@ -13,7 +14,6 @@ namespace Master.Prizes
         public string GroupName { get; set; }
         public string Remarks { get; set; }
         public bool IsActive { get; set; }
-
         public List<PrizeGroupSubmitPrizeDto> SubPrizes { get; set; }
     }
 
@@ -22,5 +22,6 @@ namespace Master.Prizes
         public int Id { get; set; }
         public string Name { get; set; }
         public bool Checked { get; set; }
+        public int? Sort { get; set; }
     }
 }

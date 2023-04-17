@@ -88,7 +88,7 @@
 
         };
         function doSearch() {
-            var where = { where: '' };
+            var where = { where: '1=1' };
             var matchId = $("select[name='matchId']").val();
             if (matchId) {
                 where.where += ' and matchId=' + matchId;

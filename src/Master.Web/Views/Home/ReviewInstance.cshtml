@@ -151,7 +151,7 @@
                         }
                         else if (currentRound.ReviewMethod == ReviewMethod.VetoSystem)
                         {
-                            <span>否决制投票</span>
+                            <span>预评</span>
                         }
                         else
                         {
@@ -185,7 +185,7 @@
                             <col>
                             <col width="200">
                             <col width="150">
-                            <col width="150">
+                           @* <col width="150">*@
                             @if (currentRound.ReviewMethod != ReviewMethod.Vote && currentRound.ReviewMethod != ReviewMethod.VetoSystem)
                             {
                                 <col width="88">

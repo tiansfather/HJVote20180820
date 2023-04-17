@@ -18,7 +18,7 @@ namespace Master.Prizes
         {
             var prizeGroup = await Repository.GetAll().Include(o => o.Prizes).FirstOrDefaultAsync(o => o.Id == id);
             var prizeGroupDto = prizeGroup.MapTo<PrizeGroupSubmitDto>();
-            prizeGroupDto.SubPrizes = prizeGroup.Prizes.Select(o => new PrizeGroupSubmitPrizeDto() { Id = o.Id, Name = o.PrizeName, Checked = true }).ToList();
+            prizeGroupDto.SubPrizes = prizeGroup.Prizes.Select(o => new PrizeGroupSubmitPrizeDto() { Id = o.Id, Name = o.PrizeName, Checked = true, Sort = o.Sort }).ToList();
 
             return prizeGroupDto;
         }
@@ -35,6 +35,7 @@ namespace Master.Prizes
                 {
                     var prize = await PrizeManager.GetByIdAsync(prizeDto.Id);
                     prize.PrizeGroupId = prizeGroup.Id;
+                    prize.Sort = prizeDto.Sort;
                     await PrizeManager.UpdateAsync(prize);
                 }
             }
@@ -47,7 +48,9 @@ namespace Master.Prizes
                 prizes.Where(o => o.PrizeGroupId == prizeGroup.Id).ToList().ForEach(o => o.PrizeGroupId = null);
                 foreach (var prizeDto in prizeGroupSubmitDto.SubPrizes.Where(o => o.Checked))
                 {
-                    prizes.Where(o => o.Id == prizeDto.Id).First().PrizeGroupId = prizeGroup.Id;
+                    var prize = prizes.Where(o => o.Id == prizeDto.Id).First();
+                    prize.PrizeGroupId = prizeGroup.Id;
+                    prize.Sort = prizeDto.Sort;
                 }
                 foreach (var prize in prizes)
                 {
