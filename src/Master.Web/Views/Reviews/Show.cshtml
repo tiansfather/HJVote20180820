@@ -86,7 +86,7 @@
                 transition: .1s linear;
             }
         .layui-form-onswitch em {
-            left: 5px;
+            left: 0px;
             right: auto;
             color: #fff !important;
         }
@@ -96,9 +96,9 @@
         }
         .layui-form-switch em {
             position: absolute;
-            right: 5px;
+            right: 0px;
             top: 0;
-            width: 25px;
+            width: 45px;
             padding: 0 !important;
             text-align: center !important;
             /*color: #999 !important;*/
@@ -129,7 +129,7 @@
                         </div>
                     </div>
                     <div class="layui-inline">
-                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">不同意</label>
+                        <label class="layui-form-label" style="font-size:20px;font-weight:bold;">否决</label>
                         <div class="layui-input-inline" style="width:60px">
                             <input type="checkbox" lay-skin="switch" lay-filter="denySwitch" :checked="currentProject.score===0">
                         </div>
@@ -151,7 +151,7 @@
                     <div class="layui-inline">
                     <label class="layui-form-label" style="font-size:20px;font-weight:bold;"></label>
                         <div class="layui-input-inline veto" style="width:100px">
-                        <input type="checkbox" name="voteFlag" lay-skin="switch" lay-text="同意|否决" lay-filter="voteFlag" title="@voteTitle" v-model="currentProject.voteFlag">
+                        <input type="checkbox" name="voteFlag" lay-skin="switch" lay-text="同意|不同意" lay-filter="voteFlag" title="@voteTitle" v-model="currentProject.voteFlag">
                         </div>
                     </div>
                 </div>
