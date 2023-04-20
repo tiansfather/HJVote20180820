@@ -7,7 +7,7 @@
 }
 @foreach (var group in Model)
 {
-                                <div style="padding:0 5px;">
+                                <div style="padding:0 5px;clear:both">
                                     <h3 style="width:100px;height:38px;font-weight:bold; line-height:38px;float:left">@group.GroupName</h3>
                                     <div style="margin-left:105px">
             @foreach (var oriPrize in group.Prizes.OrderBy(o => o.Sort))
