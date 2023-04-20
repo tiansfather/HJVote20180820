@@ -1,6 +1,6 @@
 ﻿@using Master.Web.Components
 @using Master.Matches
-@model List<Master.Prizes.Prize>
+@model List<Master.Prizes.PrizeGroup>
 @{
     var matchInstance = ViewData["matchInstance"] as MatchInstance;
     var userid = AbpSession.UserId.Value;
@@ -11,22 +11,18 @@
         <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("我的申报")</div>
         <div class="layui-card-body">
             <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
-                <div class="layui-form-item" style="width:800px">
+                <div class="layui-form-item" style="width:1200px">
                     <label class="layui-form-label">@L("项目名称")</label>
                     <div class="layui-input-block">
                         <input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
                     </div>
                 </div>
-                <div class="layui-form-item" pane style="width:800px">
+                <div class="layui-form-item" pane style="width:1200px">
                     <label class="layui-form-label">@L("申报奖项")</label>
                     <div class="layui-input-block">
-                        @foreach (var prize in Model)
-                        {
-                            <input type="checkbox" name="prize" lay-skin="primary" value="@prize.Id" title="@prize.PrizeName">
-                        }
-
+                        <vc:prize-group-view prize-groups="Model" match-instance="matchInstance"></vc:prize-group-view>      
                     </div>
-                    <button style="position:absolute;top:0px;left:820px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
+                    <button style="position:absolute;top:0px;left:1220px;" class="layui-btn layui-btn-primary" type="button" onclick="doSearch()">@L("查询")</button>
                 </div>
             </form>
 

@@ -1,0 +1,28 @@
+﻿@using Master.Prizes;
+
+@model List<PrizeGroup>
+@{
+    var prizeMapDic = ViewData["prizeMapDic"] as Dictionary<int, int>;
+    var prizes = ViewData["prizes"] as List<Prize>;
+}
+@foreach (var group in Model)
+{
+                                <div style="padding:0 5px;">
+                                    <h3 style="width:100px;height:38px;font-weight:bold; line-height:38px;float:left">@group.GroupName</h3>
+                                    <div style="margin-left:105px">
+            @foreach (var oriPrize in group.Prizes.OrderBy(o => o.Sort))
+            {
+                if (prizeMapDic.ContainsKey(oriPrize.Id))
+                {
+                    var prize = prizes.Where(o => o.Id == prizeMapDic[oriPrize.Id]).FirstOrDefault();
+                    if (prize != null)
+                    {
+                        <input type="checkbox" name="prize" lay-skin="primary" value="@prize.Id" title="@prize.PrizeName">
+                    }
+                    
+                }
+                
+            }
+                                    </div>
+                                </div>
+}

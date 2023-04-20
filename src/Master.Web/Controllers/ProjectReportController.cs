@@ -121,10 +121,12 @@ namespace Master.Web.Controllers
                 return Error("请先选择具体赛事");
             }
 
-            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
+            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeGroup).Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id).ToListAsync();
+
+            var prizeGroups = await PrizeGroupManager.GetAll().Include(o => o.Prizes).Where(o => o.MatchId == matchInstance.MatchId && o.IsActive).ToListAsync();
 
             ViewData["matchInstance"] = matchInstance;
-            return View(prizes);
+            return View(prizeGroups);
         }
 
         /// <summary>

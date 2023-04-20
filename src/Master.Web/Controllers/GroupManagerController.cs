@@ -18,7 +18,9 @@ namespace Master.Web.Controllers
     {
         public UserAppService UserAppService { get; set; }
         public PrizeManager PrizeManager { get; set; }
+        public PrizeGroupManager PrizeGroupManager { get; set; }
         public ProjectManager ProjectManager { get; set; }
+
         public async Task<IActionResult> Index()
         {
             var matchInstance = await GetCurrentMatchInstance();
@@ -28,20 +30,21 @@ namespace Master.Web.Controllers
                 return Error("请先选择具体赛事");
             }
 
-            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id  && o.IsActive).ToListAsync();
-            foreach (var prize in prizes)
-            {
-                foreach (var prizeSubMajor in prize.PrizeSubMajors)
-                {
-                    await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
-                }
+            //var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id  && o.IsActive).ToListAsync();
+            //foreach (var prize in prizes)
+            //{
+            //    foreach (var prizeSubMajor in prize.PrizeSubMajors)
+            //    {
+            //        await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
+            //    }
 
-            }
-
+            //}
+            var prizeGroups = await PrizeGroupManager.GetAll().Include(o => o.Prizes).Where(o => o.MatchId == matchInstance.MatchId && o.IsActive).ToListAsync();
 
             ViewData["matchInstance"] = matchInstance;
-            return View(prizes);
+            return View(prizeGroups);
         }
+
         public async Task<IActionResult> VerifyMajor()
         {
             var matchInstance = await GetCurrentMatchInstance();
@@ -51,20 +54,21 @@ namespace Master.Web.Controllers
                 return Error("请先选择具体赛事");
             }
 
-            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
-            foreach (var prize in prizes)
-            {
-                foreach (var prizeSubMajor in prize.PrizeSubMajors)
-                {
-                    await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
-                }
+            var prizeGroups = await PrizeGroupManager.GetAll().Include(o => o.Prizes).Where(o => o.MatchId == matchInstance.MatchId && o.IsActive).ToListAsync();
 
-            }
-
+            //var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
+            //foreach (var prize in prizes)
+            //{
+            //    foreach (var prizeSubMajor in prize.PrizeSubMajors)
+            //    {
+            //        await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
+            //    }
+            //}
 
             ViewData["matchInstance"] = matchInstance;
-            return View(prizes);
+            return View(prizeGroups);
         }
+
         /// <summary>
         /// 所有申报项目
         /// </summary>
@@ -77,19 +81,18 @@ namespace Master.Web.Controllers
             {
                 return Error("请先选择具体赛事");
             }
-
-            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
-            foreach (var prize in prizes)
-            {
-                foreach (var prizeSubMajor in prize.PrizeSubMajors)
-                {
-                    await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
-                }
-
-            }
+            var prizeGroups = await PrizeGroupManager.GetAll().Include(o => o.Prizes).Where(o => o.MatchId == matchInstance.MatchId && o.IsActive).ToListAsync();
+            //var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
+            //foreach (var prize in prizes)
+            //{
+            //    foreach (var prizeSubMajor in prize.PrizeSubMajors)
+            //    {
+            //        await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
+            //    }
+            //}
 
             ViewData["matchInstance"] = matchInstance;
-            return View(prizes);
+            return View(prizeGroups);
         }
 
         /// <summary>
@@ -104,21 +107,20 @@ namespace Master.Web.Controllers
             {
                 return Error("请先选择具体赛事");
             }
-
-            var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
-            foreach (var prize in prizes)
-            {
-                foreach (var prizeSubMajor in prize.PrizeSubMajors)
-                {
-                    await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
-                }
-
-            }
-
+            var prizeGroups = await PrizeGroupManager.GetAll().Include(o => o.Prizes).Where(o => o.MatchId == matchInstance.MatchId && o.IsActive).ToListAsync();
+            //var prizes = await PrizeRepository.GetAll().Include(o => o.PrizeSubMajors).Where(o => o.MatchInstanceId == matchInstance.Id && o.IsActive).ToListAsync();
+            //foreach (var prize in prizes)
+            //{
+            //    foreach (var prizeSubMajor in prize.PrizeSubMajors)
+            //    {
+            //        await PrizeSubMajorRepository.EnsurePropertyLoadedAsync(prizeSubMajor, o => o.Major);
+            //    }
+            //}
 
             ViewData["matchInstance"] = matchInstance;
-            return View(prizes);
+            return View(prizeGroups);
         }
+
         /// <summary>
         /// 项目审批
         /// </summary>
@@ -129,6 +131,7 @@ namespace Master.Web.Controllers
             ViewBag.ProjectId = projectId;
             return View();
         }
+
         /// <summary>
         /// 项目查看
         /// </summary>
@@ -136,10 +139,10 @@ namespace Master.Web.Controllers
         /// <returns></returns>
         public async Task<IActionResult> View(int projectId)
         {
-
             ViewBag.ProjectId = projectId;
             return View();
         }
+
         /// <summary>
         /// 导入错误信息查看
         /// </summary>
