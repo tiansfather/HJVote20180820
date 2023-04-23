@@ -37,6 +37,7 @@ namespace Master.Web.Controllers
         public BackUpManager BackUpManager { get; set; }
         public ProjectAppService ProjectAppService { get; set; }
         public MatchManager MatchManager { get; set; }
+
         public HomeController(ISessionAppService sessionAppService, UserManager userManager, IRepository<Setting> settingRepository, IHostingEnvironment hostingEnvironment, IRepository<MatchInstance, int> matchInstanceRepository)
         {
             _userManager = userManager;
@@ -45,6 +46,7 @@ namespace Master.Web.Controllers
             _env = hostingEnvironment;
             _matchInstanceRepository = matchInstanceRepository;
         }
+
         [AbpMvcAuthorize]
         public async Task<ActionResult> Index(string view)
         {
@@ -64,7 +66,6 @@ namespace Master.Web.Controllers
                 Response.Cookies.Delete("token");
                 return Redirect("/Account/Login");
             }
-                     
 
             var appConfiguration = _env.GetAppConfiguration();
             ViewData["softTitle"] = appConfiguration["System:SoftTitle"];
@@ -76,7 +77,7 @@ namespace Master.Web.Controllers
             }
 
             //申报人、分公司科管、专业负责人、集团科管进入赛事实例页页面
-            if (AbpSession.IsReporter()|| 
+            if (AbpSession.IsReporter() ||
                 AbpSession.IsSubManager() ||
                 AbpSession.IsGroupManager() ||
                 AbpSession.IsMajorManager()
@@ -99,6 +100,7 @@ namespace Master.Web.Controllers
             }
             return View(loginInfo);
         }
+
         /// <summary>
         /// 基于赛事实例的操作，用于申报人、分公司科管、集团科管
         /// </summary>
@@ -111,7 +113,7 @@ namespace Master.Web.Controllers
             {
                 return RedirectToAction("Message", "Error", new { msg = "参数错误" });
             }
-            var matchInstance = await _matchInstanceRepository.GetAll().Include(o=>o.Match).Where(o=>o.Id==int.Parse(matchIntanceId)).SingleOrDefaultAsync();
+            var matchInstance = await _matchInstanceRepository.GetAll().Include(o => o.Match).Where(o => o.Id == int.Parse(matchIntanceId)).SingleOrDefaultAsync();
             if (matchInstance == null)
             {
                 return RedirectToAction("Message", "Error", new { msg = "参数错误" });
@@ -123,6 +125,7 @@ namespace Master.Web.Controllers
 
             return View(loginInfo);
         }
+
         /// <summary>
         /// 基于评审实例的操作
         /// </summary>
@@ -130,7 +133,7 @@ namespace Master.Web.Controllers
         public async Task<ActionResult> ReviewInstance()
         {
             var review = await GetCurrentReview();
-            if(review==null || review.CurrentReviewRound==null || review.CurrentReviewRound.ReviewStatus != Reviews.ReviewStatus.Reviewing)
+            if (review == null || review.CurrentReviewRound == null || review.CurrentReviewRound.ReviewStatus != Reviews.ReviewStatus.Reviewing)
             {
                 return RedirectToAction("Index");
             }
@@ -139,7 +142,7 @@ namespace Master.Web.Controllers
             var loginInfo = await _sessionAppService.GetCurrentLoginInformations();
             ViewData["softTitle"] = appConfiguration["System:SoftTitle"];
             ViewData["reviewInstance"] = review;
-            List<ReviewProject> reviewProjects= review.ReviewProjects;
+            List<ReviewProject> reviewProjects = review.ReviewProjects;
             var sourceProjectIds = review.CurrentReviewRound.SourceProjectIDs.Split(',').Select(o => int.Parse(o));
             reviewProjects = reviewProjects.Where(o => sourceProjectIds.Contains(o.Id)).ToList();
             List<Project> projects;
@@ -149,10 +152,10 @@ namespace Master.Web.Controllers
                 reviewProjects = reviewProjects.Where(o => !o.IsAvoidedByExpert(AbpSession.UserId.Value)).ToList();
             }
             //获取所有待评审项目
-            projects = await ProjectRepository.GetAllIncluding(o => o.Prize,o=>o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Where(o => reviewProjects.Select(r => r.Id).Contains(o.Id)).ToListAsync();
+            projects = await ProjectRepository.GetAllIncluding(o => o.Prize, o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Where(o => reviewProjects.Select(r => r.Id).Contains(o.Id)).ToListAsync();
             //暂存的数据
             List<ProjectReviewDetail> projectReviewDetails = new List<ProjectReviewDetail>();
-            var expertReviewDetail=review.CurrentReviewRound.ExpertReviewDetails.SingleOrDefault(o => o.ExpertID == AbpSession.UserId.Value);
+            var expertReviewDetail = review.CurrentReviewRound.ExpertReviewDetails.SingleOrDefault(o => o.ExpertID == AbpSession.UserId.Value);
             if (expertReviewDetail != null)
             {
                 projectReviewDetails = expertReviewDetail.ProjectReviewDetails;
@@ -165,19 +168,20 @@ namespace Master.Web.Controllers
 
             return View(loginInfo);
         }
+
         public async Task<ActionResult> Init()
         {
             var reporterRole = await RoleRepository.GetAll().Where(o => o.Name == "ProjectReporter").SingleAsync();
-            var subRole= await RoleRepository.GetAll().Where(o => o.Name == "SubManager").SingleAsync();
+            var subRole = await RoleRepository.GetAll().Where(o => o.Name == "SubManager").SingleAsync();
             //初始化用户数据
-            var arr = new string[] {"sjzx|10","kczx|20","shy|40","hdzy|40","dszy|30","jszx|30","hjy|30","ghy|30","lby|15","szy|20","sly|20","syyt|20","syzx|10","dxy|20","ldgs|10","zcb|10","xb|20","wh|20","xn|20","yn|20","dl|20","ah|20","js|20","nb|20","cs|20","sz|20","xm|20" };
-            foreach(var item in arr)
+            //var arr = new string[] {"sjzx|10","kczx|20","shy|40","hdzy|40","dszy|30","jszx|30","hjy|30","ghy|30","lby|15","szy|20","sly|20","syyt|20","syzx|10","dxy|20","ldgs|10","zcb|10","xb|20","wh|20","xn|20","yn|20","dl|20","ah|20","js|20","nb|20","cs|20","sz|20","xm|20" };
+            var arr = new string[] { "xxzx|10", "hdy|60", "xdy|30", "jcss|40", "syyt|40", "hjsc|10" };
+            foreach (var item in arr)
             {
-                
                 var prefix = item.Split('|')[0];
                 var maxCount = int.Parse(item.Split('|')[1]);
                 var organization = await OrganizationRepository.GetAll().Where(o => o.BriefCode == prefix).FirstOrDefaultAsync();
-                for(var i = 1; i <= maxCount; i++)
+                for (var i = 1; i <= maxCount; i++)
                 {
                     var username = prefix + (i < 10 ? "0" + i : i.ToString());
                     if (await UserRepository.CountAsync(o => o.UserName == username) > 0)
@@ -197,7 +201,7 @@ namespace Master.Web.Controllers
                     await CurrentUnitOfWork.SaveChangesAsync();
                     await _userManager.SetPassword(user, "87654321");
 
-                    await _userManager.SetRoles(user, new int[] { reporterRole.Id});
+                    await _userManager.SetRoles(user, new int[] { reporterRole.Id });
                 }
                 //科管
                 var subUserName = prefix + "jsb";
@@ -231,6 +235,7 @@ namespace Master.Web.Controllers
         {
             return Content(SimpleStringCipher.Instance.Decrypt("xPSdWiKf+3JmG7TCYOd6sg=="));
         }
+
         [UnitOfWork(false)]
         public async Task<ActionResult> DoBackUp()
         {
