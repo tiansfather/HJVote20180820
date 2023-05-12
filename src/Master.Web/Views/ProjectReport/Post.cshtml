@@ -433,7 +433,7 @@
                 getOption: function (selectValue) {
                     var result = [];
                     if (selectValue) {
-                        result = selectValue.split(',');
+                        result = selectValue.split(',').map(o=>o.trim());
                     }
                     return result;
                 },
