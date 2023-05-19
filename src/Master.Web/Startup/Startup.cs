@@ -15,6 +15,7 @@ using Newtonsoft.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Master.Configuration;
 using Master.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Master.Web.Startup
 {
@@ -26,6 +27,7 @@ namespace Master.Web.Startup
         {
             _appConfiguration = env.GetAppConfiguration();
         }
+
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             //Configure DbContext
@@ -37,7 +39,8 @@ namespace Master.Web.Startup
             services.AddMvc(options =>
             {
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-            }).AddJsonOptions(options => {
+            }).AddJsonOptions(options =>
+            {
                 //忽略循环引用
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 //不使用驼峰样式的key
@@ -87,8 +90,14 @@ namespace Master.Web.Startup
             {
                 app.UseExceptionHandler("/Error");
             }
-
-            app.UseStaticFiles();
+            //添加MIME
+            var provider = new FileExtensionContentTypeProvider();
+            provider.Mappings[".properties"] = "application/octet-stream";
+            provider.Mappings[".bcmap"] = "application/octet-stream";
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                ContentTypeProvider = provider
+            });
 
             app.UseAuthentication();
 
@@ -97,7 +106,7 @@ namespace Master.Web.Startup
             app.UseSwagger();
             // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
             app.UseSwaggerUI(options =>
-            {                
+            {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "Master API V1");
             }); // URL: /swagger
 
