@@ -176,7 +176,7 @@ namespace Master.Web.Controllers
             //初始化用户数据
             //var arr = new string[] {"sjzx|10","kczx|20","shy|40","hdzy|40","dszy|30","jszx|30","hjy|30","ghy|30","lby|15","szy|20","sly|20","syyt|20","syzx|10","dxy|20","ldgs|10","zcb|10","xb|20","wh|20","xn|20","yn|20","dl|20","ah|20","js|20","nb|20","cs|20","sz|20","xm|20" };
             //var arr = new string[] { "xxzx|10", "hdy|60", "xdy|30", "jcss|40", "syyt|40", "hjsc|10" };
-            var arr = new string[] { "hdy|80" };
+            var arr = new string[] { "hdy|120" };
             foreach (var item in arr)
             {
                 var prefix = item.Split('|')[0];
