@@ -324,7 +324,7 @@ namespace Master.Projects
                 Logger.Error("2.2:" + DateTime.Now.ToString("HH:mm:ss:fff"));
                 //var project = await Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).SingleAsync(o => o.Id == reviewProject.Id);
                 reviewProjectDto.ProjectName = project.ProjectName;
-                reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
+                reviewProjectDto.DesignOrganizationName = project.DesignOrganization?.DisplayName;
                 reviewProjectDto.PrizeName = project.Prize.PrizeName;
                 reviewProjectDto.SubMajorName = project.PrizeSubMajor?.Major.BriefName;
                 Logger.Error("2.3:" + DateTime.Now.ToString("HH:mm:ss:fff"));
