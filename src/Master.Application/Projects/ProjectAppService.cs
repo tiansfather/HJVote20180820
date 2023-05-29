@@ -400,7 +400,7 @@ namespace Master.Projects
                     Id = project.Id,
                 };
                 reviewProjectDto.ProjectName = project.ProjectName;
-                reviewProjectDto.DesignOrganizationName = project.DesignOrganization.DisplayName;
+                reviewProjectDto.DesignOrganizationName = project.DesignOrganization?.DisplayName;
                 reviewProjectDto.PrizeName = project.Prize.PrizeName;
                 reviewProjectDto.SubMajorName = project.PrizeSubMajor?.Major.BriefName;
                 //获取项目在上次评审中的序号

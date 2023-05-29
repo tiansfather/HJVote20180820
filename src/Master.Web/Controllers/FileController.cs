@@ -20,21 +20,19 @@ namespace Master.Web.Controllers
         public string FileName { get; set; }
         public string Msg { get; set; }
     }
+
     [AbpMvcAuthorize]
     public class FileController : MasterControllerBase
     {
-
-        private async Task<UploadResult> UploadFile(IFormFile file,bool isFromAdmin=false)
+        private async Task<UploadResult> UploadFile(IFormFile file, bool isFromAdmin = false)
         {
             string ext = Path.GetExtension(file.FileName);
 
             DateTime now = DateTime.Now;
-            string upload_path = $"{Directory.GetCurrentDirectory()}\\wwwroot\\{(isFromAdmin?"filesadmin":"files")}\\{now.ToString("yyyyMMdd")}";
+            string upload_path = $"{Directory.GetCurrentDirectory()}\\wwwroot\\{(isFromAdmin ? "filesadmin" : "files")}\\{now.ToString("yyyyMMdd")}";
 
             Directory.CreateDirectory(upload_path);
 
-
-            
             var filenameWithOutPath = Guid.NewGuid().ToString() + ext;
             var filename = upload_path + "\\" + filenameWithOutPath;
             //path = "/images/" + now.Year + "/" + now.ToString("MMdd") + "/" + filenamenew;
@@ -43,20 +41,21 @@ namespace Master.Web.Controllers
             {
                 await file.CopyToAsync(fs);
                 fs.Flush();
-
             }
             //虚拟路径
             var virtualPath = $"/{(isFromAdmin ? "filesadmin" : "files")}/{now.ToString("yyyyMMdd")}/{filenameWithOutPath}";
 
-            var result = new UploadResult {Success=true, FilePath = virtualPath, FileName = file.FileName };
+            var result = new UploadResult { Success = true, FilePath = virtualPath, FileName = file.FileName };
             return result;
         }
+
         /// <summary>
         /// 文件上传
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public async Task<JsonResult> Upload(bool mustPDF=false,bool isFromAdmin=false)
+        [RequestSizeLimit(700_000_000)]
+        public async Task<JsonResult> Upload(bool mustPDF = false, bool isFromAdmin = false)
         {
             //throw new UserFriendlyException("Not Available");
             //if(new Random().Next(1, 4) > 2)
@@ -86,11 +85,12 @@ namespace Master.Web.Controllers
                 Logger.Error(ex.StackTrace);
                 return Json(new UploadResult { Success = false, Msg = "系统繁忙,请稍候重试" });
             }
-            
 
             throw new UserFriendlyException("未找到上传文件");
         }
+
         [DontWrapResult]
+        [RequestSizeLimit(700_000_000)]
         public async Task<object> LayEditUpload()
         {
             var files = HttpContext.Request.Form.Files;
@@ -103,7 +103,7 @@ namespace Master.Web.Controllers
 
                 var result = new ResultDto()
                 {
-                    data = new { src=uploadResult.FilePath,title=uploadResult.FileName}
+                    data = new { src = uploadResult.FilePath, title = uploadResult.FileName }
                 };
 
                 return Json(result);
@@ -112,7 +112,7 @@ namespace Master.Web.Controllers
             throw new UserFriendlyException("未找到上传文件");
         }
 
-        public ActionResult DownLoad(string fileName,string filePath)
+        public ActionResult DownLoad(string fileName, string filePath)
         {
             return File(filePath, "application/octet-stream", fileName);
         }
@@ -133,11 +133,13 @@ namespace Master.Web.Controllers
                 case ".png":
                     ContentType = "image/png";
                     break;
+
                 case ".jpg":
                 case ".jpe":
                 case ".jpeg":
                     ContentType = "image/jpeg";
                     break;
+
                 default:
                     ContentType = "application/octet-stream";
                     break;
