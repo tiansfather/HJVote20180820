@@ -137,16 +137,16 @@ namespace Master.Reviews
             //modi20181031去除混排类项目
             projectQuery = projectQuery.Where(o => o.Prize.PrizeType != Prizes.PrizeType.Mixed);
             //&& (o.ProjectStatus==ProjectStatus.UnderReview || (o.ProjectStatus==ProjectStatus.Reviewing && o.Prize.PrizeType==Prizes.PrizeType.Multiple))
-            if (review.ReviewType == ReviewType.Pre)
+            if (review.ReviewType == ReviewType.Pre || review.ReviewType == ReviewType.Initial)
             {
-                //预审选择待评选的项目
+                //预审及初评选择待评选的项目
                 projectQuery = projectQuery.Where(o => o.ProjectStatus == ProjectStatus.UnderReview);
             }
-            else if (review.ReviewType == ReviewType.Initial)
-            {
-                //初评选择有初评标识的项目
-                projectQuery = projectQuery.Where(o => o.IsInInitialReview);
-            }
+            //else if (review.ReviewType == ReviewType.Initial)
+            //{
+            //    //初评选择有初评标识的项目
+            //    projectQuery = projectQuery.Where(o => o.IsInInitialReview);
+            //}
             else
             {
                 //终评选择有终评标识的项目

@@ -360,7 +360,8 @@ namespace Master.Projects
             if (review.ReviewType == ReviewType.Initial)
             {
                 //初评选择项目条件为进入初评项目
-                projectQuery = projectQuery.Where(o => o.IsInInitialReview);
+                //modi: 初评选择项目为所有
+                //projectQuery = projectQuery.Where(o => o.IsInInitialReview);
             }
             else if (review.ReviewType == ReviewType.Finish)
             {
