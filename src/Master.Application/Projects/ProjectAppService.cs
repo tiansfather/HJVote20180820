@@ -361,7 +361,7 @@ namespace Master.Projects
             {
                 //初评选择项目条件为进入初评项目
                 //modi: 初评选择项目为所有
-                //projectQuery = projectQuery.Where(o => o.IsInInitialReview);
+                projectQuery = projectQuery.Where(o => (o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing));
             }
             else if (review.ReviewType == ReviewType.Finish)
             {

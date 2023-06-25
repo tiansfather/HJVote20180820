@@ -142,11 +142,11 @@ namespace Master.Reviews
                 //预审及初评选择待评选的项目
                 projectQuery = projectQuery.Where(o => o.ProjectStatus == ProjectStatus.UnderReview);
             }
-            //else if (review.ReviewType == ReviewType.Initial)
-            //{
-            //    //初评选择有初评标识的项目
-            //    projectQuery = projectQuery.Where(o => o.IsInInitialReview);
-            //}
+            else if (review.ReviewType == ReviewType.Initial)
+            {
+                //初评选择待评选和初评中的项目
+                projectQuery = projectQuery.Where(o => o.ProjectStatus == ProjectStatus.UnderReview || o.ProjectStatus == ProjectStatus.Reviewing);
+            }
             else
             {
                 //终评选择有终评标识的项目
