@@ -23,7 +23,7 @@
     List<ProjectReviewDetail> projectReviewDetails = ViewData["ProjectReviewDetails"] as List<ProjectReviewDetail>;
 
     //预审默认同意
-    if (currentRound.ReviewMethod == ReviewMethod.VetoSystem)
+    if (currentRound.ReviewMethod == ReviewMethod.VetoSystem && projectReviewDetails.All(o=>o.VoteFlag==false))
     {
         projectReviewDetails.ForEach(o => o.VoteFlag = true);
     }
