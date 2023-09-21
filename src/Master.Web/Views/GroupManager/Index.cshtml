@@ -18,6 +18,12 @@
 							<input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
 						</div>
 					</div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("奖项大类")</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="prizeName" name="prizeName" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
 					<div class="layui-inline">
 						<label class="layui-form-label">所属单位</label>
 						<div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
@@ -133,6 +139,10 @@
             if (projectName) {
                 where.where += ' and projectName.Contains(\"' + projectName + '\") ';
 			}
+            var prizeName = $("#prizeName").val();
+            if (prizeName) {
+                where.where += ' and Prize.PrizeName.Contains(\"' + prizeName + '\") ';
+            }
 			var organizationId = $("input[name='OrganizationId']").val();
 			if (organizationId) {
 				where.where += " and DesignOrganizationId=" + organizationId;
