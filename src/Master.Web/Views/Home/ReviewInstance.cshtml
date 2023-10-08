@@ -145,9 +145,8 @@
                     <li class="fheader-wrleft">
                         @if (currentRound.ReviewMethod == ReviewMethod.Vote)
                         {
-                            <span>每人投@(
-                                                       reviewMethodSetting.VoteNumber
-                                                       )票</span>
+                            <span>您一共可投@(reviewMethodSetting.VoteNumber)票，</span>
+                            <span id="votednumber">目前已投0票</span>
                         }
                         else if (currentRound.ReviewMethod == ReviewMethod.VetoSystem)
                         {
@@ -423,12 +422,18 @@
                 } else {
                     //tr.removeClass("on");
                 }
+                setVotedNumber();
             });
 
+        }
+        function setVotedNumber(){
+            var votedNumber=app.projectDetails.filter(o=>o.voteFlag).length;
+            $("#votednumber").html("目前已投" + votedNumber + "票");
         }
         function refresh() {
             Vue.nextTick(function () {
                 layui.form.render();
+                setVotedNumber();
             })
         }
         @*function showProject(projectId) {
