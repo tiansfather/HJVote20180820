@@ -10,7 +10,7 @@
     <div class="layui-card">
         <div class="layui-card-header bold"><i class="layui-icon layui-icon-next"></i> @L("项目越权审批")</div>
         <div class="layui-card-body">
-            <form class="layui-form layui-form-pane" onsubmit="return doSearch();">
+            <form class="layui-form-pane" onsubmit="return doSearch();" id="app">
 				<div class="layui-form-item" style="width:1200px">
 					<div class="layui-inline">
 						<label class="layui-form-label">@L("项目名称")</label>
@@ -18,6 +18,17 @@
 							<input type="text" id="projectName" name="projectName" autocomplete="off" class="layui-input">
 						</div>
 					</div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">@L("奖项大类")</label>
+                        <div class="layui-input-inline">
+                            <select name="prizeId" lay-filter="PrizeId">
+                                <option value="">--选择奖项大类--</option>
+                                <option v-for="item in prizes" :value="item.id">{{item.prizeName}}</option>
+                            </select>
+
+                            @* <input type="text" id="prizeName" name="prizeName" autocomplete="off" class="layui-input">*@
+                        </div>
+                    </div>
 					<div class="layui-inline">
 						<label class="layui-form-label">所属单位</label>
 						<div cyType="dropDownTool" cyProps="url:'/api/services/app/Organization/GetTreeJson?maxlevel=2',search:'false',checkbox:'false',key_name:'briefName'"
@@ -73,7 +84,32 @@
 
 @section scripts{
     <script>
+        var app;
 		config.ready = function () {
+            layui.form.on('select(PrizeId)', function (data) {
+                app.prizeId = data.value;
+            });
+            app = new Vue({
+                el: '#app',
+                data: {
+                    prizeId: null,
+                    prizes: []
+                },
+                methods: {
+                    loadPrizes: function (matchInstanceId) {
+                        abp.services.app.prize.getMatchInstancePrizes(matchInstanceId).done(function (data) {
+                            console.log(data);
+                            app.prizes = data;
+                            refresh();
+                        });
+                    },
+
+                },
+                mounted: function () {
+                    this.loadPrizes(@matchInstance.Id);
+                    $("#app").removeClass("layui-hide");
+                }
+            });
 			var table = layui.table;
 			table.on('sort(Project)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
 				console.log(obj.field); //当前排序的字段名
@@ -133,6 +169,10 @@
             if (projectName) {
                 where.where += ' and projectName.Contains(\"' + projectName + '\") ';
 			}
+            var prizeId = app.prizeId;
+            if (prizeId) {
+                where.where += ' and PrizeId='+prizeId;
+            }
 			var organizationId = $("input[name='OrganizationId']").val();
 			if (organizationId) {
 				where.where += " and DesignOrganizationId=" + organizationId;
@@ -179,6 +219,16 @@
                 }
             })
 
+        }
+
+        function refresh() {
+            Vue.nextTick(function () {
+                $(".layui-form-switch,.layui-form-select").remove();
+                $("form").addClass("layui-form");
+                //$("#app").addClass("layui-form");//layui-form加载必须在vue加载之后，不然会出现下拉选项无法绑定数据
+                layui.form.render();
+
+            })
         }
     </script>
 }
