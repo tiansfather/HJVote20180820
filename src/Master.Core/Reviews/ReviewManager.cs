@@ -542,6 +542,7 @@ namespace Master.Reviews
                         if (p.IsAvoid) { return 0; }
                         return p.VoteFlag ? 1 : 0;
                     });
+                    obj.OriScore = obj.Score;
                 }
                 else
                 {

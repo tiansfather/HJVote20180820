@@ -510,6 +510,13 @@
                 if (mode == 'export') {
                     doExport();
                 }
+                if("@isExpert"=="True"){
+                    //专家不能看到设计
+                    var $el=$("label:contains('设计团队')").parent().parent().prev();
+                    for(var i=0;i<7;i++){
+                        $el.next().remove();
+                    }
+                }
             });
         }
 
