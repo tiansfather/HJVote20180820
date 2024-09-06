@@ -233,7 +233,7 @@
 
                             <div class="layout layui-col-md12 layout-height1" style="border-right:0">
                                 <div class="layout layui-col-md2 layout-height1 layout-padding-left20">
-                                    <label>是否有合作单位:</label>
+                                    <label>是否有合作单位<font color="red">*</font>:</label>
                                 </div>
                                 <div class="layout layui-col-md10 layout-height1 layout-padding-left20">
                                     <label><input type="radio" v-model="project.hasCoorparation" :value="true" />有</label>
@@ -845,11 +845,11 @@
                     return false;
                 }
             });
-            //if (flag && app.project.hasCoorparation && !app.project.coorparation) {
-            //    layer.msg("请填写合作单位" , { icon: 5, anim: 6 });
-            //    flag = false;
-            //    return false;
-            //}
+            if (flag && app.project.hasCoorparation && !app.project.coorparation) {
+               layer.msg("请填写合作单位" , { icon: 5, anim: 6 });
+               flag = false;
+               return false;
+            }
             //if (flag && !simpleMode && !app.project.buildingCountry && !app.project.buildingProvince && !app.project.buildingCity) {
             //    layer.msg("请填写建设地点", { icon: 5, anim: 6 });
             //    flag = false;
