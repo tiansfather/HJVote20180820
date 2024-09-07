@@ -343,7 +343,7 @@ namespace Master.Projects
         {
             //var major = await MajorRepository.GetAsync(majorId);
             var review = await ReviewRepository.GetAll().Where(o => o.Id == reviewId).SingleAsync();
-            var projectQuery = Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).Where(o => o.MatchInstanceId == review.MatchInstanceId);
+            var projectQuery = Repository.GetAllIncluding(o => o.DesignOrganization).Include(o => o.PrizeSubMajor).ThenInclude(o => o.Major).Include(o => o.Prize).ThenInclude(o => o.Major).Where(o => o.MatchInstanceId == review.MatchInstanceId && o.ProjectStatus != ProjectStatus.Draft);
             if (majorId.HasValue)
             {
                 projectQuery = projectQuery.Where(o => o.Prize.MajorId == majorId);

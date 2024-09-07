@@ -531,7 +531,7 @@ namespace Master.Reviews
                 obj.ProjectName = o.ProjectName;
                 obj.PrizeName = o.Prize.PrizeName;
                 obj.SubMajorName = o.PrizeSubMajor?.Major.BriefName;
-                obj.DesignOrganizationName = o.DesignOrganization.BriefName;
+                obj.DesignOrganizationName = o.DesignOrganization?.BriefName;
                 obj.Sort = reviewProject.Sort;//排序
                 obj.NeedConfirm = false;//同分标记
                 //得分
