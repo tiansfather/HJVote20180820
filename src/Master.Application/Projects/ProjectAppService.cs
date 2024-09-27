@@ -51,28 +51,39 @@ namespace Master.Projects
                 .Include(o => o.CrossProject).ThenInclude(o => o.ProjectMajorInfos)
                 .ToListAsync();
             var data = projects
-                .Select(o => new
+                .Select(o =>
                 {
-                    o.Id,
-                    o.ProjectName,
-                    o.PrizeId,
-                    o.ReportSN,
-                    o.Prize?.PrizeName,
-                    MajorName = o.Prize?.Major?.BriefName,
-                    SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
-                    SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
-                    DesignOrganizationName = o.DesignOrganization != null ? o.DesignOrganization.BriefName : "",
-                    IsOriginal = o.IsOriginalStr,
-                    o.CreatorUser.Organization?.BriefName,
-                    o.BuildingCompany,
-                    ProjectStatus = o.ProjectStatusStr,
-                    CreatorOrganizationName = o.CreatorUser.Organization != null ? o.CreatorUser.Organization.BriefName : "",
-                    o.ProjectSource,
-                    o.ProjectSN,
-                    o.CreatorUser.Name,
-                    BuildingType = GetBuildingType(o),
-                    Coorperation = GetCoorperation(o),
-                    DesignTime = GetDesignTime(o)
+                    var formDatas = GetFormDatas(o, new List<Func<MatchResourceFormDesignItem, bool>> {
+                        i => i.Id == "1566533430205775" || i.FormName == "设计时间下拉",
+                        i => i.Id == "1536590402055720" || i.Id == "1566534458218148" || i.FormName == "建筑类别下拉" ,
+                        i => i.Id == "1727422494365744" ||  i.FormName == "来源方式" ,
+                        i => i.Id == "1727422579858604" ||  i.FormName == "实施情况" ,
+                    });
+                    return new
+                    {
+                        o.Id,
+                        o.ProjectName,
+                        o.PrizeId,
+                        o.ReportSN,
+                        o.Prize?.PrizeName,
+                        MajorName = o.Prize?.Major?.BriefName,
+                        SubMajorId = o.PrizeSubMajor != null ? o.PrizeSubMajor.MajorId.ToString() : "",
+                        SubMajorName = o.PrizeSubMajor != null ? o.PrizeSubMajor.Major.BriefName : "-",
+                        DesignOrganizationName = o.DesignOrganization != null ? o.DesignOrganization.BriefName : "",
+                        IsOriginal = o.IsOriginalStr,
+                        o.CreatorUser.Organization?.BriefName,
+                        o.BuildingCompany,
+                        ProjectStatus = o.ProjectStatusStr,
+                        CreatorOrganizationName = o.CreatorUser.Organization != null ? o.CreatorUser.Organization.BriefName : "",
+                        o.ProjectSource,
+                        o.ProjectSN,
+                        o.CreatorUser.Name,
+                        Coorperation = GetCoorperation(o),
+                        DesignTime = formDatas?.ElementAt(0),
+                        BuildingType = formDatas?.ElementAt(1),
+                        SourceType = formDatas?.ElementAt(2),
+                        ImplementInfo = formDatas?.ElementAt(3),
+                    };
                 });
 
             var result = new ResultPageDto()
@@ -97,6 +108,33 @@ namespace Master.Projects
             coorperations.AddRange(project.ProjectMajorInfos.Select(o => o.GetData<string>("Coorperation")).ToList());
             coorperations.RemoveAll(o => string.IsNullOrEmpty(o));
             return string.Join(',', coorperations);
+        }
+
+        private List<string> GetFormDatas(Project project, List<Func<MatchResourceFormDesignItem, bool>> filters)
+        {
+            var majorInfo = project.ProjectMajorInfos.Where(o => o.MajorId == null).SingleOrDefault();
+            if (majorInfo == null)
+            {
+                return null;
+            }
+            else
+            {
+                var layouts = majorInfo.GetData<List<MatchResourceFormDesignItem>>("Layouts");
+                if (layouts == null) return null;
+                var result = new List<string>();
+                var allControls = new List<MatchResourceFormDesignItem>();
+                allControls.AddRange(layouts);
+                foreach (var item in layouts)
+                {
+                    allControls.AddRange(GetChildren(item));
+                }
+                foreach (var filter in filters)
+                {
+                    var control = allControls.Where(filter).FirstOrDefault();
+                    result.Add(control != null ? control.Value : "");
+                }
+                return result;
+            }
         }
 
         private string GetDesignTime(Project project)

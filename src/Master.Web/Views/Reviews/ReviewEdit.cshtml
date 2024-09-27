@@ -475,7 +475,10 @@
         }
         function reorderprojectitem(id, val) {
             if (isNaN(val) || val <= 0 || val % 1 != 0) {
-                layer.msg("请正确输入序号,"+val+" 不正确", {icon:5,anim:6});
+                if(val){
+                    layer.msg("请正确输入序号," + val + " 不正确", { icon: 5, anim: 6 });
+                }
+                
 
                 return false;
             }
