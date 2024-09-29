@@ -88,7 +88,7 @@ namespace Master.Web.Controllers
                 ThirdLevelMajors = childMajors.OrderBy(o => o.Sort).Select(o => o.BriefName).ToList();
             }
             //如果有项目id,则查询subMajorId
-            if (projectId.HasValue)
+            else if (projectId.HasValue)
             {
                 //获取子专业id;
                 subMajorIds = await ProjectMajorInfoRepository.GetAll().Where(o => o.ProjectId == projectId && o.MajorId != null).Select(o => o.MajorId.Value).ToListAsync();
