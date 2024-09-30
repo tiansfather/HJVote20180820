@@ -394,7 +394,7 @@
     </div>
 </div>
 <div id="contentContainer" style="padding:20px;display:none">
-    <input type="hidden" name="subMajorId" />
+    <input type="hidden" name="subMajorId" value="@string.Join(",", subMajorIds)"/>
     请选择要申报的专业
     <hr />
     <div id="radioContainer" class="layui-form">
@@ -481,7 +481,9 @@
             });
             layui.form.on('checkbox(subMajorId)', function (data) {
                 var valStr = $("input[name='subMajorId']").val();
+                console.log(valStr);
                 var oriVals = valStr ? valStr.split(','):[];
+                console.log(oriVals);
                 if(data.elem.checked){
                     oriVals.push(data.value);
                 }else{
@@ -515,6 +517,13 @@
                         } else {
                             abp.services.app.project.getProject(id).done(function (data) {
                                 that.project = data;
+                                //如果有subMajorId，则移除不存在的
+                                var subMajorId = $("input[name='subMajorId']").val();
+                                var subMajorIds = [];
+                                if (subMajorId) subMajorIds = subMajorId.split(",");
+                                if(subMajorIds.length>0){
+                                    that.project.projectMajorInfos = that.project.projectMajorInfos.filter(function (o) { return subMajorIds.indexOf(o.majorId)>=0 || !o.majorId; });
+                                }
                                 //获取表单设计
                                 abp.services.app.matchResource.getFormDesignDetail(@Model.MatchInstanceId,@Model.MajorId).done(function (data) {
                                     //构建数据
@@ -764,13 +773,19 @@
         }
         //专业类和混排类重新选择子专业
         function changeSubMajor() {
-            var subMajorIds = [];
+            var subMajorId = $("input[name='subMajorId']").val();
+            var subMajorIds =  [];
+            if(subMajorId)subMajorIds=subMajorId.split(",");
             var prizeType=@((int)Model.PrizeType);
-            $("input[name='subMajorId']").val('');
+            //$("input[name='subMajorId']").val('');
             var html = '';
             var inputType = prizeType == 5 ? "checkbox" : "radio";
             $.each(allSubMajors, function (i, v) {
-                html += '<input type="' + inputType + '" title="' + v.BriefName + '" name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId" lay-skin="primary"/>';
+                var checked="";
+                if (subMajorIds.indexOf(v.MajorId.toString()) >= 0) {
+                    checked = "checked";
+                }
+                html += '<input type="' + inputType + '" title="' + v.BriefName + '" '+checked+'  name="subMajor" value="' + v.MajorId + '" lay-filter="subMajorId" lay-skin="primary"/>';
             });
             $("#radioContainer").html(html);
             layui.form.render();
@@ -812,6 +827,9 @@
             }
             app.project.projectStatus = 0;//草稿状态
             app.loadFormData();//同步自定义表单数据
+
+            
+
             func.runAsync(abp.services.app.project.submitProject(app.project).done(function () {
                 top.layer.msg("@L("提交成功")");
                 top.layer.closeAll("iframe");
