@@ -55,7 +55,7 @@ namespace Master.Projects
                 {
                     var formDatas = GetFormDatas(o, new List<Func<MatchResourceFormDesignItem, bool>> {
                         i => i.Id == "1566533430205775" || i.FormName == "设计时间下拉",
-                        i => i.Id == "1536590402055720" || i.Id == "1566534458218148" || i.FormName == "建筑类别下拉" ,
+                        i => i.Id == "1536590402055720" || i.Id == "1566534458218148" ||i.Id=="1536590184270625" || i.FormName == "建筑类别下拉"||i.FormName=="项目类别" ,
                         i => i.Id == "1727422494365744" ||  i.FormName == "来源方式" ,
                         i => i.Id == "1727422579858604" ||  i.FormName == "实施情况" ,
                     });
