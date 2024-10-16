@@ -130,7 +130,7 @@ namespace Master.Projects
                 }
                 foreach (var filter in filters)
                 {
-                    var control = allControls.Where(filter).FirstOrDefault();
+                    var control = allControls.Where(o => o.Type != "label").Where(filter).FirstOrDefault();
                     result.Add(control != null ? control.Value : "");
                 }
                 return result;
